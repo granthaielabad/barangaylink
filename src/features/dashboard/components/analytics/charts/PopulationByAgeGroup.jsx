@@ -40,12 +40,21 @@ const options = {
   },
 };
 
-const getData = (filters) => {
-  const year = parseInt(filters?.year || new Date().getFullYear(), 10);
-  const yearOffset = year - new Date().getFullYear();
-  const baseData = [780, 920, 1189, 355];
-  const data = baseData.map((val) => Math.max(0, Math.round(val + yearOffset * 20)));
-  
+// Real data: analyticsData.ageGroups = { children, youth, adults, seniorCitizens }
+// Falls back to original mock formula when analyticsData is not yet loaded.
+const getData = (filters, analyticsData) => {
+  let data;
+
+  if (analyticsData?.ageGroups) {
+    const { children, youth, adults, seniorCitizens } = analyticsData.ageGroups;
+    data = [children, youth, adults, seniorCitizens];
+  } else {
+    const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
+    const yearOffset = year - new Date().getFullYear();
+    const baseData   = [780, 920, 1189, 355];
+    data = baseData.map((val) => Math.max(0, Math.round(val + yearOffset * 20)));
+  }
+
   return {
     labels: ['Children', 'Youth', 'Adults', 'Senior Citizens'],
     datasets: [
@@ -59,22 +68,22 @@ const getData = (filters) => {
   };
 };
 
-export default function PopulationByAgeGroup({ filters }) {
+export default function PopulationByAgeGroup({ filters, analyticsData }) {
   const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+  const chartRef  = useRef(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext('2d');
     if (chartRef.current) chartRef.current.destroy();
-    const chartData = getData(filters);
+    const chartData = getData(filters, analyticsData);
     chartRef.current = new Chart(ctx, {
       type: 'bar',
       data: chartData,
       options,
     });
     return () => chartRef.current?.destroy();
-  }, [filters]);
+  }, [filters, analyticsData]);
 
   return (
     <div className="h-[280px] w-full relative">
