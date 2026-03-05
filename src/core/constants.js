@@ -1,4 +1,3 @@
-// src/core/constants.js
 // ─────────────────────────────────────────────────────────────
 // Single source of truth for all domain constants.
 // Import from here — never hardcode strings in components.
@@ -74,14 +73,62 @@ export const CIVIL_STATUS_OPTIONS = [
 ];
 
 export const SEX_OPTIONS = [
-  { value: 'M',     label: 'Male' },
-  { value: 'F',     label: 'Female' },
-  { value: 'Other', label: 'Other' },
+  { value: 'Male',   label: 'Male' },
+  { value: 'Female', label: 'Female' },
 ];
+
+export const BARANGAY = 'San Bartolome';
+
+export const NATIONALITIES = [
+  'Afghan','Albanian','Algerian','American','Andorran','Angolan','Antiguan',
+  'Argentine','Armenian','Australian','Austrian','Azerbaijani','Bahamian',
+  'Bahraini','Bangladeshi','Barbadian','Belarusian','Belgian','Belizean',
+  'Beninese','Bhutanese','Bolivian','Bosnian','Botswanan','Brazilian',
+  'British','Bruneian','Bulgarian','Burkinabe','Burmese','Burundian',
+  'Cambodian','Cameroonian','Canadian','Cape Verdean','Central African',
+  'Chadian','Chilean','Chinese','Colombian','Comorian','Congolese',
+  'Costa Rican','Croatian','Cuban','Cypriot','Czech','Danish','Djiboutian',
+  'Dominican','Dutch','East Timorese','Ecuadorian','Egyptian','Emirati',
+  'Equatorial Guinean','Eritrean','Estonian','Eswatini','Ethiopian',
+  'Fijian','Filipino','Finnish','French','Gabonese','Gambian','Georgian',
+  'German','Ghanaian','Greek','Grenadian','Guatemalan','Guinean',
+  'Guinea-Bissauan','Guyanese','Haitian','Honduran','Hungarian','Icelandic',
+  'Indian','Indonesian','Iranian','Iraqi','Irish','Israeli','Italian',
+  'Ivorian','Jamaican','Japanese','Jordanian','Kazakhstani','Kenyan',
+  'Kiribati','Kuwaiti','Kyrgyz','Laotian','Latvian','Lebanese','Liberian',
+  'Libyan','Liechtensteiner','Lithuanian','Luxembourgish','Malagasy',
+  'Malawian','Malaysian','Maldivian','Malian','Maltese','Marshallese',
+  'Mauritanian','Mauritian','Mexican','Micronesian','Moldovan','Monégasque',
+  'Mongolian','Montenegrin','Moroccan','Mozambican','Namibian','Nauruan',
+  'Nepalese','New Zealander','Nicaraguan','Nigerian','Nigerien','North Korean',
+  'North Macedonian','Norwegian','Omani','Pakistani','Palauan','Panamanian',
+  'Papua New Guinean','Paraguayan','Peruvian','Polish','Portuguese','Qatari',
+  'Romanian','Russian','Rwandan','Saint Kitts and Nevis','Saint Lucian',
+  'Saint Vincentian','Samoan','San Marinese','São Toméan','Saudi',
+  'Senegalese','Serbian','Seychellois','Sierra Leonean','Singaporean',
+  'Slovak','Slovenian','Solomon Islander','Somali','South African',
+  'South Korean','South Sudanese','Spanish','Sri Lankan','Sudanese',
+  'Surinamese','Swedish','Swiss','Syrian','Taiwanese','Tajik','Tanzanian',
+  'Thai','Togolese','Tongan','Trinidadian','Tunisian','Turkish','Turkmen',
+  'Tuvaluan','Ugandan','Ukrainian','Uruguayan','Uzbek','Vanuatuan',
+  'Venezuelan','Vietnamese','Yemeni','Zambian','Zimbabwean',
+].map((n) => ({ value: n, label: n }));
 
 export const OWNERSHIP_TYPE_OPTIONS = [
   { value: 'owned',    label: 'Owned' },
   { value: 'rented',   label: 'Rented' },
   { value: 'shared',   label: 'Shared' },
   { value: 'informal', label: 'Informal Settler' },
+];
+
+export const DWELLING_TYPE_OPTIONS = [
+  { value: 'house',     label: 'House' },
+  { value: 'apartment', label: 'Apartment' },
+  { value: 'condo',     label: 'Condominium' },
+  { value: 'informal',  label: 'Informal' },
+];
+
+export const HOUSEHOLD_STATUS_OPTIONS = [
+  { value: 'active',   label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
 ];

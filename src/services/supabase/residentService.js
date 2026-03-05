@@ -8,11 +8,14 @@ import { supabase } from './client';
 const TABLE = 'residents';
 const DEFAULT_SELECT = `
   id, first_name, middle_name, last_name, suffix,
-  date_of_birth, sex, civil_status, contact_number, email,
-  address_line, status, photo_url, voter_status, purok_id,
-  household_id, created_at, updated_at,
+  date_of_birth, place_of_birth, sex, civil_status,
+  nationality, religion, occupation,
+  contact_number, email, voter_status,
+  address_line, years_of_stay, purok_id,
+  philhealth_no, sss_no, tin_no,
+  status, photo_url, household_id, created_at, updated_at,
   puroks ( id, name ),
-  households ( id, house_no, street )
+  households:households!residents_household_id_fkey ( id, house_no, street )
 `;
 
 /**
@@ -81,7 +84,7 @@ export async function getResidentById(id) {
     .select(`
       *,
       puroks ( id, name ),
-      households ( * ),
+      households:households!residents_household_id_fkey ( * ),
       electronic_ids ( id, eid_number, status, issued_at, expires_at ),
       document_requests ( id, document_type, status, requested_at )
     `)

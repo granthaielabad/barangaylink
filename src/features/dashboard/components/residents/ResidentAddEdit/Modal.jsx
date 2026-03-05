@@ -3,68 +3,68 @@ import { PiUserPlus } from 'react-icons/pi';
 import PersonalInformationForm from './PersonalInformationForm';
 import AddressInformationForm from './AddressInformationForm';
 import IdentificationDetailForm from './IdentificationDetailForm';
+import { BARANGAY } from '../../../../../core/constants';
 
-const initialFormData = {
-  personal: {},
-  address: {},
-  identification: {},
+const emptyForm = {
+  personal: {
+    lastName: '', firstName: '', middleName: '', suffix: '',
+    birthdate: '', gender: '', contactNumber: '', email: '',
+    civilStatus: '', placeOfBirth: '', nationality: 'Filipino',
+    religion: '', occupation: '', voterStatus: false,
+  },
+  address: {
+    houseNo: '', street: '', purok: '', barangay: BARANGAY,
+  },
+  identification: {
+    philhealthNo: '', sssNo: '', tinNo: '', status: 'active',
+  },
 };
 
+// Build pre-fill from the raw DB resident object (r._raw)
+function buildEditForm(raw) {
+  if (!raw) return emptyForm;
+  return {
+    personal: {
+      lastName:      raw.last_name    ?? '',
+      firstName:     raw.first_name   ?? '',
+      middleName:    raw.middle_name  ?? '',
+      suffix:        raw.suffix       ?? '',
+      birthdate:     raw.date_of_birth ?? '',   // already ISO date from DB
+      gender:        raw.sex === 'M' ? 'Male' : raw.sex === 'F' ? 'Female' : raw.sex ?? '',
+      contactNumber: raw.contact_number ?? '',
+      email:         raw.email         ?? '',
+      civilStatus:   raw.civil_status  ?? '',
+      placeOfBirth:  raw.place_of_birth ?? '',
+      nationality:   raw.nationality   ?? 'Filipino',
+      religion:      raw.religion      ?? '',
+      occupation:    raw.occupation    ?? '',
+      voterStatus:   raw.voter_status  ?? false,
+    },
+    address: {
+      houseNo:  raw.households?.house_no ?? '',
+      street:   raw.households?.street   ?? '',
+      purok:    raw.puroks?.name          ?? '',
+      barangay: BARANGAY,
+    },
+    identification: {
+      philhealthNo: raw.philhealth_no ?? '',
+      sssNo:        raw.sss_no        ?? '',
+      tinNo:        raw.tin_no        ?? '',
+      status:       raw.status        ?? 'active',
+    },
+  };
+}
+
 export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData = null, mode = 'add' }) {
-  const getInitialFormData = useMemo(() => {
-    // Stored as "LastName FirstName MiddleName Suffix"
-    if (initialData && mode === 'edit') {
-      const nameParts = initialData.name?.split(' ') || [];
-      let lastName = '', firstName = '', middleName = '', suffix = '';
+  // initialData carries the table display row which has ._raw = full DB object
+  const raw = initialData?._raw ?? null;
 
-      if (nameParts.length >= 2) {
-        lastName = nameParts[nameParts.length - 1];
-        firstName = nameParts[0];
-        middleName = nameParts.slice(1, -1).join(' ');
-      } else if (nameParts.length === 1) {
-        firstName = nameParts[0];
-      }
+  const getInitialFormData = useMemo(
+    () => (mode === 'edit' && raw ? buildEditForm(raw) : emptyForm),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [raw?.id, mode]
+  );
 
-      // Check for suffix in middleName
-      const suffixMatch = middleName.match(/(Jr\.|Sr\.|II|III|IV)$/);
-      if (suffixMatch) {
-        suffix = suffixMatch[1];
-        middleName = middleName.replace(/\s+(Jr\.|Sr\.|II|III|IV)$/, '');
-      }
-
-      // Stored as "HouseNo, Street, Purok, Barangay"
-      const addressParts = initialData.address?.split(', ') || [];
-      const houseNo = addressParts[0] || '';
-      const street = addressParts[1] || '';
-      const purok = addressParts[2] || '';
-      const barangay = addressParts[3] || '';
-
-      return {
-        personal: {
-          lastName,
-          firstName,
-          middleName,
-          suffix,
-          birthdate: initialData.birthdate || '',
-          gender: initialData.gender || '',
-          contactNumber: initialData.contactNo || '',
-        },
-        address: {
-          houseNo,
-          street,
-          purok,
-          barangay,
-        },
-        identification: {
-          idNumber: initialData.residentNo || '',
-          status: initialData.status || 'Active',
-        },
-      };
-    }
-    return initialFormData;
-  }, [initialData, mode]);
-
-  // We want to reset form data whenever initialData changes (e.g. when opening edit modal for a different resident)
   const [formData, setFormData] = useState(getInitialFormData);
   const panelRef = useRef(null);
 
@@ -73,9 +73,7 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
   }, [getInitialFormData]);
 
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose?.();
-    };
+    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
     if (isOpen) window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
@@ -84,30 +82,43 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
     if (panelRef.current && !panelRef.current.contains(e.target)) onClose?.();
   };
 
-  const handleClear = () => {
-    setFormData(initialFormData);
-  };
+  const handleClear = () => setFormData(emptyForm);
 
-  // When submitting, we want to combine the form data into the expected resident format
+  // Flatten form sections into the shape Residents.jsx handleAddResident expects
   const handleSubmit = (e) => {
     e.preventDefault();
-    const resident = {
-      lastName: formData.personal.lastName,
-      firstName: formData.personal.firstName,
-      middleName: formData.personal.middleName,
-      suffix: formData.personal.suffix,
-      birthdate: formData.personal.birthdate,
-      gender: formData.personal.gender,
-      contactNumber: formData.personal.contactNumber,
-      houseNo: formData.address.houseNo,
-      street: formData.address.street,
-      purok: formData.address.purok,
-      barangay: formData.address.barangay,
-      idNumber: formData.identification.idNumber,
-      status: formData.identification.status ?? 'Active',
-    };
-    onSubmit?.(resident);
-    setFormData(initialFormData);
+    const { personal, address, identification } = formData;
+
+    onSubmit?.({
+      // Personal
+      firstName:    personal.firstName,
+      middleName:   personal.middleName   || null,
+      lastName:     personal.lastName,
+      suffix:       personal.suffix       || null,
+      birthdate:    personal.birthdate    || null,
+      gender:       personal.gender       || null,
+      contactNumber: personal.contactNumber || null,
+      email:        personal.email        || null,
+      civilStatus:  personal.civilStatus  || null,
+      placeOfBirth: personal.placeOfBirth || null,
+      nationality:  personal.nationality  || 'Filipino',
+      religion:     personal.religion     || null,
+      occupation:   personal.occupation   || null,
+      voterStatus:  personal.voterStatus  ?? false,
+      // Address
+      houseNo:     address.houseNo    || null,
+      street:      address.street     || null,
+      purokId:     address.purokId    ? Number(address.purokId) : null,
+      barangay:    address.barangay   || null,
+      yearsOfStay: address.yearsOfStay !== '' ? Number(address.yearsOfStay) : null,
+      // Identification
+      philhealthNo: identification.philhealthNo || null,
+      sssNo:        identification.sssNo        || null,
+      tinNo:        identification.tinNo        || null,
+      status:       identification.status       || 'active',
+    });
+
+    if (mode === 'add') setFormData(emptyForm);
     onClose?.();
   };
 

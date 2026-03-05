@@ -9,7 +9,7 @@ import { useResidentFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
-import toast from 'react-hot-toast';
+import { BARANGAY } from '../../../core/constants';
 
 export default function Residents() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -45,17 +45,31 @@ export default function Residents() {
   const totalEntries = data?.total ?? 0;
 
   // ── Adapter: map DB fields → table display shape ──────────────
-  const tableResidents = residents.map((r) => ({
-    id: r.id,
-    residentNo: r.id.slice(0, 8).toUpperCase(),
-    name: `${r.last_name}, ${r.first_name}${r.middle_name ? ' ' + r.middle_name : ''}${r.suffix ? ' ' + r.suffix : ''}`,
-    address: r.address_line ?? [r.households?.house_no, r.households?.street, r.puroks?.name].filter(Boolean).join(', ') ?? '—',
-    gender: r.sex === 'M' ? 'Male' : r.sex === 'F' ? 'Female' : r.sex ?? '—',
-    birthdate: r.date_of_birth ?? '—',
-    contactNo: r.contact_number ?? '—',
-    status: r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : '—',
-    _raw: r, // keep the raw DB object for edit pre-fill
-  }));
+  const tableResidents = residents.map((r, idx) => {
+    // Sequential resident number: global position based on page offset + row index
+    const globalIndex = (page - 1) * pageSize + idx + 1;
+    const n = String(globalIndex).padStart(9, '0');
+    const residentNo = `${n.slice(0, 4)}-${n.slice(4, 7)}-${n.slice(7, 9)}`;
+
+    // Birthdate: DB returns YYYY-MM-DD → display as MM-DD-YYYY
+    let birthdate = '—';
+    if (r.date_of_birth) {
+      const [y, m, d] = r.date_of_birth.split('-');
+      birthdate = `${m}-${d}-${y}`;
+    }
+
+    return {
+      id: r.id,
+      residentNo,
+      name: `${r.last_name}, ${r.first_name}${r.middle_name ? ' ' + r.middle_name : ''}${r.suffix ? ' ' + r.suffix : ''}`,
+      address: r.address_line ?? [r.households?.house_no, r.households?.street, r.puroks?.name].filter(Boolean).join(', ') ?? '—',
+      gender: r.sex === 'M' ? 'Male' : r.sex === 'F' ? 'Female' : r.sex ?? '—',
+      birthdate,
+      contactNo: r.contact_number ?? '—',
+      status: r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : '—',
+      _raw: r,
+    };
+  });
 
   // ── Handlers ──────────────────────────────────────────────────
   const handleLogout = async () => {
@@ -63,37 +77,38 @@ export default function Residents() {
     catch (err) { toast.error(err.message ?? 'Logout failed.'); }
   };
 
+  const buildPayload = (data) => ({
+    first_name:     data.firstName,
+    middle_name:    data.middleName    || null,
+    last_name:      data.lastName,
+    suffix:         data.suffix        || null,
+    date_of_birth:  data.birthdate     || null,
+    sex:            data.gender === 'Male' ? 'M' : data.gender === 'Female' ? 'F' : null,
+    contact_number: data.contactNumber || null,
+    email:          data.email         || null,
+    civil_status:   data.civilStatus   || null,
+    place_of_birth: data.placeOfBirth  || null,
+    nationality:    data.nationality   || 'Filipino',
+    religion:       data.religion      || null,
+    occupation:     data.occupation    || null,
+    voter_status:   data.voterStatus   ?? false,
+    // Address — barangay is always San Bartolome, locked in form
+    address_line: [data.houseNo, data.street, data.purok, BARANGAY].filter(Boolean).join(', ') || null,
+    // Identification
+    philhealth_no:  data.philhealthNo  || null,
+    sss_no:         data.sssNo         || null,
+    tin_no:         data.tinNo         || null,
+    status:         (data.status       || 'active').toLowerCase(),
+  });
+
   const handleAddResident = (data) => {
-    const payload = {
-      first_name: data.firstName,
-      middle_name: data.middleName || null,
-      last_name: data.lastName,
-      suffix: data.suffix || null,
-      date_of_birth: data.birthdate || null,
-      sex: data.gender === 'Male' ? 'M' : data.gender === 'Female' ? 'F' : null,
-      contact_number: data.contactNumber || null,
-      address_line: [data.houseNo, data.street, data.purok, data.barangay].filter(Boolean).join(', ') || null,
-      status: (data.status ?? 'active').toLowerCase(),
-      // purok_id must be set — defaults to staff's own purok via RLS
-    };
-    create.mutate(payload);
+    create.mutate(buildPayload(data));
     setAddModalOpen(false);
   };
 
   const handleUpdateResident = (data) => {
     if (!selectedResident) return;
-    const payload = {
-      first_name: data.firstName,
-      middle_name: data.middleName || null,
-      last_name: data.lastName,
-      suffix: data.suffix || null,
-      date_of_birth: data.birthdate || null,
-      sex: data.gender === 'Male' ? 'M' : data.gender === 'Female' ? 'F' : null,
-      contact_number: data.contactNumber || null,
-      address_line: [data.houseNo, data.street, data.purok, data.barangay].filter(Boolean).join(', ') || null,
-      status: (data.status ?? 'active').toLowerCase(),
-    };
-    update.mutate({ id: selectedResident._raw?.id ?? selectedResident.id, payload });
+    update.mutate({ id: selectedResident._raw?.id ?? selectedResident.id, payload: buildPayload(data) });
     setEditModalOpen(false);
     setSelectedResident(null);
   };

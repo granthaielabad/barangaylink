@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getHouseholds, getHouseholdById, createHousehold,
   updateHousehold, archiveHousehold, deleteHousehold,
+  assignMemberToHousehold, removeMemberFromHousehold,
 } from '../../../services/supabase/householdService';
 import { useHouseholdFilters } from '../../../store/filterStore';
 import toast from 'react-hot-toast';
@@ -73,5 +74,17 @@ export function useMutateHousehold() {
     onError: (err) => toast.error(`Delete failed: ${err.message}`),
   });
 
-  return { create, update, archive, remove };
+  const assignMember = useMutation({
+    mutationFn: ({ residentId, householdId }) => assignMemberToHousehold(residentId, householdId),
+    onSuccess: () => { invalidate(); qc.invalidateQueries({ queryKey: ['residents'] }); },
+    onError: (err) => toast.error(`Failed to assign member: ${err.message}`),
+  });
+
+  const removeMember = useMutation({
+    mutationFn: (residentId) => removeMemberFromHousehold(residentId),
+    onSuccess: () => { invalidate(); qc.invalidateQueries({ queryKey: ['residents'] }); },
+    onError: (err) => toast.error(`Failed to remove member: ${err.message}`),
+  });
+
+  return { create, update, archive, remove, assignMember, removeMember };
 }

@@ -1,5 +1,10 @@
 import { FiUser } from 'react-icons/fi';
 import { FormSelect } from '../../../../../shared';
+import {
+  SEX_OPTIONS,
+  CIVIL_STATUS_OPTIONS,
+  NATIONALITIES,
+} from '../../../../../core/constants';
 
 const inputClass =
   'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
@@ -16,23 +21,30 @@ export default function PersonalInformationForm({ value = {}, onChange }) {
         </h3>
       </div>
 
+      {/* Name row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Last Name <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             value={value.lastName ?? ''}
             onChange={(e) => update('lastName', e.target.value)}
             className={inputClass}
+            required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            First Name <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             value={value.firstName ?? ''}
             onChange={(e) => update('firstName', e.target.value)}
             className={inputClass}
+            required
           />
         </div>
         <div>
@@ -56,27 +68,29 @@ export default function PersonalInformationForm({ value = {}, onChange }) {
         </div>
       </div>
 
+      {/* Birth + Gender + Contact */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Birthdate</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Birthdate <span className="text-red-500">*</span>
+          </label>
           <input
-            type="text"
+            type="date"
             value={value.birthdate ?? ''}
             onChange={(e) => update('birthdate', e.target.value)}
-            placeholder="MM/DD/YYYY"
             className={inputClass}
+            required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Gender</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Sex <span className="text-red-500">*</span>
+          </label>
           <FormSelect
-            placeholder="Gender"
-            value={value.gender}
+            placeholder="Sex"
+            value={value.gender ?? ''}
             onChange={(val) => update('gender', val)}
-            options={[
-              { value: 'Male', label: 'Male' },
-              { value: 'Female', label: 'Female' },
-            ]}
+            options={SEX_OPTIONS}
           />
         </div>
         <div>
@@ -85,9 +99,91 @@ export default function PersonalInformationForm({ value = {}, onChange }) {
             type="text"
             value={value.contactNumber ?? ''}
             onChange={(e) => update('contactNumber', e.target.value)}
+            placeholder="09XXXXXXXXX"
             className={inputClass}
           />
         </div>
+      </div>
+
+      {/* Civil status + Place of birth + Nationality */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Civil Status</label>
+          <FormSelect
+            placeholder="Civil Status"
+            value={value.civilStatus ?? ''}
+            onChange={(val) => update('civilStatus', val)}
+            options={CIVIL_STATUS_OPTIONS}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Place of Birth <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={value.placeOfBirth ?? ''}
+            onChange={(e) => update('placeOfBirth', e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Nationality <span className="text-red-500">*</span>
+          </label>
+          <FormSelect
+            placeholder="Nationality"
+            value={value.nationality ?? 'Filipino'}
+            onChange={(val) => update('nationality', val)}
+            options={NATIONALITIES}
+          />
+        </div>
+      </div>
+
+      {/* Religion + Occupation + Email */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Religion</label>
+          <input
+            type="text"
+            value={value.religion ?? ''}
+            onChange={(e) => update('religion', e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Occupation</label>
+          <input
+            type="text"
+            value={value.occupation ?? ''}
+            onChange={(e) => update('occupation', e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+          <input
+            type="email"
+            value={value.email ?? ''}
+            onChange={(e) => update('email', e.target.value)}
+            placeholder="email@example.com"
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      {/* Voter status */}
+      <div className="flex items-center gap-3 pt-1">
+        <input
+          id="voter-status"
+          type="checkbox"
+          checked={value.voterStatus ?? false}
+          onChange={(e) => update('voterStatus', e.target.checked)}
+          className="w-4 h-4 accent-[#005F02] cursor-pointer"
+        />
+        <label htmlFor="voter-status" className="text-sm font-medium text-gray-700 cursor-pointer">
+          Registered Voter
+        </label>
       </div>
     </div>
   );

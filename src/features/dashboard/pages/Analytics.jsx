@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import {
@@ -14,6 +15,10 @@ import {
   PopulationGrowth,
 } from '../components/analytics';
 import { useAnalytics } from '../../../hooks/queries/analytics/useAnalytics';
+import { useAuth } from '../../../hooks/auth/useAuth';
+import { useAuthStore } from '../../../store/authStore';
+import { signOut } from '../../../services/supabase/authService';
+import toast from 'react-hot-toast';
 
 export default function Analytics() {
   const [filters, setFilters] = useState({
@@ -26,6 +31,15 @@ export default function Analytics() {
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const navigate  = useNavigate();
+  const { profile } = useAuth();
+  const clearAuth = useAuthStore((s) => s.clearAuth);
+
+  const handleLogout = async () => {
+    try { await signOut(); clearAuth(); navigate('/login', { replace: true }); }
+    catch (err) { toast.error(err.message ?? 'Logout failed.'); }
+  };
+
   // Single parallel fetch — all chart components read from this one result.
   // analyticsData is undefined while loading; each chart falls back gracefully.
   const { data: analyticsData } = useAnalytics();
@@ -35,7 +49,13 @@ export default function Analytics() {
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto">
-        <DashboardHeader title="Analytics" onMenuToggle={() => setSidebarOpen(o => !o)} />
+        <DashboardHeader
+          title="Analytics"
+          userName={profile?.full_name ?? ''}
+          userRole={profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : ''}
+          onLogout={handleLogout}
+          onMenuToggle={() => setSidebarOpen(o => !o)}
+        />
 
         <section className="px-5 py-7">
           <Filters onFilterChange={setFilters} />

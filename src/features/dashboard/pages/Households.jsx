@@ -12,18 +12,18 @@ import { signOut } from '../../../services/supabase/authService';
 import toast from 'react-hot-toast';
 
 export default function Household() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen]           = useState(false);
+  const [addModalOpen, setAddModalOpen]           = useState(false);
+  const [editModalOpen, setEditModalOpen]         = useState(false);
+  const [archiveModalOpen, setArchiveModalOpen]   = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen]     = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState(null);
 
-  const navigate = useNavigate();
+  const navigate    = useNavigate();
   const { profile } = useAuth();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const clearAuth   = useAuthStore((s) => s.clearAuth);
 
-  // ── Filter store — select each primitive individually ─────────
+  // ── Filter store ──────────────────────────────────────────────
   const search    = useHouseholdFilters((s) => s.search);
   const sortBy    = useHouseholdFilters((s) => s.sortBy);
   const order     = useHouseholdFilters((s) => s.order);
@@ -36,51 +36,83 @@ export default function Household() {
   const setStatus = useHouseholdFilters((s) => s.setStatus);
   const setPage   = useHouseholdFilters((s) => s.setPage);
 
-  const { data, isLoading } = useHouseholds();
-  const { create, update, archive, remove } = useMutateHousehold();
+  const { data, isLoading }                                          = useHouseholds();
+  const { create, update, archive, remove, assignMember, removeMember } = useMutateHousehold();
 
-  const households = data?.data ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const totalEntries = data?.total ?? 0;
+  const households   = data?.data       ?? [];
+  const totalPages   = data?.totalPages ?? 1;
+  const totalEntries = data?.total      ?? 0;
 
-  // Adapter: map DB fields → table display shape
-  const tableHouseholds = households.map((h) => ({
-    id: h.id,
-    householdNo: h.house_no ?? '—',
-    headMemberName: h.head
-      ? `${h.head.first_name} ${h.head.last_name}`.trim()
-      : '—',
-    address: [h.house_no, h.street, h.puroks?.name].filter(Boolean).join(', ') || '—',
-    members: '—', // member count requires a separate count query — deferred
-    status: h.status ? h.status.charAt(0).toUpperCase() + h.status.slice(1) : '—',
-    _raw: h,
-  }));
+  // ── Adapter ───────────────────────────────────────────────────
+  const tableHouseholds = households.map((h, idx) => {
+    const globalIndex = (page - 1) * pageSize + idx + 1;
+    const n = String(globalIndex).padStart(7, '0');
+    const householdNo = `${n.slice(0, 4)}-${n.slice(4, 6)}-${n.slice(6)}`;
 
+    return {
+      id: h.id,
+      householdNo,
+      headMemberName: h.head
+        ? `${h.head.first_name} ${h.head.last_name}`.trim()
+        : '—',
+      address: [h.house_no, h.street].filter(Boolean).join(' ') || '—',
+      members: h._memberCount ?? 0,
+      status:  h.status ? h.status.charAt(0).toUpperCase() + h.status.slice(1) : '—',
+      _raw: h,
+    };
+  });
+
+  // ── Auth ──────────────────────────────────────────────────────
   const handleLogout = async () => {
     try { await signOut(); clearAuth(); navigate('/login', { replace: true }); }
     catch (err) { toast.error(err.message ?? 'Logout failed.'); }
   };
 
-  const handleAddHousehold = (data) => {
-    create.mutate({
-      house_no: data.householdNo || null,
-      street: data.address || null,
-      status: 'active',
-    });
-    setAddModalOpen(false);
+  // ── Sync member assignments after create/update ───────────────
+  async function syncMembers(householdId, members = []) {
+    await Promise.all(
+      members.map((m) => assignMember.mutateAsync({ residentId: m.id, householdId }))
+    );
+  }
+
+  // ── Payload builder ───────────────────────────────────────────
+  const buildPayload = (data) => ({
+    house_no:         data.houseNo        || null,
+    street:           data.street         || null,
+    head_resident_id: data.headResidentId || null,
+    ownership_type:   data.ownershipType  || null,
+    dwelling_type:    data.dwellingType   || null,
+    monthly_income:   data.monthlyIncome !== '' ? Number(data.monthlyIncome) : null,
+    status:           data.status         || 'active',
+    purok_id:         1,
+  });
+
+  // ── CRUD handlers ─────────────────────────────────────────────
+  const handleAddHousehold = async (data) => {
+    try {
+      const household = await create.mutateAsync(buildPayload(data));
+      if (data.members?.length) await syncMembers(household.id, data.members);
+      setAddModalOpen(false);
+    } catch { /* already toasted */ }
   };
 
-  const handleUpdateHousehold = (data) => {
+  const handleUpdateHousehold = async (data) => {
     if (!selectedHousehold) return;
-    update.mutate({
-      id: selectedHousehold._raw?.id ?? selectedHousehold.id,
-      payload: {
-        house_no: data.householdNo || null,
-        street: data.address || null,
-      },
-    });
-    setEditModalOpen(false);
-    setSelectedHousehold(null);
+    const householdId = selectedHousehold._raw?.id ?? selectedHousehold.id;
+    try {
+      await update.mutateAsync({ id: householdId, payload: buildPayload(data) });
+
+      const prevMemberIds  = (selectedHousehold._raw?._members ?? []).map((m) => m.id);
+      const nextMemberIds  = (data.members ?? []).map((m) => m.id);
+      const toRemove       = prevMemberIds.filter((id) => !nextMemberIds.includes(id));
+      const toAdd          = (data.members ?? []).filter((m) => !prevMemberIds.includes(m.id));
+
+      await Promise.all(toRemove.map((id) => removeMember.mutateAsync(id)));
+      await syncMembers(householdId, toAdd);
+
+      setEditModalOpen(false);
+      setSelectedHousehold(null);
+    } catch { /* already toasted */ }
   };
 
   const handleConfirmArchive = () => {
@@ -156,7 +188,12 @@ export default function Household() {
         </section>
       </main>
 
-      <HouseholdAddEdit isOpen={addModalOpen} onClose={() => setAddModalOpen(false)} onSubmit={handleAddHousehold} mode="add" />
+      <HouseholdAddEdit
+        isOpen={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onSubmit={handleAddHousehold}
+        mode="add"
+      />
       <HouseholdAddEdit
         isOpen={editModalOpen}
         onClose={() => { setEditModalOpen(false); setSelectedHousehold(null); }}

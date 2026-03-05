@@ -4,10 +4,11 @@ const TABLE = 'households';
 
 const DEFAULT_SELECT = `
   id, house_no, street, ownership_type, dwelling_type,
-  monthly_income, no_of_members, status, created_at, updated_at,
+  monthly_income, status, created_at, updated_at,
   purok_id, puroks ( id, name ),
   head_resident_id,
-  head:residents!head_resident_id ( id, first_name, last_name )
+  head:residents!fk_head_resident ( id, first_name, last_name ),
+  memberCount:household_member_counts ( member_count )
 `;
 
 export async function getHouseholds({
@@ -37,8 +38,14 @@ export async function getHouseholds({
   const { data, error, count } = await query;
   if (error) throw error;
 
+  // Flatten the joined member count onto each row
+  const normalised = (data ?? []).map((h) => ({
+    ...h,
+    _memberCount: h.memberCount?.[0]?.member_count ?? 0,
+  }));
+
   return {
-    data,
+    data: normalised,
     total: count ?? 0,
     page,
     pageSize,
@@ -49,7 +56,7 @@ export async function getHouseholds({
 export async function getHouseholdById(id) {
   const { data, error } = await supabase
     .from(TABLE)
-    .select(`*, puroks(*), residents(id, first_name, last_name, status, photo_url)`)
+    .select(`*, puroks(*), residents!residents_household_id_fkey(id, first_name, last_name, status, photo_url)`)
     .eq('id', id)
     .single();
   if (error) throw error;
@@ -91,6 +98,28 @@ export async function clearHouseholdHead(householdId) {
 
 export async function archiveHousehold(id) {
   return updateHousehold(id, { status: 'archived' });
+}
+
+/**
+ * Assign a resident to a household (set residents.household_id).
+ */
+export async function assignMemberToHousehold(residentId, householdId) {
+  const { error } = await supabase
+    .from('residents')
+    .update({ household_id: householdId })
+    .eq('id', residentId);
+  if (error) throw error;
+}
+
+/**
+ * Remove a resident from a household (clear residents.household_id).
+ */
+export async function removeMemberFromHousehold(residentId) {
+  const { error } = await supabase
+    .from('residents')
+    .update({ household_id: null })
+    .eq('id', residentId);
+  if (error) throw error;
 }
 
 export async function deleteHousehold(id) {
