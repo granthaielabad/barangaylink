@@ -1,166 +1,112 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
-import {
-  ResidentTable,
-  ResidentAddEdit,
-} from '../components/residents';
+import { ResidentTable, ResidentAddEdit } from '../components/residents';
 import { SortFilter, OrderFilter, Pagination, SearchBox, ArchiveModal, DeleteModal } from '../../../shared';
-
-const MOCK_RESIDENTS = [
-  {
-    id: 1,
-    residentNo: '1234-123-12',
-    name: 'JM Melca C. Nuevo',
-    address: 'Dahlia Avenue St.',
-    gender: 'Female',
-    birthdate: '11/21/2005',
-    contactNo: '09100976326',
-    status: 'Active',
-  },
-  {
-    id: 2,
-    residentNo: '1234-123-13',
-    name: 'John Doe',
-    address: 'Dahlia Avenue St.',
-    gender: 'Male',
-    birthdate: '01/01/2003',
-    contactNo: '09123456789',
-    status: 'Active',
-  },
-  {
-    id: 3,
-    residentNo: '1234-123-14',
-    name: 'Jane Smith',
-    address: 'Dahlia Avenue St.',
-    gender: 'Female',
-    birthdate: '12/23/2004',
-    contactNo: '09987654321',
-    status: 'Inactive',
-  },
-  ...Array.from({ length: 9 }, (_, i) => ({
-    id: i + 4,
-    residentNo: `1234-123-${String(15 + i).padStart(2, '0')}`,
-    name: `Resident ${i + 4}`,
-    address: 'Dahlia Avenue St.',
-    gender: i % 2 === 0 ? 'Male' : 'Female',
-    birthdate: '05/15/2000',
-    contactNo: '09123456789',
-    status: i % 3 === 0 ? 'Inactive' : 'Active',
-  })),
-];
-
-const PAGE_SIZE = 8;
+import { useResidents, useMutateResident } from '../../../hooks/queries/residents/useResidents';
+import { useResidentFilters } from '../../../store/filterStore';
+import { useAuth } from '../../../hooks/auth/useAuth';
+import { useAuthStore } from '../../../store/authStore';
+import { signOut } from '../../../services/supabase/authService';
+import toast from 'react-hot-toast';
 
 export default function Residents() {
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('name-asc');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedResident, setSelectedResident] = useState(null);
-  const [residentToArchive, setResidentToArchive] = useState(null);
-  const [residentToDelete, setResidentToDelete] = useState(null);
-  const [residents, setResidents] = useState(MOCK_RESIDENTS);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const filteredAndSorted = useMemo(() => {
-    let list = residents.filter(
-      (r) =>
-        !search ||
-        r.name?.toLowerCase().includes(search.toLowerCase()) ||
-        r.residentNo?.includes(search) ||
-        r.address?.toLowerCase().includes(search.toLowerCase())
-    );
-    if (sortBy === 'name-asc') list = [...list].sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
-    if (sortBy === 'name-desc') list = [...list].sort((a, b) => (b.name ?? '').localeCompare(a.name ?? ''));
-    if (sortBy === 'date-newest') list = [...list].sort((a, b) => new Date(b.birthdate ?? 0) - new Date(a.birthdate ?? 0));
-    if (sortBy === 'date-oldest') list = [...list].sort((a, b) => new Date(a.birthdate ?? 0) - new Date(b.birthdate ?? 0));
-    if (sortBy === 'status') list = [...list].sort((a, b) => (a.status ?? '').localeCompare(b.status ?? ''));
-    return list;
-  }, [residents, search, sortBy]);
+  const navigate = useNavigate();
+  const { profile } = useAuth();
+  const clearAuth = useAuthStore((s) => s.clearAuth);
 
-  const totalPages = Math.ceil(filteredAndSorted.length / PAGE_SIZE) || 1;
-  const paginatedResidents = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredAndSorted.slice(start, start + PAGE_SIZE);
-  }, [filteredAndSorted, currentPage]);
+  // ── Filter store — select each primitive individually ─────────
+  // Never destructure useXxxFilters() with no selector; it subscribes
+  // to the entire store object and causes an infinite render loop.
+  const search   = useResidentFilters((s) => s.search);
+  const sortBy   = useResidentFilters((s) => s.sortBy);
+  const order    = useResidentFilters((s) => s.order);
+  const page     = useResidentFilters((s) => s.page);
+  const pageSize = useResidentFilters((s) => s.pageSize);
+  const setSearch = useResidentFilters((s) => s.setSearch);
+  const setSortBy = useResidentFilters((s) => s.setSortBy);
+  const setOrder  = useResidentFilters((s) => s.setOrder);
+  const setPage   = useResidentFilters((s) => s.setPage);
+
+  // ── Server data ───────────────────────────────────────────────
+  const { data, isLoading, isFetching } = useResidents();
+  const { create, update, archive, remove } = useMutateResident();
+
+  const residents = data?.data ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const totalEntries = data?.total ?? 0;
+
+  // ── Adapter: map DB fields → table display shape ──────────────
+  const tableResidents = residents.map((r) => ({
+    id: r.id,
+    residentNo: r.id.slice(0, 8).toUpperCase(),
+    name: `${r.last_name}, ${r.first_name}${r.middle_name ? ' ' + r.middle_name : ''}${r.suffix ? ' ' + r.suffix : ''}`,
+    address: r.address_line ?? [r.households?.house_no, r.households?.street, r.puroks?.name].filter(Boolean).join(', ') ?? '—',
+    gender: r.sex === 'M' ? 'Male' : r.sex === 'F' ? 'Female' : r.sex ?? '—',
+    birthdate: r.date_of_birth ?? '—',
+    contactNo: r.contact_number ?? '—',
+    status: r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : '—',
+    _raw: r, // keep the raw DB object for edit pre-fill
+  }));
+
+  // ── Handlers ──────────────────────────────────────────────────
+  const handleLogout = async () => {
+    try { await signOut(); clearAuth(); navigate('/login', { replace: true }); }
+    catch (err) { toast.error(err.message ?? 'Logout failed.'); }
+  };
 
   const handleAddResident = (data) => {
-    const name = [data.lastName, data.firstName, data.middleName, data.suffix].filter(Boolean).join(' ');
-    const address = [data.houseNo, data.street, data.purok, data.barangay].filter(Boolean).join(', ');
-    setResidents((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        residentNo: data.idNumber || '—',
-        name: name || '—',
-        address: address || '—',
-        gender: data.gender || '—',
-        birthdate: data.birthdate || '—',
-        contactNo: data.contactNumber || '—',
-        status: data.status || 'Active',
-      },
-    ]);
-  };
-
-  const handleEditResident = (resident) => {
-    console.log('handleEditResident called with:', resident);
-    setSelectedResident(resident);
-    setEditModalOpen(true);
-  };
-
-  const handleArchiveResident = (resident) => {
-    console.log('handleArchiveResident called with:', resident);
-    setResidentToArchive(resident);
-    setArchiveModalOpen(true);
-  };
-
-  const handleDeleteResident = (resident) => {
-    console.log('handleDeleteResident called with:', resident);
-    setResidentToDelete(resident);
-    setDeleteModalOpen(true);
-  };
-
-  const handleConfirmArchive = () => {
-    if (residentToArchive) {
-      setResidents((prev) => prev.filter((r) => r.id !== residentToArchive.id));
-      setArchiveModalOpen(false);
-      setResidentToArchive(null);
-      setCurrentPage(1);
-    }
-  };
-
-  const handleConfirmDelete = () => {
-    if (residentToDelete) {
-      setResidents((prev) => prev.filter((r) => r.id !== residentToDelete.id));
-      setDeleteModalOpen(false);
-      setResidentToDelete(null);
-      setCurrentPage(1);
-    }
+    const payload = {
+      first_name: data.firstName,
+      middle_name: data.middleName || null,
+      last_name: data.lastName,
+      suffix: data.suffix || null,
+      date_of_birth: data.birthdate || null,
+      sex: data.gender === 'Male' ? 'M' : data.gender === 'Female' ? 'F' : null,
+      contact_number: data.contactNumber || null,
+      address_line: [data.houseNo, data.street, data.purok, data.barangay].filter(Boolean).join(', ') || null,
+      status: (data.status ?? 'active').toLowerCase(),
+      // purok_id must be set — defaults to staff's own purok via RLS
+    };
+    create.mutate(payload);
+    setAddModalOpen(false);
   };
 
   const handleUpdateResident = (data) => {
-    const name = [data.lastName, data.firstName, data.middleName, data.suffix].filter(Boolean).join(' ');
-    const address = [data.houseNo, data.street, data.purok, data.barangay].filter(Boolean).join(', ');
-    setResidents((prev) =>
-      prev.map((r) =>
-        r.id === selectedResident.id
-          ? {
-            ...r,
-            residentNo: data.idNumber || r.residentNo,
-            name: name || r.name,
-            address: address || r.address,
-            gender: data.gender || r.gender,
-            birthdate: data.birthdate || r.birthdate,
-            contactNo: data.contactNumber || r.contactNo,
-            status: data.status || r.status,
-          }
-          : r
-      )
-    );
+    if (!selectedResident) return;
+    const payload = {
+      first_name: data.firstName,
+      middle_name: data.middleName || null,
+      last_name: data.lastName,
+      suffix: data.suffix || null,
+      date_of_birth: data.birthdate || null,
+      sex: data.gender === 'Male' ? 'M' : data.gender === 'Female' ? 'F' : null,
+      contact_number: data.contactNumber || null,
+      address_line: [data.houseNo, data.street, data.purok, data.barangay].filter(Boolean).join(', ') || null,
+      status: (data.status ?? 'active').toLowerCase(),
+    };
+    update.mutate({ id: selectedResident._raw?.id ?? selectedResident.id, payload });
+    setEditModalOpen(false);
+    setSelectedResident(null);
+  };
+
+  const handleConfirmArchive = () => {
+    if (selectedResident) archive.mutate(selectedResident._raw?.id ?? selectedResident.id);
+    setArchiveModalOpen(false);
+    setSelectedResident(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedResident) remove.mutate(selectedResident._raw?.id ?? selectedResident.id);
+    setDeleteModalOpen(false);
     setSelectedResident(null);
   };
 
@@ -169,18 +115,28 @@ export default function Residents() {
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto relative">
-        <DashboardHeader title="Resident" onMenuToggle={() => setSidebarOpen(o => !o)} />
+        <DashboardHeader
+          title="Resident"
+          userName={profile?.full_name ?? ''}
+          userRole={profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : ''}
+          onLogout={handleLogout}
+          onMenuToggle={() => setSidebarOpen((o) => !o)}
+        />
 
         <section className="px-5 py-7">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <h1 className='mb-10 font-semibold text-[25px]'>Resident List</h1>
-            {/* Search, Sort, Actions */}
+            <h1 className="mb-10 font-semibold text-[25px]">Resident List</h1>
+
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                <SearchBox value={search} onChange={setSearch} placeholder="Search" />
+                <SearchBox
+                  value={search}
+                  onChange={(v) => { setSearch(v); setPage(1); }}
+                  placeholder="Search"
+                />
                 <div className="flex items-center gap-2">
                   <SortFilter value={sortBy} onChange={setSortBy} />
-                  <OrderFilter value={sortBy} onChange={setSortBy} />
+                  <OrderFilter value={order} onChange={setOrder} />
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
@@ -194,65 +150,56 @@ export default function Residents() {
               </div>
             </div>
 
-            {/* Table */}
-            <ResidentTable
-              residents={paginatedResidents}
-              onEditResident={handleEditResident}
-              onArchiveResident={handleArchiveResident}
-              onDeleteResident={handleDeleteResident}
-            />
+            {isLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+              </div>
+            ) : (
+              <ResidentTable
+                residents={tableResidents}
+                onEditResident={(r) => { setSelectedResident(r); setEditModalOpen(true); }}
+                onArchiveResident={(r) => { setSelectedResident(r); setArchiveModalOpen(true); }}
+                onDeleteResident={(r) => { setSelectedResident(r); setDeleteModalOpen(true); }}
+              />
+            )}
 
-            {/* Pagination */}
             <Pagination
-              currentPage={currentPage}
+              currentPage={page}
               totalPages={totalPages}
-              totalEntries={filteredAndSorted.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setCurrentPage}
+              totalEntries={totalEntries}
+              pageSize={pageSize}
+              onPageChange={setPage}
             />
           </div>
         </section>
       </main>
 
-      {/* Modals rendered outside scrollable main */}
       <ResidentAddEdit
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onSubmit={handleAddResident}
         mode="add"
       />
-
       <ResidentAddEdit
         isOpen={editModalOpen}
-        onClose={() => {
-          setEditModalOpen(false);
-          setSelectedResident(null);
-        }}
+        onClose={() => { setEditModalOpen(false); setSelectedResident(null); }}
         onSubmit={handleUpdateResident}
         initialData={selectedResident}
         mode="edit"
       />
-
       <ArchiveModal
         isOpen={archiveModalOpen}
         title="Resident"
         message="This record will be archived and removed from the active list."
         onConfirm={handleConfirmArchive}
-        onCancel={() => {
-          setArchiveModalOpen(false);
-          setResidentToArchive(null);
-        }}
+        onCancel={() => { setArchiveModalOpen(false); setSelectedResident(null); }}
       />
-
       <DeleteModal
         isOpen={deleteModalOpen}
         title="Resident"
-        message="This record will be archived and deleted from the active list."
+        message="This action is permanent and cannot be undone."
         onConfirm={handleConfirmDelete}
-        onCancel={() => {
-          setDeleteModalOpen(false);
-          setResidentToDelete(null);
-        }}
+        onCancel={() => { setDeleteModalOpen(false); setSelectedResident(null); }}
       />
     </div>
   );

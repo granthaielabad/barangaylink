@@ -6,6 +6,8 @@ import {
   PasswordForm,
   SuccessStep,
 } from '../components/';
+import { sendOtp, verifyOtp, updatePassword } from '../../../services/supabase/authService';
+import toast from 'react-hot-toast';
 
 const STEPS = {
   EMAIL: 1,
@@ -21,18 +23,37 @@ const BREADCRUMBS = {
 
 export default function ForgotPassword() {
   const [step, setStep] = useState(STEPS.EMAIL);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', otp: '', password: '' });
 
   const breadcrumbItems = BREADCRUMBS[step] ?? BREADCRUMBS[STEPS.EMAIL];
 
-  const handleEmailSubmit = (data) => {
-    setFormData((prev) => ({ ...prev, ...data }));
-    setStep(STEPS.NEW_PASSWORD);
+  // ── Step 1: Verify email + OTP ────────────────────────────
+  const handleEmailSubmit = async ({ email, otp }) => {
+    setIsLoading(true);
+    try {
+      await verifyOtp({ email, otp });
+      setFormData((prev) => ({ ...prev, email, otp }));
+      setStep(STEPS.NEW_PASSWORD);
+    } catch (err) {
+      toast.error(err.message ?? 'Invalid or expired verification code.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handlePasswordSubmit = (data) => {
-    setFormData((prev) => ({ ...prev, ...data }));
-    setStep(STEPS.SUCCESS);
+  // ── Step 2: Set new password ──────────────────────────────
+  const handlePasswordSubmit = async ({ password }) => {
+    setIsLoading(true);
+    try {
+      await updatePassword(password);
+      setFormData((prev) => ({ ...prev, password }));
+      setStep(STEPS.SUCCESS);
+    } catch (err) {
+      toast.error(err.message ?? 'Failed to update password. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const header = (
@@ -45,10 +66,7 @@ export default function ForgotPassword() {
         {breadcrumbItems.map((item, i) => (
           <span key={`${item}-${i}`} className="flex items-center">
             {item === 'HOME' ? (
-              <Link
-                to="/"
-                className="hover:text-white hover:underline transition-colors"
-              >
+              <Link to="/" className="hover:text-white hover:underline transition-colors">
                 {item}
               </Link>
             ) : (
@@ -73,12 +91,14 @@ export default function ForgotPassword() {
             <EmailCredentialsForm
               onSubmit={handleEmailSubmit}
               defaultEmail={formData.email}
+              isLoading={isLoading}
             />
           )}
           {step === STEPS.NEW_PASSWORD && (
             <PasswordForm
               onSubmit={handlePasswordSubmit}
               variant="forgotPassword"
+              isLoading={isLoading}
             />
           )}
           {step !== STEPS.SUCCESS && (

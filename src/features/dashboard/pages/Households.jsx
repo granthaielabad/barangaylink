@@ -1,224 +1,97 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
-import {
-  HouseholdTable,
-  HouseholdAddEdit,
-} from '../components/households';
+import { HouseholdTable, HouseholdAddEdit } from '../components/households';
 import { SortFilter, OrderFilter, StatusFilter, Pagination, SearchBox, ArchiveModal, DeleteModal } from '../../../shared';
-
-const MOCK_HOUSEHOLDS = [
-  {
-    id: 1,
-    householdNo: '1-2345',
-    headMemberName: 'JM Melca C. Nueva',
-    address: 'Dahlia Avenue St.',
-    members: 5,
-    status: 'Active',
-  },
-  {
-    id: 2,
-    householdNo: '2-3456',
-    headMemberName: 'Raine Heart Nocion',
-    address: 'Dahlia Avenue St.',
-    members: 4,
-    status: 'Active',
-  },
-  {
-    id: 3,
-    householdNo: '3-4567',
-    headMemberName: 'Ariana Roxanne Malegro',
-    address: 'Dahlia Avenue St.',
-    members: 7,
-    status: 'Active',
-  },
-  {
-    id: 4,
-    householdNo: '4-5678',
-    headMemberName: 'Sophia Nicole Cecillano',
-    address: 'Dahlia Avenue St.',
-    members: 3,
-    status: 'Active',
-  },
-  {
-    id: 5,
-    householdNo: '5-6789',
-    headMemberName: 'Carlo Jesus Cacho',
-    address: 'Dahlia Avenue St.',
-    members: 4,
-    status: 'Active',
-  },
-  {
-    id: 6,
-    householdNo: '6-7891',
-    headMemberName: 'Grant Haell Abad',
-    address: 'Dahlia Avenue St.',
-    members: 6,
-    status: 'Inactive',
-  },
-  {
-    id: 7,
-    householdNo: '7-8912',
-    headMemberName: 'Murphy De Guzman',
-    address: 'Dahlia Avenue St.',
-    members: 5,
-    status: 'Inactive',
-  },
-  {
-    id: 8,
-    householdNo: '8-9123',
-    headMemberName: 'Jhon Carlo T. Millan',
-    address: 'Dahlia Avenue St.',
-    members: 2,
-    status: 'Inactive',
-  },
-  {
-    id: 9,
-    householdNo: '9-1234',
-    headMemberName: 'Household Member 9',
-    address: 'Dahlia Avenue St.',
-    members: 3,
-    status: 'Active',
-  },
-  {
-    id: 10,
-    householdNo: '10-2345',
-    headMemberName: 'Household Member 10',
-    address: 'Dahlia Avenue St.',
-    members: 4,
-    status: 'Active',
-  },
-  {
-    id: 11,
-    householdNo: '11-3456',
-    headMemberName: 'Household Member 11',
-    address: 'Dahlia Avenue St.',
-    members: 5,
-    status: 'Inactive',
-  },
-  {
-    id: 12,
-    householdNo: '12-4567',
-    headMemberName: 'Household Member 12',
-    address: 'Dahlia Avenue St.',
-    members: 6,
-    status: 'Active',
-  },
-];
-
-const PAGE_SIZE = 8;
+import { useHouseholds, useMutateHousehold } from '../../../hooks/queries/households/useHouseholds';
+import { useHouseholdFilters } from '../../../store/filterStore';
+import { useAuth } from '../../../hooks/auth/useAuth';
+import { useAuthStore } from '../../../store/authStore';
+import { signOut } from '../../../services/supabase/authService';
+import toast from 'react-hot-toast';
 
 export default function Household() {
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('name-asc');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedHousehold, setSelectedHousehold] = useState(null);
-  const [householdToArchive, setHouseholdToArchive] = useState(null);
-  const [householdToDelete, setHouseholdToDelete] = useState(null);
-  const [households, setHouseholds] = useState(MOCK_HOUSEHOLDS);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const filteredAndSorted = useMemo(() => {
-    let list = households.filter((h) => {
-      // Search filter
-      const matchesSearch =
-        !search ||
-        h.householdNo?.includes(search) ||
-        h.headMemberName?.toLowerCase().includes(search.toLowerCase()) ||
-        h.address?.toLowerCase().includes(search.toLowerCase());
+  const navigate = useNavigate();
+  const { profile } = useAuth();
+  const clearAuth = useAuthStore((s) => s.clearAuth);
 
-      // Status filter
-      const matchesStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'active' && h.status === 'Active') ||
-        (statusFilter === 'inactive' && h.status === 'Inactive');
+  // ── Filter store — select each primitive individually ─────────
+  const search    = useHouseholdFilters((s) => s.search);
+  const sortBy    = useHouseholdFilters((s) => s.sortBy);
+  const order     = useHouseholdFilters((s) => s.order);
+  const status    = useHouseholdFilters((s) => s.status);
+  const page      = useHouseholdFilters((s) => s.page);
+  const pageSize  = useHouseholdFilters((s) => s.pageSize);
+  const setSearch = useHouseholdFilters((s) => s.setSearch);
+  const setSortBy = useHouseholdFilters((s) => s.setSortBy);
+  const setOrder  = useHouseholdFilters((s) => s.setOrder);
+  const setStatus = useHouseholdFilters((s) => s.setStatus);
+  const setPage   = useHouseholdFilters((s) => s.setPage);
 
-      return matchesSearch && matchesStatus;
-    });
+  const { data, isLoading } = useHouseholds();
+  const { create, update, archive, remove } = useMutateHousehold();
 
-    // Sort
-    if (sortBy === 'name-asc') list = [...list].sort((a, b) => (a.headMemberName ?? '').localeCompare(b.headMemberName ?? ''));
-    if (sortBy === 'name-desc') list = [...list].sort((a, b) => (b.headMemberName ?? '').localeCompare(a.headMemberName ?? ''));
-    if (sortBy === 'date-newest') list = [...list].sort((a, b) => b.id - a.id);
-    if (sortBy === 'date-oldest') list = [...list].sort((a, b) => a.id - b.id);
-    if (sortBy === 'status') list = [...list].sort((a, b) => (a.status ?? '').localeCompare(b.status ?? ''));
+  const households = data?.data ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const totalEntries = data?.total ?? 0;
 
-    return list;
-  }, [households, search, sortBy, statusFilter]);
+  // Adapter: map DB fields → table display shape
+  const tableHouseholds = households.map((h) => ({
+    id: h.id,
+    householdNo: h.house_no ?? '—',
+    headMemberName: h.head
+      ? `${h.head.first_name} ${h.head.last_name}`.trim()
+      : '—',
+    address: [h.house_no, h.street, h.puroks?.name].filter(Boolean).join(', ') || '—',
+    members: '—', // member count requires a separate count query — deferred
+    status: h.status ? h.status.charAt(0).toUpperCase() + h.status.slice(1) : '—',
+    _raw: h,
+  }));
 
-  const totalPages = Math.ceil(filteredAndSorted.length / PAGE_SIZE) || 1;
-  const paginatedHouseholds = useMemo(() => {
-    const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredAndSorted.slice(start, start + PAGE_SIZE);
-  }, [filteredAndSorted, currentPage]);
+  const handleLogout = async () => {
+    try { await signOut(); clearAuth(); navigate('/login', { replace: true }); }
+    catch (err) { toast.error(err.message ?? 'Logout failed.'); }
+  };
 
   const handleAddHousehold = (data) => {
-    setHouseholds((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        householdNo: data.householdNo || '—',
-        headMemberName: data.headName || '—',
-        address: data.address || '—',
-        members: data.members || [],
-        status: 'Active',
-      },
-    ]);
-    setCurrentPage(1);
-  };
-
-  const handleEditHousehold = (household) => {
-    setSelectedHousehold(household);
-    setEditModalOpen(true);
-  };
-
-  const handleArchiveHousehold = (household) => {
-    setHouseholdToArchive(household);
-    setArchiveModalOpen(true);
-  };
-
-  const handleDeleteHousehold = (household) => {
-    setHouseholdToDelete(household);
-    setDeleteModalOpen(true);
-  };
-
-  const handleConfirmArchive = () => {
-    if (householdToArchive) {
-      setHouseholds((prev) => prev.filter((h) => h.id !== householdToArchive.id));
-      setArchiveModalOpen(false);
-      setHouseholdToArchive(null);
-      setCurrentPage(1);
-    }
-  };
-
-  const handleConfirmDelete = () => {
-    if (householdToDelete) {
-      setHouseholds((prev) => prev.filter((h) => h.id !== householdToDelete.id));
-      setDeleteModalOpen(false);
-      setHouseholdToDelete(null);
-      setCurrentPage(1);
-    }
+    create.mutate({
+      house_no: data.householdNo || null,
+      street: data.address || null,
+      status: 'active',
+    });
+    setAddModalOpen(false);
   };
 
   const handleUpdateHousehold = (data) => {
-    setHouseholds((prev) =>
-      prev.map((h) =>
-        h.id === selectedHousehold.id
-          ? {
-            ...h,
-            householdNo: data.householdNo || h.householdNo,
-            headMemberName: data.headName || h.headMemberName,
-            address: data.address || h.address,
-            members: data.members || h.members,
-          }
-          : h
-      )
-    );
+    if (!selectedHousehold) return;
+    update.mutate({
+      id: selectedHousehold._raw?.id ?? selectedHousehold.id,
+      payload: {
+        house_no: data.householdNo || null,
+        street: data.address || null,
+      },
+    });
+    setEditModalOpen(false);
+    setSelectedHousehold(null);
+  };
+
+  const handleConfirmArchive = () => {
+    if (selectedHousehold) archive.mutate(selectedHousehold._raw?.id ?? selectedHousehold.id);
+    setArchiveModalOpen(false);
+    setSelectedHousehold(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedHousehold) remove.mutate(selectedHousehold._raw?.id ?? selectedHousehold.id);
+    setDeleteModalOpen(false);
     setSelectedHousehold(null);
   };
 
@@ -227,20 +100,25 @@ export default function Household() {
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto relative">
-        <DashboardHeader title="Household" onMenuToggle={() => setSidebarOpen(o => !o)} />
+        <DashboardHeader
+          title="Household"
+          userName={profile?.full_name ?? ''}
+          userRole={profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : ''}
+          onLogout={handleLogout}
+          onMenuToggle={() => setSidebarOpen((o) => !o)}
+        />
 
         <section className="px-5 py-7">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <h1 className="mb-10 font-semibold text-[25px]">Household List</h1>
 
-            {/* Search, Sort, Filters, Actions */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                <SearchBox value={search} onChange={setSearch} placeholder="Search" />
+                <SearchBox value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search" />
                 <div className="flex items-center gap-2 flex-wrap">
                   <SortFilter value={sortBy} onChange={setSortBy} />
-                  <StatusFilter value={statusFilter} onChange={setStatusFilter} />
-                  <OrderFilter value={sortBy} onChange={setSortBy} />
+                  <StatusFilter value={status} onChange={(v) => { setStatus(v); setPage(1); }} />
+                  <OrderFilter value={order} onChange={setOrder} />
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
@@ -254,65 +132,51 @@ export default function Household() {
               </div>
             </div>
 
-            {/* Table */}
-            <HouseholdTable
-              households={paginatedHouseholds}
-              onEditHousehold={handleEditHousehold}
-              onArchiveHousehold={handleArchiveHousehold}
-              onDeleteHousehold={handleDeleteHousehold}
-            />
+            {isLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+              </div>
+            ) : (
+              <HouseholdTable
+                households={tableHouseholds}
+                onEditHousehold={(h) => { setSelectedHousehold(h); setEditModalOpen(true); }}
+                onArchiveHousehold={(h) => { setSelectedHousehold(h); setArchiveModalOpen(true); }}
+                onDeleteHousehold={(h) => { setSelectedHousehold(h); setDeleteModalOpen(true); }}
+              />
+            )}
 
-            {/* Pagination */}
             <Pagination
-              currentPage={currentPage}
+              currentPage={page}
               totalPages={totalPages}
-              totalEntries={filteredAndSorted.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setCurrentPage}
+              totalEntries={totalEntries}
+              pageSize={pageSize}
+              onPageChange={setPage}
             />
           </div>
         </section>
       </main>
 
-      {/* Modals rendered outside scrollable main */}
-      <HouseholdAddEdit
-        isOpen={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
-        onSubmit={handleAddHousehold}
-        mode="add"
-      />
-
+      <HouseholdAddEdit isOpen={addModalOpen} onClose={() => setAddModalOpen(false)} onSubmit={handleAddHousehold} mode="add" />
       <HouseholdAddEdit
         isOpen={editModalOpen}
-        onClose={() => {
-          setEditModalOpen(false);
-          setSelectedHousehold(null);
-        }}
+        onClose={() => { setEditModalOpen(false); setSelectedHousehold(null); }}
         onSubmit={handleUpdateHousehold}
         initialData={selectedHousehold}
         mode="edit"
       />
-
       <ArchiveModal
         isOpen={archiveModalOpen}
         title="Household"
         message="This record will be archived and removed from the active list."
         onConfirm={handleConfirmArchive}
-        onCancel={() => {
-          setArchiveModalOpen(false);
-          setHouseholdToArchive(null);
-        }}
+        onCancel={() => { setArchiveModalOpen(false); setSelectedHousehold(null); }}
       />
-
       <DeleteModal
         isOpen={deleteModalOpen}
         title="Household"
-        message="This record will be deleted and removed from the active list."
+        message="This action is permanent and cannot be undone."
         onConfirm={handleConfirmDelete}
-        onCancel={() => {
-          setDeleteModalOpen(false);
-          setHouseholdToDelete(null);
-        }}
+        onCancel={() => { setDeleteModalOpen(false); setSelectedHousehold(null); }}
       />
     </div>
   );

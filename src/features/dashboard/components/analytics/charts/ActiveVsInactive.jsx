@@ -24,14 +24,22 @@ const options = {
   },
 };
 
-const getData = (filters) => {
-  const year = parseInt(filters?.year || new Date().getFullYear(), 10);
-  const yearOffset = year - new Date().getFullYear();
-  const baseActive = 92.28;
-  const baseInactive = 7.72;
-  const active = Math.max(85, Math.min(98, baseActive + yearOffset * 0.2));
-  const inactive = 100 - active;
-  
+// Real data: analyticsData.eidStatus = { active: number, inactive: number } (percentages)
+// Falls back to original mock formula when analyticsData is not yet loaded.
+const getData = (filters, analyticsData) => {
+  let active, inactive;
+
+  if (analyticsData?.eidStatus) {
+    active   = analyticsData.eidStatus.active;
+    inactive = analyticsData.eidStatus.inactive;
+  } else {
+    const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
+    const yearOffset = year - new Date().getFullYear();
+    const baseActive = 92.28;
+    active   = Math.max(85, Math.min(98, baseActive + yearOffset * 0.2));
+    inactive = 100 - active;
+  }
+
   return {
     labels: ['Active', 'Inactive'],
     datasets: [
@@ -46,22 +54,22 @@ const getData = (filters) => {
   };
 };
 
-export default function ActiveVsInactive({ filters }) {
+export default function ActiveVsInactive({ filters, analyticsData }) {
   const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+  const chartRef  = useRef(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext('2d');
     if (chartRef.current) chartRef.current.destroy();
-    const chartData = getData(filters);
+    const chartData = getData(filters, analyticsData);
     chartRef.current = new Chart(ctx, {
       type: 'doughnut',
       data: chartData,
       options,
     });
     return () => chartRef.current?.destroy();
-  }, [filters]);
+  }, [filters, analyticsData]);
 
   return (
     <div className="h-[280px] w-full relative">

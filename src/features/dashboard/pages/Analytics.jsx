@@ -13,6 +13,7 @@ import {
   ResidentsTransferredOut,
   PopulationGrowth,
 } from '../components/analytics';
+import { useAnalytics } from '../../../hooks/queries/analytics/useAnalytics';
 
 export default function Analytics() {
   const [filters, setFilters] = useState({
@@ -25,6 +26,10 @@ export default function Analytics() {
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Single parallel fetch — all chart components read from this one result.
+  // analyticsData is undefined while loading; each chart falls back gracefully.
+  const { data: analyticsData } = useAnalytics();
+
   return (
     <div className="min-h-screen flex bg-[#F3F7F3]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
@@ -34,14 +39,14 @@ export default function Analytics() {
 
         <section className="px-5 py-7">
           <Filters onFilterChange={setFilters} />
-          <AnalyticsCards filters={filters} />
+          <AnalyticsCards filters={filters} analyticsData={analyticsData} />
 
           {/* Demographic Section */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
             <h2 className="text-[21px] font-semibold text-gray-900 mb-4">Demographic</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <PopulationByAgeGroup filters={filters} />
-              <GenderDistribution filters={filters} />
+              <PopulationByAgeGroup filters={filters} analyticsData={analyticsData} />
+              <GenderDistribution filters={filters} analyticsData={analyticsData} />
             </div>
           </div>
 
@@ -50,7 +55,7 @@ export default function Analytics() {
           <div className="mb-6">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
               <h2 className="text-[21px] font-semibold text-gray-900 mb-4">Household</h2>
-              <HouseholdsPerPurok filters={filters} />
+              <HouseholdsPerPurok filters={filters} analyticsData={analyticsData} />
             </div>
           </div>
 
@@ -59,10 +64,10 @@ export default function Analytics() {
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
               <h2 className="text-[21px] font-semibold text-gray-900 mb-4">Brgy ID</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <IdRenewalStatistics filters={filters} />
+                <IdRenewalStatistics filters={filters} analyticsData={analyticsData} />
                 <div>
                   <h3 className="text-base font-medium text-gray-700 mb-3">Status</h3>
-                  <ActiveVsInactive filters={filters} />
+                  <ActiveVsInactive filters={filters} analyticsData={analyticsData} />
                 </div>
               </div>
             </div>
