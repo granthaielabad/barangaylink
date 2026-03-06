@@ -9,7 +9,7 @@ import { useHouseholdFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
-import toast from 'react-hot-toast';
+import { HOUSEHOLD_STATUS_OPTIONS } from '../../../core/constants';
 
 export default function Household() {
   const [sidebarOpen, setSidebarOpen]           = useState(false);
@@ -46,8 +46,7 @@ export default function Household() {
   // ── Adapter ───────────────────────────────────────────────────
   const tableHouseholds = households.map((h, idx) => {
     const globalIndex = (page - 1) * pageSize + idx + 1;
-    const n = String(globalIndex).padStart(7, '0');
-    const householdNo = `${n.slice(0, 4)}-${n.slice(4, 6)}-${n.slice(6)}`;
+    const householdNo = `${globalIndex}-${String(globalIndex).padStart(4, '0')}`;
 
     return {
       id: h.id,
@@ -58,7 +57,7 @@ export default function Household() {
       address: [h.house_no, h.street].filter(Boolean).join(' ') || '—',
       members: h._memberCount ?? 0,
       status:  h.status ? h.status.charAt(0).toUpperCase() + h.status.slice(1) : '—',
-      _raw: h,
+      _raw: { ...h, householdNo },
     };
   });
 
@@ -82,7 +81,6 @@ export default function Household() {
     head_resident_id: data.headResidentId || null,
     ownership_type:   data.ownershipType  || null,
     dwelling_type:    data.dwellingType   || null,
-    monthly_income:   data.monthlyIncome !== '' ? Number(data.monthlyIncome) : null,
     status:           data.status         || 'active',
     purok_id:         1,
   });
@@ -149,7 +147,7 @@ export default function Household() {
                 <SearchBox value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search" />
                 <div className="flex items-center gap-2 flex-wrap">
                   <SortFilter value={sortBy} onChange={setSortBy} />
-                  <StatusFilter value={status} onChange={(v) => { setStatus(v); setPage(1); }} />
+                  <StatusFilter value={status} onChange={(v) => { setStatus(v); setPage(1); }} options={HOUSEHOLD_STATUS_OPTIONS} />
                   <OrderFilter value={order} onChange={setOrder} />
                 </div>
               </div>

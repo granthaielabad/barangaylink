@@ -3,28 +3,24 @@ import { IoMdAdd } from 'react-icons/io';
 import HouseholdForm from './HouseholdForm';
 
 const emptyForm = {
-  houseNo:       '',
-  street:        '',
+  houseNo:        '',
+  street:         '',
   headResidentId: '',
-  ownershipType: '',
-  dwellingType:  '',
-  monthlyIncome: '',
-  status:        'active',
-  members:       [], // [{ id, name }]
+  ownershipType:  '',
+  dwellingType:   '',
+  status:         'active',
+  members:        [],
 };
 
 function buildEditForm(raw) {
   if (!raw) return emptyForm;
   return {
-    houseNo:        raw.house_no        ?? '',
-    street:         raw.street          ?? '',
+    houseNo:        raw.house_no         ?? '',
+    street:         raw.street           ?? '',
     headResidentId: raw.head_resident_id ?? '',
     ownershipType:  raw.ownership_type   ?? '',
     dwellingType:   raw.dwelling_type    ?? '',
-    monthlyIncome:  raw.monthly_income   ?? '',
     status:         raw.status           ?? 'active',
-    // Members are residents linked via household_id — loaded separately in HouseholdForm
-    // We pass the pre-fetched member list from the table row's _raw if available
     members: (raw._members ?? []).map((m) => ({
       id:   m.id,
       name: `${m.last_name ?? ''} ${m.first_name ?? ''}`.trim(),
@@ -109,6 +105,7 @@ export default function HouseholdAddEditModal({
               value={formData}
               onChange={setFormData}
               householdId={raw?.id ?? null}
+              householdNo={raw?.householdNo ?? ''}
             />
           </div>
 

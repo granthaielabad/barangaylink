@@ -37,7 +37,7 @@ export default function Eid() {
 
   const { data, isLoading } = useEids();
   const { data: stats } = useEidStats();
-  const { revoke, suspend, remove } = useMutateEid();
+  const { issue, revoke, suspend, remove } = useMutateEid();
 
   const eids = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -59,6 +59,8 @@ export default function Eid() {
       address,
       status: e.status ? e.status.charAt(0).toUpperCase() + e.status.slice(1) : '—',
       issuedAt: e.issued_at,
+      qrToken: e.qr_token ?? null,
+      photoUrl: r?.photo_url ?? null,
       _raw: e,
     };
   });
@@ -160,14 +162,24 @@ export default function Eid() {
         </section>
       </main>
 
-      {/* EID form modal — note: Create now calls Edge Function via issueEid(residentId) */}
+      {/* EID form modal */}
       <EidAddEditModal
         isOpen={eidFormModalOpen}
         onClose={() => { setEidFormModalOpen(false); setSelectedEid(null); }}
-        onSubmit={() => {
-          // Issue EID via Edge Function — requires resident selection (future enhancement)
-          toast('EID issuance via Edge Function requires a resident to be linked. Select a resident first.');
-          setEidFormModalOpen(false);
+        onSubmit={async ({ residentId, hasEid, eidStatus, photoUrl }) => {
+          if (hasEid && eidStatus === 'active') {
+            toast.error('This resident already has an active eID.');
+            return;
+          }
+          try {
+            await issue.mutateAsync(residentId);
+            // If a photo was uploaded, persist it to the resident record
+            if (photoUrl) {
+              // photo persistence handled by Edge Function or separate upload flow
+            }
+            setEidFormModalOpen(false);
+            setSelectedEid(null);
+          } catch { /* already toasted by mutation */ }
         }}
         initialData={selectedEid}
         mode={eidFormMode}

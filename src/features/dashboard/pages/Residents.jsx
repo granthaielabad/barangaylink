@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import { ResidentTable, ResidentAddEdit } from '../components/residents';
-import { SortFilter, OrderFilter, Pagination, SearchBox, ArchiveModal, DeleteModal } from '../../../shared';
+import { SortFilter, OrderFilter, StatusFilter, Pagination, SearchBox, ArchiveModal, DeleteModal } from '../../../shared';
 import { useResidents, useMutateResident } from '../../../hooks/queries/residents/useResidents';
 import { useResidentFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
-import { BARANGAY } from '../../../core/constants';
+import { RESIDENT_STATUS_FILTER_OPTIONS } from '../../../core/constants';
 
 export default function Residents() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -29,11 +29,13 @@ export default function Residents() {
   const search   = useResidentFilters((s) => s.search);
   const sortBy   = useResidentFilters((s) => s.sortBy);
   const order    = useResidentFilters((s) => s.order);
+  const status   = useResidentFilters((s) => s.status);
   const page     = useResidentFilters((s) => s.page);
   const pageSize = useResidentFilters((s) => s.pageSize);
   const setSearch = useResidentFilters((s) => s.setSearch);
   const setSortBy = useResidentFilters((s) => s.setSortBy);
   const setOrder  = useResidentFilters((s) => s.setOrder);
+  const setStatus = useResidentFilters((s) => s.setStatus);
   const setPage   = useResidentFilters((s) => s.setPage);
 
   // ── Server data ───────────────────────────────────────────────
@@ -151,6 +153,7 @@ export default function Residents() {
                 />
                 <div className="flex items-center gap-2">
                   <SortFilter value={sortBy} onChange={setSortBy} />
+                  <StatusFilter value={status} onChange={(v) => { setStatus(v); setPage(1); }} options={RESIDENT_STATUS_FILTER_OPTIONS} />
                   <OrderFilter value={order} onChange={setOrder} />
                 </div>
               </div>

@@ -57,7 +57,13 @@ export const useHouseholdFilters = create(
 );
 
 export const useEidFilters = create(
-  devtools(createFilterSlice('eid'), { name: 'eid-filters' })
+  devtools(
+    (set, get) => ({
+      ...createFilterSlice('eid')(set, get),
+      sortBy: 'issued_at', // override: electronic_ids has no created_at column
+    }),
+    { name: 'eid-filters' }
+  )
 );
 
 export const useDocumentRequestFilters = create(

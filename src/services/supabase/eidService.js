@@ -50,13 +50,24 @@ export async function getEidByResidentId(residentId) {
 
 export async function issueEid(residentId) {
   const { data: { session } } = await supabase.auth.getSession();
-  const res = await supabase.functions.invoke('issue-eid', {
-    body: { resident_id: residentId },
-    headers: { Authorization: `Bearer ${session?.access_token}` },
+  if (!session?.access_token) throw new Error('Not authenticated');
+
+  const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnon = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/issue-eid`, {
+    method: 'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+      'apikey':        supabaseAnon,
+    },
+    body: JSON.stringify({ resident_id: residentId }),
   });
-  if (res.error) throw res.error;
-  if (!res.data?.success) throw new Error(res.data?.error ?? 'Failed to issue EID');
-  return res.data.eid;
+
+  const data = await res.json();
+  if (!res.ok || !data?.success) throw new Error(data?.error ?? 'Failed to issue eID');
+  return data.eid;
 }
 
 export async function revokeEid(id) {

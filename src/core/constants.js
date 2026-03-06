@@ -1,3 +1,4 @@
+// src/core/constants.js
 // ─────────────────────────────────────────────────────────────
 // Single source of truth for all domain constants.
 // Import from here — never hardcode strings in components.
@@ -17,14 +18,22 @@ export const RESIDENT_STATUS = {
   ARCHIVED: 'archived',
 };
 
-export const RESIDENT_STATUS_OPTIONS = [
+// Used in the IdentificationDetailForm status dropdown (no 'all', no 'archived', no 'pending', no 'deactivated')
+export const RESIDENT_STATUS_FORM_OPTIONS = [
+  { value: 'active',   label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+];
+
+// Used in the Residents table StatusFilter
+export const RESIDENT_STATUS_FILTER_OPTIONS = [
   { value: 'all',         label: 'All Status' },
   { value: 'active',      label: 'Active' },
   { value: 'inactive',    label: 'Inactive' },
-  { value: 'pending',     label: 'Pending' },
-  { value: 'deactivated', label: 'Deactivated' },
   { value: 'archived',    label: 'Archived' },
 ];
+
+// Keep the old name as an alias so nothing else breaks
+export const RESIDENT_STATUS_OPTIONS = RESIDENT_STATUS_FILTER_OPTIONS;
 
 export const EID_STATUS = {
   ACTIVE: 'active',
@@ -128,7 +137,16 @@ export const DWELLING_TYPE_OPTIONS = [
   { value: 'informal',  label: 'Informal' },
 ];
 
-export const HOUSEHOLD_STATUS_OPTIONS = [
+// Used in the HouseholdForm status dropdown
+export const HOUSEHOLD_STATUS_FORM_OPTIONS = [
   { value: 'active',   label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
+];
+
+// Used in the Households table StatusFilter
+export const HOUSEHOLD_STATUS_OPTIONS = [
+  { value: 'all',      label: 'All Status' },
+  { value: 'active',   label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+  { value: 'archived', label: 'Archived' },
 ];

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { LuHouse } from 'react-icons/lu';
 import { FaRegTrashCan } from 'react-icons/fa6';
-import { RiArrowDropDownLine } from 'react-icons/ri';
 import { MdCheck } from 'react-icons/md';
 import { CiUser } from 'react-icons/ci';
 import { FormSelect } from '../../../../../shared';
@@ -9,44 +8,66 @@ import { useActiveResidents } from '../../../../../hooks/queries/residents/useAc
 import {
   OWNERSHIP_TYPE_OPTIONS,
   DWELLING_TYPE_OPTIONS,
-  HOUSEHOLD_STATUS_OPTIONS,
+  HOUSEHOLD_STATUS_FORM_OPTIONS,
   BARANGAY,
 } from '../../../../../core/constants';
 
 const inputClass =
-  'flex-1 px-4 py-2.5 bg-white focus:outline-none text-gray-900 text-base placeholder-gray-400';
-
-const fieldClass =
   'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
 
-export default function HouseholdForm({ value = {}, onChange, householdId = null }) {
+const addonInputClass =
+  'flex-1 px-4 py-2.5 bg-white focus:outline-none text-gray-900 text-base placeholder-gray-400';
+
+export default function HouseholdForm({ value = {}, onChange, householdNo = '' }) {
   const update = (field, val) => onChange?.({ ...value, [field]: val });
 
-  // ── Head of Household dropdown ──────────────────────────────
   const { data: residentOptions = [], isLoading: residentsLoading } = useActiveResidents();
+
+  // ── Head of Household — searchable text input ────────────────
+  const [headSearch, setHeadSearch] = useState(
+    () => residentOptions.find((r) => r.value === value.headResidentId)?.label ?? ''
+  );
   const [showHeadDropdown, setShowHeadDropdown] = useState(false);
-  const headDropdownRef = useRef(null);
+  const headRef = useRef(null);
+
+  // Keep headSearch label in sync when residentOptions load after mount
+  useEffect(() => {
+    if (value.headResidentId && !headSearch) {
+      const match = residentOptions.find((r) => r.value === value.headResidentId);
+      if (match) setHeadSearch(match.label);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [residentOptions]);
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (headDropdownRef.current && !headDropdownRef.current.contains(e.target)) {
+      if (headRef.current && !headRef.current.contains(e.target)) {
         setShowHeadDropdown(false);
+        // If input doesn't match a selection, clear it
+        const match = residentOptions.find((r) => r.label === headSearch);
+        if (!match) {
+          setHeadSearch('');
+          update('headResidentId', '');
+        }
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [headSearch, residentOptions]);
 
-  const selectedHead = residentOptions.find((r) => r.value === value.headResidentId);
+  const headCandidates = residentOptions.filter((r) =>
+    r.label.toLowerCase().includes(headSearch.toLowerCase())
+  );
 
-  // ── Member search ────────────────────────────────────────────
+  // ── Members — searchable input, head excluded ────────────────
   const [memberSearch, setMemberSearch] = useState('');
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
-  const memberDropdownRef = useRef(null);
+  const memberRef = useRef(null);
 
   useEffect(() => {
     function handleClickOutside(e) {
-      if (memberDropdownRef.current && !memberDropdownRef.current.contains(e.target)) {
+      if (memberRef.current && !memberRef.current.contains(e.target)) {
         setShowMemberDropdown(false);
       }
     }
@@ -56,11 +77,11 @@ export default function HouseholdForm({ value = {}, onChange, householdId = null
 
   const members = value.members ?? [];
 
-  // Filter: active residents not already in the member list and not the head
+  // Exclude: already a member, already the selected head
   const memberCandidates = residentOptions.filter(
     (r) =>
-      !members.some((m) => m.id === r.value) &&
       r.value !== value.headResidentId &&
+      !members.some((m) => m.id === r.value) &&
       r.label.toLowerCase().includes(memberSearch.toLowerCase())
   );
 
@@ -77,63 +98,63 @@ export default function HouseholdForm({ value = {}, onChange, householdId = null
   return (
     <div className="space-y-6">
 
-      {/* Household No. and Head Name */}
+      {/* Household No. (auto-generated, locked) + Head of Household */}
       <div className="flex flex-col md:flex-row gap-4">
-        {/* Household No. */}
+
+        {/* Household No. — read-only, auto-generated */}
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Household No. <span className="text-red-500">*</span>
-          </label>
-          <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-            <div className="bg-gray-100 px-4 py-3 border-r border-gray-300 flex items-center justify-center text-[#005F02]">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Household No.</label>
+          <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+            <div className="bg-gray-100 px-4 py-3 border-r border-gray-200 flex items-center justify-center text-gray-400">
               <LuHouse className="w-6 h-6" />
             </div>
-            <input
-              type="text"
-              value={value.houseNo ?? ''}
-              onChange={(e) => update('houseNo', e.target.value)}
-              placeholder="e.g. 12"
-              className={inputClass}
-              required
-            />
+            <span className="flex-1 px-4 py-2.5 text-gray-500 text-base select-none">
+              {householdNo || 'Auto-generated'}
+            </span>
           </div>
         </div>
 
-        {/* Head of Household */}
-        <div className="flex-1" ref={headDropdownRef}>
+        {/* Head of Household — searchable input */}
+        <div className="flex-1" ref={headRef}>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Head of Household <span className="text-red-500">*</span>
           </label>
           <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowHeadDropdown((o) => !o)}
-              className="w-full flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white"
-            >
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
               <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300">
                 <CiUser className="w-6 h-6" />
               </div>
-              <span className="flex-1 text-left px-4 py-2.5 text-gray-700 truncate">
-                {residentsLoading
-                  ? 'Loading…'
-                  : selectedHead?.label ?? 'Select Registered Resident'}
-              </span>
-              <RiArrowDropDownLine
-                className={`w-7 h-7 text-gray-400 mr-2 transition-transform ${showHeadDropdown ? 'rotate-180' : ''}`}
+              <input
+                type="text"
+                value={headSearch}
+                onChange={(e) => {
+                  setHeadSearch(e.target.value);
+                  setShowHeadDropdown(true);
+                  // Clear selection if user edits the text
+                  if (value.headResidentId) update('headResidentId', '');
+                }}
+                onFocus={() => setShowHeadDropdown(true)}
+                placeholder={residentsLoading ? 'Loading…' : 'Search registered resident…'}
+                className={addonInputClass}
               />
-            </button>
+              {value.headResidentId && (
+                <MdCheck className="w-5 h-5 text-[#005F02] mr-3 shrink-0" />
+              )}
+            </div>
 
-            {showHeadDropdown && (
+            {showHeadDropdown && headSearch && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-52 overflow-y-auto">
-                {residentOptions.length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-gray-500">No active residents found</div>
+                {headCandidates.length === 0 ? (
+                  <div className="px-4 py-3 text-sm text-gray-500">No matching residents</div>
                 ) : (
-                  residentOptions.map((r) => (
+                  headCandidates.map((r) => (
                     <button
                       key={r.value}
                       type="button"
+                      onMouseDown={(e) => e.preventDefault()} // prevent blur before click
                       onClick={() => {
                         update('headResidentId', r.value);
+                        setHeadSearch(r.label);
                         setShowHeadDropdown(false);
                       }}
                       className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100 flex items-center justify-between"
@@ -166,7 +187,7 @@ export default function HouseholdForm({ value = {}, onChange, householdId = null
               value={value.street ?? ''}
               onChange={(e) => update('street', e.target.value)}
               placeholder="e.g. Dahlia Avenue"
-              className={inputClass}
+              className={addonInputClass}
               required
             />
           </div>
@@ -182,8 +203,8 @@ export default function HouseholdForm({ value = {}, onChange, householdId = null
         </div>
       </div>
 
-      {/* Ownership + Dwelling + Monthly Income */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* Ownership + Dwelling */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Ownership Type</label>
           <FormSelect
@@ -202,17 +223,6 @@ export default function HouseholdForm({ value = {}, onChange, householdId = null
             options={DWELLING_TYPE_OPTIONS}
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Income (₱)</label>
-          <input
-            type="number"
-            min="0"
-            value={value.monthlyIncome ?? ''}
-            onChange={(e) => update('monthlyIncome', e.target.value ? Number(e.target.value) : '')}
-            placeholder="e.g. 15000"
-            className={fieldClass}
-          />
-        </div>
       </div>
 
       {/* Status */}
@@ -225,7 +235,7 @@ export default function HouseholdForm({ value = {}, onChange, householdId = null
             placeholder="Status"
             value={value.status ?? 'active'}
             onChange={(val) => update('status', val)}
-            options={HOUSEHOLD_STATUS_OPTIONS}
+            options={HOUSEHOLD_STATUS_FORM_OPTIONS}
           />
         </div>
       </div>
@@ -237,7 +247,6 @@ export default function HouseholdForm({ value = {}, onChange, householdId = null
           <span className="text-sm font-medium text-gray-600">{members.length}</span>
         </div>
 
-        {/* Existing members list */}
         <div className="space-y-2 mb-4">
           {members.length === 0 && (
             <p className="text-sm text-gray-400 py-2">No members added yet.</p>
@@ -264,20 +273,18 @@ export default function HouseholdForm({ value = {}, onChange, householdId = null
         </div>
 
         {/* Add member search */}
-        <div className="relative" ref={memberDropdownRef}>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={memberSearch}
-              onChange={(e) => {
-                setMemberSearch(e.target.value);
-                setShowMemberDropdown(true);
-              }}
-              onFocus={() => setShowMemberDropdown(true)}
-              placeholder="Search registered resident…"
-              className={`${fieldClass} flex-1`}
-            />
-          </div>
+        <div className="relative" ref={memberRef}>
+          <input
+            type="text"
+            value={memberSearch}
+            onChange={(e) => {
+              setMemberSearch(e.target.value);
+              setShowMemberDropdown(true);
+            }}
+            onFocus={() => setShowMemberDropdown(true)}
+            placeholder="Search registered resident to add…"
+            className={inputClass}
+          />
           {showMemberDropdown && memberSearch && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto">
               {memberCandidates.length === 0 ? (
@@ -287,6 +294,7 @@ export default function HouseholdForm({ value = {}, onChange, householdId = null
                   <button
                     key={r.value}
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleAddMember(r)}
                     className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100"
                   >
