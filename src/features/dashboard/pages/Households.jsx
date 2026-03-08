@@ -44,9 +44,9 @@ export default function Household() {
   const totalEntries = data?.total      ?? 0;
 
   // ── Adapter ───────────────────────────────────────────────────
-  const tableHouseholds = households.map((h, idx) => {
-    const globalIndex = (page - 1) * pageSize + idx + 1;
-    const householdNo = `${globalIndex}-${String(globalIndex).padStart(4, '0')}`;
+  const tableHouseholds = households.map((h) => {
+    // Use persistent household_no from DB (assigned by trigger, format X-XXXX)
+    const householdNo = h.household_no ?? '—';
 
     return {
       id: h.id,

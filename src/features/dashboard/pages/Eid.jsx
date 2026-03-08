@@ -9,6 +9,7 @@ import { useEidFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
+import { uploadResidentPhoto } from '../../../services/supabase/residentService';
 import toast from 'react-hot-toast';
 
 export default function Eid() {
@@ -173,9 +174,15 @@ export default function Eid() {
           }
           try {
             await issue.mutateAsync(residentId);
-            // If a photo was uploaded, persist it to the resident record
+            // Upload photo to Storage and save URL to residents.photo_url
             if (photoUrl) {
-              // photo persistence handled by Edge Function or separate upload flow
+              try {
+                await uploadResidentPhoto(residentId, photoUrl);
+              } catch (photoErr) {
+                // Non-fatal — eID was issued, just warn about the photo
+                toast.error('eID issued but photo upload failed. You can re-upload later.');
+                console.error('Photo upload error:', photoErr);
+              }
             }
             setEidFormModalOpen(false);
             setSelectedEid(null);

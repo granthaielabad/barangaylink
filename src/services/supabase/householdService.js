@@ -3,7 +3,7 @@ import { supabase } from './client';
 const TABLE = 'households';
 
 const DEFAULT_SELECT = `
-  id, house_no, street, ownership_type, dwelling_type,
+  id, household_no, house_no, street, ownership_type, dwelling_type,
   monthly_income, status, created_at, updated_at,
   purok_id, puroks ( id, name ),
   head_resident_id,

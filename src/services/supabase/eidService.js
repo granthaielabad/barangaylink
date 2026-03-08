@@ -107,7 +107,8 @@ export async function getEidStats() {
 
 export async function verifyQrToken({ token, method = 'qr_scan' }) {
   const { data: eid, error } = await supabase.from(TABLE)
-    .select(`id, status, expires_at, residents ( id, first_name, last_name, address_line, contact_number, date_of_birth, sex, photo_url )`)
+    .select(`id, eid_number, status, expires_at,
+      residents ( id, resident_no, first_name, last_name, address_line, contact_number, date_of_birth, sex, photo_url )`)
     .eq('qr_token', token).maybeSingle();
   if (error) throw error;
   if (!eid) return { result: 'invalid', eid: null, resident: null };
@@ -117,6 +118,14 @@ export async function verifyQrToken({ token, method = 'qr_scan' }) {
   else if (eid.status === 'suspended') result = 'invalid';
   else if (eid.expires_at && new Date(eid.expires_at) < new Date()) result = 'expired';
 
-  await supabase.from('qr_verifications').insert({ eid_id: eid.id, verification_method: method, result });
+  // Get current user so we can log who performed the verification
+  const { data: { user } } = await supabase.auth.getUser();
+  await supabase.from('qr_verifications').insert({
+    eid_id: eid.id,
+    verification_method: method,
+    result,
+    verified_by: user?.id ?? null,
+  });
+
   return { result, eid, resident: eid.residents };
 }

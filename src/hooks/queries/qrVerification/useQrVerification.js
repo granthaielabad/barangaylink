@@ -27,7 +27,7 @@ export function useQrHistory(limit = 20) {
           id, result, verified_at, verification_method,
           electronic_ids (
             eid_number,
-            residents ( first_name, last_name )
+            residents ( resident_no, first_name, last_name )
           )
         `)
         .order('verified_at', { ascending: false })

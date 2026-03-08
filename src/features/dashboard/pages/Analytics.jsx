@@ -22,12 +22,13 @@ import toast from 'react-hot-toast';
 
 export default function Analytics() {
   const [filters, setFilters] = useState({
-    dateRange: 'last30',
+    dateRange:      'last30',
     dateRangeLabel: 'Last 30 days',
-    customStart: '',
-    customEnd: '',
-    year: String(new Date().getFullYear()),
-    category: 'Category',
+    customStart:    '',
+    customEnd:      '',
+    year:           String(new Date().getFullYear()),
+    filterAll:      'All',
+    category:       'Category',
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -41,8 +42,8 @@ export default function Analytics() {
   };
 
   // Single parallel fetch — all chart components read from this one result.
-  // analyticsData is undefined while loading; each chart falls back gracefully.
-  const { data: analyticsData } = useAnalytics();
+  // Pass selected year so monthly queries respect the filter.
+  const { data: analyticsData } = useAnalytics(parseInt(filters.year, 10));
 
   return (
     <div className="min-h-screen flex bg-[#F3F7F3]">

@@ -9,7 +9,7 @@ import { useResidentFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
-import { RESIDENT_STATUS_FILTER_OPTIONS } from '../../../core/constants';
+import { RESIDENT_STATUS_FILTER_OPTIONS, BARANGAY } from '../../../core/constants';
 
 export default function Residents() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -47,11 +47,9 @@ export default function Residents() {
   const totalEntries = data?.total ?? 0;
 
   // ── Adapter: map DB fields → table display shape ──────────────
-  const tableResidents = residents.map((r, idx) => {
-    // Sequential resident number: global position based on page offset + row index
-    const globalIndex = (page - 1) * pageSize + idx + 1;
-    const n = String(globalIndex).padStart(9, '0');
-    const residentNo = `${n.slice(0, 4)}-${n.slice(4, 7)}-${n.slice(7, 9)}`;
+  const tableResidents = residents.map((r) => {
+    // Use persistent resident_no from DB (assigned by trigger, format XXXX-XXX-XX)
+    const residentNo = r.resident_no ?? '—';
 
     // Birthdate: DB returns YYYY-MM-DD → display as MM-DD-YYYY
     let birthdate = '—';

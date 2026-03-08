@@ -4,7 +4,7 @@ import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import { UserTable, RoleTabs } from '../components/UserAccount';
 import { SortFilter, OrderFilter, Pagination, SearchBox, DeleteModal } from '../../../shared';
-import { useProfiles, useMutateProfile } from '../../../hooks/queries/profiles/useProfiles';
+import { useProfiles, useProfileRoleCounts, useMutateProfile } from '../../../hooks/queries/profiles/useProfiles';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
@@ -12,57 +12,65 @@ import toast from 'react-hot-toast';
 
 const PAGE_SIZE = 8;
 
+// Map UI sort key → DB column + direction
+const SORT_MAP = {
+  'full_name':   { sortBy: 'full_name',  order: 'asc'  },
+  'created_at':  { sortBy: 'created_at', order: 'desc' },
+};
+
+// Map RoleTabs UI labels → DB role values
+const ROLE_TAB_TO_DB = {
+  'all':         'all',
+  'Super Admin': 'superadmin',
+  'Staff':       'staff',
+  'Resident':    'resident',
+};
+
 export default function UserManagement() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('name-asc');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [page, setPage] = useState(1);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState(null);
+  const [sidebarOpen,      setSidebarOpen]      = useState(false);
+  const [search,           setSearch]           = useState('');
+  const [sortBy,           setSortBy]           = useState('full_name');
+  const [order,            setOrder]            = useState('asc');
+  const [roleFilter,       setRoleFilter]       = useState('all');
+  const [page,             setPage]             = useState(1);
+  const [deleteModalOpen,  setDeleteModalOpen]  = useState(false);
+  const [userToDelete,     setUserToDelete]     = useState(null);
 
-  const navigate = useNavigate();
+  const navigate    = useNavigate();
   const { profile } = useAuth();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const clearAuth   = useAuthStore((s) => s.clearAuth);
 
-  // Map UI sort values → DB column names
-  const sortMap = {
-    'name-asc': { sortBy: 'full_name', order: 'asc' },
-    'name-desc': { sortBy: 'full_name', order: 'desc' },
-    'date-newest': { sortBy: 'created_at', order: 'desc' },
-    'date-oldest': { sortBy: 'created_at', order: 'asc' },
-  };
-  const { sortBy: dbSort, order } = sortMap[sortBy] ?? { sortBy: 'full_name', order: 'asc' };
+  const dbSort = SORT_MAP[sortBy]?.sortBy ?? 'full_name';
 
+  // Paginated user list
   const { data, isLoading } = useProfiles({
     page, pageSize: PAGE_SIZE, search,
-    role: roleFilter === 'all' ? 'all' : roleFilter.toLowerCase().replace(' ', '_'),
+    role: ROLE_TAB_TO_DB[roleFilter] ?? 'all',
     sortBy: dbSort, order,
   });
-  const { changeRole, remove } = useMutateProfile();
 
-  const profiles = data?.data ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const totalEntries = data?.total ?? 0;
+  // Accurate role counts across ALL users (not just current page)
+  const { data: roleCounts = { all: 0, superadmin: 0, staff: 0, resident: 0 } } = useProfileRoleCounts();
+
+  const { changeRole, toggleActive, remove } = useMutateProfile();
+
+  const profiles     = data?.data       ?? [];
+  const totalPages   = data?.totalPages ?? 1;
+  const totalEntries = data?.total      ?? 0;
 
   // Adapter: map DB profile → UserTable display shape
   const tableUsers = profiles.map((p) => ({
-    id: p.id,
-    name: p.full_name ?? '—',
-    email: '—', // email lives in auth.users; not exposed via profiles table for security
-    role: p.role ? p.role.charAt(0).toUpperCase() + p.role.slice(1) : '—',
-    access: p.role === 'superadmin' ? 'Full Access' : p.role === 'staff' ? 'Limited Access' : 'Read-Only',
-    status: p.is_active ? 'Enabled' : 'Disabled',
+    id:     p.id,
+    name:   p.full_name ?? '—',
+    email:  p.email     ?? '—',          // ← now populated from profiles_with_email view
+    role:   p.role ? p.role.charAt(0).toUpperCase() + p.role.slice(1).replace('_', ' ') : '—',
+    access: p.role === 'superadmin' ? 'Full Access'
+          : p.role === 'staff'      ? 'Limited Access'
+          : 'Read-Only',
+    status:   p.is_active ? 'Enabled' : 'Disabled',
+    isActive: p.is_active ?? true,
     _raw: p,
   }));
-
-  // Role counts for tabs — computed from current page data (best effort without full count)
-  const roleCounts = {
-    all: totalEntries,
-    'Super Admin': profiles.filter((p) => p.role === 'superadmin').length,
-    'Staff': profiles.filter((p) => p.role === 'staff').length,
-    'Resident': profiles.filter((p) => p.role === 'resident').length,
-  };
 
   const handleLogout = async () => {
     try { await signOut(); clearAuth(); navigate('/login', { replace: true }); }
@@ -70,8 +78,13 @@ export default function UserManagement() {
   };
 
   const handleRoleChange = (userId, newRole) => {
-    const dbRole = newRole.toLowerCase().replace(' ', '_');
+    // newRole comes from UI as e.g. "Super Admin" → map to DB value
+    const dbRole = ROLE_TAB_TO_DB[newRole] ?? newRole.toLowerCase().replace(/\s+/g, '');
     changeRole.mutate({ id: userId, role: dbRole });
+  };
+
+  const handleToggleActive = (userId, currentlyActive) => {
+    toggleActive.mutate({ id: userId, isActive: !currentlyActive });
   };
 
   const handleConfirmDelete = () => {
@@ -99,18 +112,30 @@ export default function UserManagement() {
 
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                <SearchBox value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search" />
+                <SearchBox
+                  value={search}
+                  onChange={(v) => { setSearch(v); setPage(1); }}
+                  placeholder="Search by name"
+                />
                 <div className="flex items-center gap-2">
-                  <SortFilter value={sortBy} onChange={setSortBy} />
-                  <OrderFilter value={sortBy} onChange={setSortBy} />
+                  {/* SortFilter: sort column */}
+                  <SortFilter value={sortBy} onChange={(v) => { setSortBy(v); setPage(1); }} />
+                  {/* OrderFilter: asc / desc — separate state, not the same as sortBy */}
+                  <OrderFilter value={order} onChange={(v) => { setOrder(v); setPage(1); }} />
                 </div>
               </div>
             </div>
 
+            {/* Role tabs with accurate global counts */}
             <RoleTabs
               roleFilter={roleFilter}
               onRoleChange={(r) => { setRoleFilter(r); setPage(1); }}
-              roleCounts={roleCounts}
+              roleCounts={{
+                all:         roleCounts.all,
+                'Super Admin': roleCounts.superadmin,
+                'Staff':       roleCounts.staff,
+                'Resident':    roleCounts.resident,
+              }}
             />
 
             {isLoading ? (
@@ -120,8 +145,9 @@ export default function UserManagement() {
             ) : (
               <UserTable
                 users={tableUsers}
-                onDeleteUser={(u) => { setUserToDelete(u); setDeleteModalOpen(true); }}
+                onDeleteUser={(u)  => { setUserToDelete(u); setDeleteModalOpen(true); }}
                 onRoleChange={handleRoleChange}
+                onToggleActive={handleToggleActive}
               />
             )}
 

@@ -15,16 +15,31 @@ import toast from 'react-hot-toast';
 // Maps audit log table_name + operation to a human-readable label
 function activityLabel(log) {
   const op = { INSERT: 'Added', UPDATE: 'Updated', DELETE: 'Deleted' }[log.operation] ?? log.operation;
-  const table = {
+  const tableMap = {
     residents: 'Resident',
     households: 'Household',
     electronic_ids: 'eID',
     document_requests: 'Document Request',
-  }[log.table_name] ?? log.table_name;
-  const name = log.new_data?.first_name
-    ? `${log.new_data.first_name} ${log.new_data.last_name ?? ''}`.trim()
-    : log.new_data?.eid_number ?? `#${String(log.id)}`;
-  return `${table} ${op}: ${name}`;
+    qr_verifications: 'QR Verification',
+  };
+  const table = tableMap[log.table_name] ?? log.table_name;
+
+  // Build a human-readable subject name from the record data
+  let name = '';
+  const d = log.new_data ?? log.old_data;
+  if (log.table_name === 'qr_verifications') {
+    const result = d?.result ? ` — ${d.result.charAt(0).toUpperCase() + d.result.slice(1)}` : '';
+    return `QR Verified${result}`;
+  } else if (d?.first_name) {
+    name = `${d.first_name} ${d.last_name ?? ''}`.trim();
+  } else if (d?.eid_number) {
+    name = d.eid_number;
+  } else if (d?.house_no) {
+    name = `House ${d.house_no}`;
+  } else {
+    name = log.profiles?.full_name ? `by ${log.profiles.full_name}` : '';
+  }
+  return `${table} ${op}${name ? ': ' + name : ''}`;
 }
 
 function timeAgo(dateStr) {

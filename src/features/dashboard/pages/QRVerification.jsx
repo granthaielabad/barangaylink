@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import { BsQrCode } from 'react-icons/bs';
+import { FiUpload, FiCamera, FiCameraOff, FiCheckCircle, FiXCircle, FiAlertCircle } from 'react-icons/fi';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
@@ -10,66 +11,247 @@ import { useVerifyQr, useQrHistory } from '../../../hooks/queries/qrVerification
 import { EIdProfile } from '../components/eID';
 import toast from 'react-hot-toast';
 
+// ── Helpers ───────────────────────────────────────────────────
 function formatTime(dateStr) {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+  return new Date(dateStr).toLocaleString('en-PH', {
+    month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 }
 
-export default function QRVerification() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [manualCode, setManualCode] = useState('');
-  const [verifiedResident, setVerifiedResident] = useState(null);
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const [y, m, d] = dateStr.split('-');
+  return d ? `${m}-${d}-${y}` : dateStr;
+}
 
-  const navigate = useNavigate();
-  const { profile } = useAuth();
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+const STATUS_CONFIG = {
+  valid:   { label: 'VERIFIED',    color: 'text-emerald-600', bg: 'bg-emerald-50  border-emerald-200', Icon: FiCheckCircle },
+  expired: { label: 'EXPIRED',     color: 'text-amber-600',   bg: 'bg-amber-50   border-amber-200',   Icon: FiAlertCircle },
+  revoked: { label: 'REVOKED',     color: 'text-red-600',     bg: 'bg-red-50     border-red-200',     Icon: FiXCircle     },
+  invalid: { label: 'NOT FOUND',   color: 'text-red-600',     bg: 'bg-red-50     border-red-200',     Icon: FiXCircle     },
+};
+
+// ── QR decode via jsQR ────────────────────────────────────────
+async function decodeQrFromFile(file) {
+  const jsQR = (await import('jsqr')).default;
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width  = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const { data, width, height } = ctx.getImageData(0, 0, img.width, img.height);
+        const code = jsQR(data, width, height);
+        code ? resolve(code.data) : reject(new Error('No QR code found in image'));
+      };
+      img.onerror = () => reject(new Error('Could not load image'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Could not read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// ── Camera scanner ────────────────────────────────────────────
+function CameraScanner({ onDetect, onClose }) {
+  const videoRef    = useRef(null);
+  const canvasRef   = useRef(null);
+  const rafRef      = useRef(null);
+  const streamRef   = useRef(null);
+  const [error, setError] = useState(null);
+  const [scanning, setScanning] = useState(false);
+
+  // Start camera
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+        });
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+          setScanning(true);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.name === 'NotAllowedError'
+          ? 'Camera access denied. Please allow camera permission and try again.'
+          : 'Could not access camera. Make sure no other app is using it.');
+      }
+    })();
+    return () => {
+      cancelled = true;
+      streamRef.current?.getTracks().forEach(t => t.stop());
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  // Scan frames
+  useEffect(() => {
+    if (!scanning) return;
+    let detected = false;
+
+    const tick = async () => {
+      const video  = videoRef.current;
+      const canvas = canvasRef.current;
+      if (!video || !canvas || video.readyState < 2) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      canvas.width  = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      try {
+        const jsQR = (await import('jsqr')).default;
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code && !detected) {
+          detected = true;
+          streamRef.current?.getTracks().forEach(t => t.stop());
+          onDetect(code.data);
+          return;
+        }
+      } catch { /* keep scanning */ }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [scanning, onDetect]);
+
+  return (
+    <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+      {error ? (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-2 p-4 text-center">
+          <FiCameraOff className="w-10 h-10 text-red-400" />
+          <p className="text-sm">{error}</p>
+        </div>
+      ) : (
+        <>
+          <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
+          {/* Scanning reticle */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-44 h-44 relative">
+              <span className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-[#00E676] rounded-tl" />
+              <span className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-[#00E676] rounded-tr" />
+              <span className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-[#00E676] rounded-bl" />
+              <span className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-[#00E676] rounded-br" />
+              {/* Scanning line */}
+              <span className="absolute left-0 right-0 h-0.5 bg-[#00E676]/70 top-1/2 animate-pulse" />
+            </div>
+          </div>
+          <p className="absolute bottom-3 w-full text-center text-xs text-white/70">
+            Point camera at a QR code
+          </p>
+        </>
+      )}
+      <canvas ref={canvasRef} className="hidden" />
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1.5 hover:bg-black/70 transition-colors"
+        aria-label="Stop camera"
+      >
+        <FiCameraOff className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────
+export default function QRVerification() {
+  const [sidebarOpen,       setSidebarOpen]       = useState(false);
+  const [manualCode,        setManualCode]         = useState('');
+  const [verifiedResident,  setVerifiedResident]   = useState(null);
+  const [verifyStatus,      setVerifyStatus]       = useState(null); // 'valid'|'expired'|'revoked'|'invalid'
+  const [cameraActive,      setCameraActive]       = useState(false);
+  const fileInputRef = useRef(null);
+
+  const navigate     = useNavigate();
+  const { profile }  = useAuth();
+  const clearAuth    = useAuthStore((s) => s.clearAuth);
 
   const verifyMutation = useVerifyQr();
-  const { data: history = [] } = useQrHistory(20);
+  const { data: history = [], refetch: refetchHistory } = useQrHistory(20);
 
   const handleLogout = async () => {
     try { await signOut(); clearAuth(); navigate('/login', { replace: true }); }
     catch (err) { toast.error(err.message ?? 'Logout failed.'); }
   };
 
-  const handleVerify = async (token, method = 'manual_entry') => {
+  const handleVerify = useCallback(async (token, method = 'manual_entry') => {
     if (!token?.trim()) return;
     try {
       const result = await verifyMutation.mutateAsync({ token: token.trim(), method });
-      if (result.result === 'valid') {
-        setVerifiedResident(result.resident);
-        toast.success('QR Code verified — Active resident.');
-      } else if (result.result === 'expired') {
-        setVerifiedResident(result.resident);
-        toast.error('eID is expired.');
-      } else if (result.result === 'revoked') {
-        setVerifiedResident(null);
-        toast.error('eID has been revoked.');
-      } else {
-        setVerifiedResident(null);
-        toast.error('Invalid QR Code — No matching record found.');
-      }
-    } catch {
-      // error toast handled by hook
+      setVerifyStatus(result.result);
+      setVerifiedResident(result.result !== 'invalid' ? result.resident : null);
+      refetchHistory();
+
+      const msgs = {
+        valid:   'QR Code verified — Active resident.',
+        expired: 'eID is expired.',
+        revoked: 'eID has been revoked.',
+        invalid: 'Invalid QR Code — No matching record found.',
+      };
+      result.result === 'valid'
+        ? toast.success(msgs[result.result])
+        : toast.error(msgs[result.result] ?? 'Unknown result.');
+    } catch { /* toasted by hook */ }
+  }, [verifyMutation, refetchHistory]);
+
+  // Camera detected a QR
+  const handleCameraDetect = useCallback((token) => {
+    setCameraActive(false);
+    handleVerify(token, 'qr_scan');
+  }, [handleVerify]);
+
+  // Upload QR image
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    try {
+      toast.loading('Reading QR code…', { id: 'qr-read' });
+      const token = await decodeQrFromFile(file);
+      toast.dismiss('qr-read');
+      await handleVerify(token, 'image_upload');
+    } catch (err) {
+      toast.dismiss('qr-read');
+      toast.error(err.message ?? 'Could not read QR code from image.');
     }
   };
 
-  const handleManualEntry = () => {
+  const handleManualSubmit = () => {
     if (manualCode.trim()) {
-      handleVerify(manualCode, 'manual_entry');
+      handleVerify(manualCode.trim(), 'manual_entry');
       setManualCode('');
     }
   };
 
-  const r = verifiedResident;
-  const fullName = r
-    ? `${r.first_name}${r.last_name ? ' ' + r.last_name : ''}`.trim()
-    : '—';
+  const r        = verifiedResident;
+  const fullName = r ? [r.first_name, r.last_name].filter(Boolean).join(' ') : '—';
+  const status   = verifyStatus ? STATUS_CONFIG[verifyStatus] ?? STATUS_CONFIG.invalid : null;
+
+  // Last Verified: scoped to the current resident's eID entries in history
+  const lastVerifiedEntry = r
+    ? history.find(h => h.electronic_ids?.residents?.resident_no === r.resident_no)
+    : null;
 
   return (
     <div className="flex h-screen bg-[#F3F7F3]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader
           title="QR Verification"
           userName={profile?.full_name ?? ''}
@@ -77,125 +259,231 @@ export default function QRVerification() {
           onLogout={handleLogout}
           onMenuToggle={() => setSidebarOpen((o) => !o)}
         />
+
         <div className="flex-1 overflow-auto">
           <div className="p-3 mx-auto w-full max-w-7xl">
             <div className="mt-2 flex flex-col md:flex-row gap-6">
 
-              {/* Left: Scan Panel */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col w-full sm:w-[650px]">
-                <div className="bg-[#F1F7F2] rounded-t-lg px-6 sm:px-10 py-3 mb-6 -mx-6 -my-6 border border-gray-200">
-                  <h3 className="text-xl sm:text-[24px] font-semibold">Scan QR Code</h3>
+              {/* ── Left: Scan Panel ── */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm w-full md:w-[650px] flex flex-col overflow-hidden">
+
+                {/* Panel header */}
+                <div className="bg-[#F1F7F2] px-6 py-3 border-b border-gray-200">
+                  <h3 className="text-xl sm:text-2xl font-semibold">Scan QR Code</h3>
                 </div>
 
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 mx-auto flex items-center justify-center bg-gray-50 mb-6 w-full max-w-[400px] min-h-[180px] sm:min-h-[220px]">
-                  <div className="text-center">
-                    <BsQrCode className="w-16 h-16 sm:w-24 sm:h-24 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-400 text-sm">QR Code will appear here</p>
-                  </div>
-                </div>
+                <div className="p-6 flex flex-col flex-1 gap-5">
 
-                <div className="flex gap-3 mb-6">
-                  <button
-                    onClick={() => toast('Camera scan requires device camera access — coming soon.')}
-                    className="flex-1 bg-[#005F02] hover:bg-[#004A01] text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
-                  >
-                    Scan QR Code
-                  </button>
-                  <input
-                    type="text"
-                    value={manualCode}
-                    onChange={(e) => setManualCode(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleManualEntry()}
-                    placeholder="Enter Code Manually"
-                    className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]"
-                  />
-                </div>
-
-                {/* Verification History */}
-                <div className="flex-1 flex flex-col">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3">Verification History</h4>
-                  <div className="space-y-2 overflow-y-auto">
-                    {history.map((item) => {
-                      const name = item.electronic_ids?.residents
-                        ? `${item.electronic_ids.residents.first_name} ${item.electronic_ids.residents.last_name}`
-                        : item.electronic_ids?.eid_number ?? '—';
-                      const statusLabel = item.result === 'valid' ? 'Active' : item.result === 'expired' ? 'Expired' : 'Invalid';
-                      return (
-                        <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-b-0">
-                          <span className="text-sm text-gray-700">{name}</span>
-                          <div className="flex items-center gap-3">
-                            <span className={`text-xs font-medium ${item.result === 'valid' ? 'text-[#005F02]' : 'text-red-600'}`}>
-                              {statusLabel}
-                            </span>
-                            <span className="text-xs text-gray-400">{formatTime(item.verified_at)}</span>
-                          </div>
+                  {/* Camera / placeholder area */}
+                  {cameraActive ? (
+                    <CameraScanner
+                      onDetect={handleCameraDetect}
+                      onClose={() => setCameraActive(false)}
+                    />
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 min-h-[180px] sm:min-h-[220px]">
+                      {status ? (
+                        // Show result badge in the scan area after verification
+                        <div className={`flex flex-col items-center gap-2 p-6 rounded-lg border ${status.bg}`}>
+                          <status.Icon className={`w-12 h-12 ${status.color}`} />
+                          <span className={`text-lg font-bold tracking-widest ${status.color}`}>
+                            {status.label}
+                          </span>
+                          {r && (
+                            <span className="text-sm text-gray-600 font-medium">{fullName}</span>
+                          )}
                         </div>
-                      );
-                    })}
-                    {history.length === 0 && (
-                      <p className="text-sm text-gray-400 py-4 text-center">No verifications yet.</p>
-                    )}
+                      ) : (
+                        <div className="text-center">
+                          <BsQrCode className="w-16 h-16 sm:w-24 sm:h-24 text-gray-300 mx-auto mb-2" />
+                          <p className="text-gray-400 text-sm">Scan, upload, or enter a code below</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Action buttons */}
+                  <div className="flex gap-3">
+                    {/* Camera scan */}
+                    <button
+                      type="button"
+                      onClick={() => { setCameraActive((v) => !v); setVerifyStatus(null); }}
+                      className={`flex-1 flex items-center justify-center gap-2 font-medium py-2.5 px-4 rounded-lg transition-colors text-sm ${
+                        cameraActive
+                          ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+                          : 'bg-[#005F02] text-white hover:bg-[#004A01]'
+                      }`}
+                    >
+                      {cameraActive ? <FiCameraOff className="w-4 h-4" /> : <FiCamera className="w-4 h-4" />}
+                      {cameraActive ? 'Stop Camera' : 'Scan with Camera'}
+                    </button>
+
+                    {/* Upload QR image */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-1 flex items-center justify-center gap-2 font-medium py-2.5 px-4 rounded-lg border border-[#005F02] text-[#005F02] hover:bg-[#F1F7F2] transition-colors text-sm"
+                    >
+                      <FiUpload className="w-4 h-4" />
+                      Upload QR Image
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                    />
                   </div>
+
+                  {/* Manual entry */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={manualCode}
+                      onChange={(e) => setManualCode(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleManualSubmit()}
+                      placeholder="Or enter QR token manually…"
+                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleManualSubmit}
+                      disabled={!manualCode.trim() || verifyMutation.isPending}
+                      className="px-5 py-2.5 rounded-lg bg-[#005F02] text-white text-sm font-medium hover:bg-[#004A01] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {verifyMutation.isPending ? '…' : 'Verify'}
+                    </button>
+                  </div>
+
+                  {/* Verification history */}
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Verification History</h4>
+                    <div className="space-y-1 overflow-y-auto max-h-64 pr-1">
+                      {history.length === 0 ? (
+                        <p className="text-sm text-gray-400 py-4 text-center">No verifications yet.</p>
+                      ) : history.map((item) => {
+                        const res = item.electronic_ids?.residents;
+                        const itemName = res
+                          ? `${res.first_name} ${res.last_name}`
+                          : item.electronic_ids?.eid_number ?? '—';
+                        const itemNo = res?.resident_no ?? null;
+                        const cfg = STATUS_CONFIG[item.result] ?? STATUS_CONFIG.invalid;
+                        return (
+                          <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
+                            <div className="flex flex-col min-w-0 max-w-[55%]">
+                              <span className="text-sm text-gray-700 truncate">{itemName}</span>
+                              {itemNo && <span className="text-xs text-gray-400">{itemNo}</span>}
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
+                              <span className="text-xs text-gray-400">{formatTime(item.verified_at)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
-              {/* Right: Resident Detail Panel */}
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 w-full flex flex-col">
-                <div className="bg-[#F1F7F2] rounded-t-lg border border-gray-200 flex flex-col items-center py-6 -my-6 mb-6 -mx-6 px-6">
-                  <div className="rounded-full overflow-hidden">
-                    <EIdProfile size={100} photoUrl={r?.photo_url} />
+              {/* ── Right: Resident Detail Panel ── */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm w-full flex flex-col overflow-hidden">
+
+                {/* Dark green header — photo overlaps the bottom edge */}
+                <div className="relative bg-[#1A5C1A] flex flex-col items-center pt-8 pb-14 px-6">
+                  {/* Circular profile photo — positioned to overlap header bottom */}
+                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+                    <div className="rounded-full border-4 border-white shadow-md overflow-hidden w-[90px] h-[90px] bg-gray-200">
+                      <EIdProfile size={90} photoUrl={r?.photo_url} className="!rounded-full" />
+                    </div>
                   </div>
-                  <p className="text-2xl sm:text-3xl font-bold mt-3">{fullName}</p>
                 </div>
 
-                <div className="mb-6 pb-4 border-b border-gray-200">
-                  <p className="text-sm font-medium text-gray-900">
-                    Last Verified: <span className="text-gray-600">{history[0] ? formatTime(history[0].verified_at) : '—'}</span>
+                {/* Name + eID badge — sits below the overlapping photo */}
+                <div className="flex flex-col items-center pt-14 pb-4 px-6 border-b border-gray-200">
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900 text-center">
+                    {verifyStatus ? fullName : '—'}
                   </p>
+                  {verifyStatus && (
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {/* Resident number */}
+                      <span className="text-sm text-gray-500">
+                        {r?.resident_no ?? '—'}
+                      </span>
+                      {/* Status dot + label */}
+                      <span className={`flex items-center gap-1 text-sm font-semibold ${
+                        verifyStatus === 'valid' ? 'text-emerald-600' : 'text-red-500'
+                      }`}>
+                        <span className={`w-2 h-2 rounded-full inline-block ${
+                          verifyStatus === 'valid' ? 'bg-emerald-500' : 'bg-red-500'
+                        }`} />
+                        {verifyStatus === 'valid' ? 'Active eID'
+                          : verifyStatus === 'expired' ? 'Expired eID'
+                          : verifyStatus === 'revoked' ? 'Revoked eID'
+                          : 'Invalid eID'}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex-1 mb-6">
+                <div className="p-6 flex flex-col flex-1">
+
+                  {/* Last verified */}
+                  <div className="mb-5 pb-4 border-b border-gray-200">
+                    <p className="text-sm text-gray-900">
+                      <span className="font-semibold">Last Verified: </span>
+                      <span className="text-gray-500">
+                        {lastVerifiedEntry ? formatTime(lastVerifiedEntry.verified_at) : '—'}
+                      </span>
+                    </p>
+                  </div>
+
+                  {/* Resident details */}
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Resident Details</h3>
-                  <div className="mb-6">
-                    <label className="text-sm font-medium text-[#005F02]">Full Name</label>
-                    <p className="text-gray-600 pb-2 border-b border-gray-300">{fullName}</p>
-                  </div>
-                  <div className="mb-6">
-                    <label className="text-sm font-medium text-[#005F02]">Address</label>
-                    <p className="text-gray-600 pb-2 border-b border-gray-300">{r?.address_line ?? '—'}</p>
-                  </div>
-                  <div className="mb-6">
-                    <label className="text-sm font-medium text-[#005F02]">Contact Number</label>
-                    <p className="text-gray-600 pb-2 border-b border-gray-300">{r?.contact_number ?? '—'}</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-[#005F02]">Birthdate</label>
-                      <p className="text-gray-600 pb-2 border-b border-gray-300">{r?.date_of_birth ?? '—'}</p>
+                  <div className="space-y-4 flex-1">
+                    {[
+                      { label: 'Full Name',      value: verifyStatus ? fullName : '—' },
+                      { label: 'Address',        value: r?.address_line ?? '—' },
+                      { label: 'Contact Number', value: r?.contact_number ?? '—' },
+                    ].map(({ label, value }) => (
+                      <div key={label}>
+                        <p className="text-sm font-semibold text-gray-800">{label}</p>
+                        <p className="text-sm text-gray-500 pb-2 border-b border-gray-200 mt-0.5">{value}</p>
+                      </div>
+                    ))}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">Birthdate</p>
+                        <p className="text-sm text-gray-500 pb-2 border-b border-gray-200 mt-0.5">
+                          {r?.date_of_birth ? formatDate(r.date_of_birth) : '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">Sex</p>
+                        <p className="text-sm text-gray-500 pb-2 border-b border-gray-200 mt-0.5">
+                          {r?.sex === 'M' ? 'Male' : r?.sex === 'F' ? 'Female' : '—'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-[#005F02]">Sex</label>
-                      <p className="text-gray-600 pb-2 border-b border-gray-300">
-                        {r?.sex === 'M' ? 'Male' : r?.sex === 'F' ? 'Female' : '—'}
-                      </p>
-                    </div>
                   </div>
-                </div>
 
-                <div className="mt-auto">
-                  <label htmlFor="qr-upload" className="block w-full bg-[#F1F7F2] hover:bg-[#005F02]/20 transition-colors rounded-lg py-3 text-center cursor-pointer">
-                    <span className="text-base font-medium text-[#005F02]">Upload QR Code</span>
-                  </label>
-                  <input
-                    id="qr-upload"
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) toast('QR image upload parsing requires a jsQR library — coming soon.');
-                    }}
-                  />
+                  {/* Scan Again button */}
+                  <div className="mt-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVerifyStatus(null);
+                        setVerifiedResident(null);
+                        setCameraActive(true);
+                      }}
+                      className="w-full bg-[#005F02] hover:bg-[#004A01] text-white font-semibold py-3 rounded-lg transition-colors text-base"
+                    >
+                      Scan Again
+                    </button>
+                  </div>
+
                 </div>
               </div>
 

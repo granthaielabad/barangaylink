@@ -7,7 +7,7 @@ import { supabase } from './client';
 
 const TABLE = 'residents';
 const DEFAULT_SELECT = `
-  id, first_name, middle_name, last_name, suffix,
+  id, resident_no, first_name, middle_name, last_name, suffix,
   date_of_birth, place_of_birth, sex, civil_status,
   nationality, religion, occupation,
   contact_number, email, voter_status,
@@ -149,4 +149,48 @@ export async function activateResident(id) {
 export async function deleteResident(id) {
   const { error } = await supabase.from(TABLE).delete().eq('id', id);
   if (error) throw error;
+}
+
+/**
+ * Upload a resident profile photo to Supabase Storage and
+ * write the public URL back to residents.photo_url.
+ *
+ * @param {string} residentId  - UUID of the resident
+ * @param {string} dataUrl     - base64 DataURL from FileReader (image/png or image/jpeg)
+ * @returns {string}           - public URL of the uploaded photo
+ */
+export async function uploadResidentPhoto(residentId, dataUrl) {
+  // 1. Convert base64 DataURL → Blob
+  const [meta, base64] = dataUrl.split(',');
+  const mimeType = meta.match(/:(.*?);/)?.[1] ?? 'image/jpeg';
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const blob = new Blob([bytes], { type: mimeType });
+
+  // 2. Deterministic path — one file per resident, overwrites on re-upload
+  const ext = mimeType === 'image/png' ? 'png' : 'jpg';
+  const path = `${residentId}.${ext}`;
+
+  // 3. Upload to storage (upsert so re-upload works)
+  const { error: uploadError } = await supabase.storage
+    .from('resident-photos')
+    .upload(path, blob, { upsert: true, contentType: mimeType });
+
+  if (uploadError) throw uploadError;
+
+  // 4. Get public URL
+  const { data: { publicUrl } } = supabase.storage
+    .from('resident-photos')
+    .getPublicUrl(path);
+
+  // 5. Write URL back to the resident record
+  const { error: updateError } = await supabase
+    .from('residents')
+    .update({ photo_url: publicUrl })
+    .eq('id', residentId);
+
+  if (updateError) throw updateError;
+
+  return publicUrl;
 }

@@ -53,10 +53,10 @@ export async function getRecentResidents(limit = 5) {
 /**
  * Fetch the 5 most recent audit log entries for the activity feed.
  */
-export async function getRecentActivity(limit = 5) {
+export async function getRecentActivity(limit = 10) {
   const { data, error } = await supabase
     .from('audit_logs')
-    .select('id, table_name, operation, new_data, old_data, changed_at, profiles(full_name)')
+    .select('id, table_name, operation, new_data, old_data, changed_by, changed_at, profiles!audit_logs_changed_by_fkey(full_name)')
     .order('changed_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
