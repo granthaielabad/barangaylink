@@ -1,11 +1,7 @@
+// src/features/dashboard/components/residents/ResidentAddEdit/IdentificationDetailForm.jsx
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import { FormSelect } from '../../../../../shared';
-import { RESIDENT_STATUS_OPTIONS } from '../../../../../core/constants';
-
-// Filter out 'all' and 'archived' — those aren't valid when creating/editing
-const STATUS_FORM_OPTIONS = RESIDENT_STATUS_OPTIONS.filter(
-  (o) => o.value !== 'all' && o.value !== 'archived'
-);
+import { RESIDENT_STATUS_FORM_OPTIONS } from '../../../../../core/constants';
 
 const inputClass =
   'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
@@ -22,40 +18,20 @@ export default function IdentificationDetailForm({ value = {}, onChange }) {
         </h3>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">PhilHealth No.</label>
-          <input
-            type="text"
-            value={value.philhealthNo ?? ''}
-            onChange={(e) => update('philhealthNo', e.target.value)}
-            placeholder="00-000000000-0"
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">SSS No.</label>
-          <input
-            type="text"
-            value={value.sssNo ?? ''}
-            onChange={(e) => update('sssNo', e.target.value)}
-            placeholder="00-0000000-0"
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">TIN No.</label>
-          <input
-            type="text"
-            value={value.tinNo ?? ''}
-            onChange={(e) => update('tinNo', e.target.value)}
-            placeholder="000-000-000-000"
-            className={inputClass}
-          />
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* ID No. — visible replacement for PhilHealth / SSS / TIN */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">ID No.</label>
+          <input
+            type="text"
+            value={value.idNumber ?? ''}
+            onChange={(e) => update('idNumber', e.target.value)}
+            placeholder="e.g. National ID, Voter's ID, etc."
+            className={inputClass}
+          />
+        </div>
+
+        {/* Status */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Status <span className="text-red-500">*</span>
@@ -64,10 +40,15 @@ export default function IdentificationDetailForm({ value = {}, onChange }) {
             placeholder="Status"
             value={value.status ?? 'active'}
             onChange={(val) => update('status', val)}
-            options={STATUS_FORM_OPTIONS}
+            options={RESIDENT_STATUS_FORM_OPTIONS}
           />
         </div>
       </div>
+
+      {/* Hidden — PhilHealth, SSS, TIN (preserved in state, not rendered) */}
+      <input type="hidden" value={value.philhealthNo ?? ''} readOnly />
+      <input type="hidden" value={value.sssNo ?? ''} readOnly />
+      <input type="hidden" value={value.tinNo ?? ''} readOnly />
     </div>
   );
 }

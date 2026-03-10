@@ -37,7 +37,7 @@ export default function UserManagement() {
   const [userToDelete,     setUserToDelete]     = useState(null);
 
   const navigate    = useNavigate();
-  const { profile } = useAuth();
+  const { profile, isSuperadmin } = useAuth();
   const clearAuth   = useAuthStore((s) => s.clearAuth);
 
   const dbSort = SORT_MAP[sortBy]?.sortBy ?? 'full_name';
@@ -145,6 +145,8 @@ export default function UserManagement() {
             ) : (
               <UserTable
                 users={tableUsers}
+                canChangeRole={isSuperadmin}
+                canDelete={isSuperadmin}
                 onDeleteUser={(u)  => { setUserToDelete(u); setDeleteModalOpen(true); }}
                 onRoleChange={handleRoleChange}
                 onToggleActive={handleToggleActive}

@@ -1,3 +1,4 @@
+// src/services/supabase/residentService.js
 // ─────────────────────────────────────────────────────────────
 // All Supabase queries for the `residents` table.
 // Server-side filtering, sorting, and pagination —
@@ -12,7 +13,8 @@ const DEFAULT_SELECT = `
   nationality, religion, occupation,
   contact_number, email, voter_status,
   address_line, years_of_stay, purok_id,
-  philhealth_no, sss_no, tin_no,
+  philhealth_no, sss_no, tin_no, id_number,
+  age_group, blood_type,
   status, photo_url, household_id, created_at, updated_at,
   puroks ( id, name ),
   households:households!residents_household_id_fkey ( id, house_no, street )

@@ -14,9 +14,8 @@ import toast from 'react-hot-toast';
 // ── Helpers ───────────────────────────────────────────────────
 function formatTime(dateStr) {
   if (!dateStr) return '—';
-  return new Date(dateStr).toLocaleString('en-PH', {
-    month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+  return new Date(dateStr).toLocaleTimeString('en-PH', {
+    hour: '2-digit', minute: '2-digit', hour12: true,
   });
 }
 
@@ -27,10 +26,10 @@ function formatDate(dateStr) {
 }
 
 const STATUS_CONFIG = {
-  valid:   { label: 'VERIFIED',    color: 'text-emerald-600', bg: 'bg-emerald-50  border-emerald-200', Icon: FiCheckCircle },
-  expired: { label: 'EXPIRED',     color: 'text-amber-600',   bg: 'bg-amber-50   border-amber-200',   Icon: FiAlertCircle },
-  revoked: { label: 'REVOKED',     color: 'text-red-600',     bg: 'bg-red-50     border-red-200',     Icon: FiXCircle     },
-  invalid: { label: 'NOT FOUND',   color: 'text-red-600',     bg: 'bg-red-50     border-red-200',     Icon: FiXCircle     },
+  valid:   { label: 'Active',    color: 'text-emerald-600', bg: 'bg-emerald-50  border-emerald-200', Icon: FiCheckCircle },
+  expired: { label: 'Expired',   color: 'text-amber-600',   bg: 'bg-amber-50   border-amber-200',   Icon: FiAlertCircle },
+  revoked: { label: 'Inactive',  color: 'text-red-500',     bg: 'bg-red-50     border-red-200',     Icon: FiXCircle     },
+  invalid: { label: 'Not Found', color: 'text-red-600',     bg: 'bg-red-50     border-red-200',     Icon: FiXCircle     },
 };
 
 // ── QR decode via jsQR ────────────────────────────────────────
@@ -370,14 +369,12 @@ export default function QRVerification() {
                         const itemNo = res?.resident_no ?? null;
                         const cfg = STATUS_CONFIG[item.result] ?? STATUS_CONFIG.invalid;
                         return (
-                          <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                            <div className="flex flex-col min-w-0 max-w-[55%]">
-                              <span className="text-sm text-gray-700 truncate">{itemName}</span>
-                              {itemNo && <span className="text-xs text-gray-400">{itemNo}</span>}
-                            </div>
+                          <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                            <span className="text-sm font-medium text-gray-800 truncate max-w-[45%]">{itemName}</span>
                             <div className="flex items-center gap-3 shrink-0">
-                              <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.label}</span>
-                              <span className="text-xs text-gray-400">{formatTime(item.verified_at)}</span>
+                              <span className="text-gray-300 select-none">—</span>
+                              <span className={`text-sm font-semibold ${cfg.color}`}>{cfg.label}</span>
+                              <span className="text-sm text-gray-400">{formatTime(item.verified_at)}</span>
                             </div>
                           </div>
                         );

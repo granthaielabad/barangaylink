@@ -1,3 +1,4 @@
+// src/features/dashboard/components/residents/ResidentAddEdit/Modal.jsx
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { PiUserPlus } from 'react-icons/pi';
 import PersonalInformationForm from './PersonalInformationForm';
@@ -10,13 +11,13 @@ const emptyForm = {
     lastName: '', firstName: '', middleName: '', suffix: '',
     birthdate: '', gender: '', contactNumber: '', email: '',
     civilStatus: '', placeOfBirth: '', nationality: 'Filipino',
-    religion: '', occupation: '', voterStatus: false,
+    religion: '', occupation: '', voterStatus: false, bloodType: '',
   },
   address: {
     houseNo: '', street: '', purok: '', barangay: BARANGAY,
   },
   identification: {
-    philhealthNo: '', sssNo: '', tinNo: '', status: 'active',
+    philhealthNo: '', sssNo: '', tinNo: '', idNumber: '', status: 'active',
   },
 };
 
@@ -30,6 +31,7 @@ function buildEditForm(raw) {
       middleName:    raw.middle_name  ?? '',
       suffix:        raw.suffix       ?? '',
       birthdate:     raw.date_of_birth ?? '',   // already ISO date from DB
+      ageGroup:      raw.age_group    ?? '',  // display-only, server-computed
       gender:        raw.sex === 'M' ? 'Male' : raw.sex === 'F' ? 'Female' : raw.sex ?? '',
       contactNumber: raw.contact_number ?? '',
       email:         raw.email         ?? '',
@@ -39,6 +41,7 @@ function buildEditForm(raw) {
       religion:      raw.religion      ?? '',
       occupation:    raw.occupation    ?? '',
       voterStatus:   raw.voter_status  ?? false,
+      bloodType:     raw.blood_type    ?? '',
     },
     address: {
       houseNo:  raw.households?.house_no ?? '',
@@ -50,6 +53,7 @@ function buildEditForm(raw) {
       philhealthNo: raw.philhealth_no ?? '',
       sssNo:        raw.sss_no        ?? '',
       tinNo:        raw.tin_no        ?? '',
+      idNumber:     raw.id_number     ?? '',
       status:       raw.status        ?? 'active',
     },
   };
@@ -96,6 +100,7 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
       lastName:     personal.lastName,
       suffix:       personal.suffix       || null,
       birthdate:    personal.birthdate    || null,
+      bloodType:    personal.bloodType    || null,
       gender:       personal.gender       || null,
       contactNumber: personal.contactNumber || null,
       email:        personal.email        || null,
@@ -115,6 +120,7 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
       philhealthNo: identification.philhealthNo || null,
       sssNo:        identification.sssNo        || null,
       tinNo:        identification.tinNo        || null,
+      idNumber:     identification.idNumber     || null,
       status:       identification.status       || 'active',
     });
 

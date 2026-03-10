@@ -83,6 +83,7 @@ export default function Residents() {
     last_name:      data.lastName,
     suffix:         data.suffix        || null,
     date_of_birth:  data.birthdate     || null,
+    blood_type:     data.bloodType     || null,
     sex:            data.gender === 'Male' ? 'M' : data.gender === 'Female' ? 'F' : null,
     contact_number: data.contactNumber || null,
     email:          data.email         || null,
@@ -98,6 +99,7 @@ export default function Residents() {
     philhealth_no:  data.philhealthNo  || null,
     sss_no:         data.sssNo         || null,
     tin_no:         data.tinNo         || null,
+    id_number:      data.idNumber      || null,
     status:         (data.status       || 'active').toLowerCase(),
   });
 

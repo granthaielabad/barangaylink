@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { LandingPage, Privacy, Terms, Contact } from '../features/landing'
 import { ScrollToTop } from "../shared";
 import { Login, SignUp, ForgotPassword } from '../features/auth'
-import { Dashboard, Analytics, Residents, Households, Eid, QRVerification, UserAccount } from '../features/dashboard'
+import { Dashboard, Analytics, Residents, Households, Eid, QRVerification, UserAccount, ResidentPortal } from '../features/dashboard'
 import ProtectedRoute from './ProtectedRoute'
 import RoleGuard from './RoleGuard'
 
@@ -48,7 +48,12 @@ function AppRoutes() {
             <Route path="/qr-verification" element={<QRVerification />} />
           </Route>
 
-          {/* All authenticated roles (staff, superadmin, resident) */}
+          {/* Resident only — self-service portal */}
+          <Route element={<RoleGuard roles={['resident']} />}>
+            <Route path="/resident-portal" element={<ResidentPortal />} />
+          </Route>
+
+          {/* All authenticated roles */}
           <Route path="/user-account" element={<UserAccount />} />
 
         </Route>

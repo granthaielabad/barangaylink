@@ -1,3 +1,4 @@
+// src/hooks/queries/qrVerification/useQrVerification.js
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { verifyQrToken } from '../../../services/supabase/eidService';
 import { supabase } from '../../../services/supabase/client';
@@ -36,5 +37,6 @@ export function useQrHistory(limit = 20) {
       return data ?? [];
     },
     staleTime: 1000 * 15, // Re-fetch every 15s so history stays fresh
+    refetchInterval: 1000 * 30,
   });
 }

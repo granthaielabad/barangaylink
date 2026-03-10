@@ -29,6 +29,8 @@ export const RESIDENT_STATUS_FILTER_OPTIONS = [
   { value: 'all',         label: 'All Status' },
   { value: 'active',      label: 'Active' },
   { value: 'inactive',    label: 'Inactive' },
+  { value: 'pending',     label: 'Pending' },
+  { value: 'deactivated', label: 'Deactivated' },
   { value: 'archived',    label: 'Archived' },
 ];
 
@@ -149,4 +151,34 @@ export const HOUSEHOLD_STATUS_OPTIONS = [
   { value: 'active',   label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
   { value: 'archived', label: 'Archived' },
+];
+
+// Age group options — aligned with Population by Age Group analytics
+export const AGE_GROUP_OPTIONS = [
+  { value: '0-4',   label: '0–4 years' },
+  { value: '5-9',   label: '5–9 years' },
+  { value: '10-14', label: '10–14 years' },
+  { value: '15-19', label: '15–19 years' },
+  { value: '20-24', label: '20–24 years' },
+  { value: '25-29', label: '25–29 years' },
+  { value: '30-34', label: '30–34 years' },
+  { value: '35-39', label: '35–39 years' },
+  { value: '40-44', label: '40–44 years' },
+  { value: '45-49', label: '45–49 years' },
+  { value: '50-54', label: '50–54 years' },
+  { value: '55-59', label: '55–59 years' },
+  { value: '60-64', label: '60–64 years' },
+  { value: '65+',   label: '65+ years' },
+];
+
+// Blood type options
+export const BLOOD_TYPE_OPTIONS = [
+  { value: 'A+',  label: 'A+' },
+  { value: 'A-',  label: 'A-' },
+  { value: 'B+',  label: 'B+' },
+  { value: 'B-',  label: 'B-' },
+  { value: 'AB+', label: 'AB+' },
+  { value: 'AB-', label: 'AB-' },
+  { value: 'O+',  label: 'O+' },
+  { value: 'O-',  label: 'O-' },
 ];

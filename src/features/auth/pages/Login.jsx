@@ -12,8 +12,8 @@ export default function Login() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const hydrateAuth = useAuthStore((s) => s.hydrateAuth);
 
-  // Redirect back to the page the user tried to visit, or default to /dashboard
-  const from = location.state?.from?.pathname ?? '/dashboard';
+  // Redirect back to the page the user tried to visit, or role-based default
+  const from = location.state?.from?.pathname;
 
   const handleSubmit = async ({ email, password }) => {
     if (isLoggingIn) return;
@@ -22,7 +22,10 @@ export default function Login() {
       const { session, profile } = await signIn({ email, password });
       hydrateAuth(session, profile);
       toast.success(`Welcome back, ${profile.full_name?.split(' ')[0] ?? 'User'}!`);
-      navigate(from, { replace: true });
+      // Role-based landing: residents go to their own portal
+      const destination = from
+        ?? (profile.role === 'resident' ? '/resident-portal' : '/dashboard');
+      navigate(destination, { replace: true });
     } catch (err) {
       // Supabase returns user-friendly messages like "Invalid login credentials"
       toast.error(err.message ?? 'Login failed. Please try again.');
