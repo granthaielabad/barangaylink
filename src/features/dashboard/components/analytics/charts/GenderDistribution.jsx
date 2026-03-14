@@ -24,15 +24,22 @@ const options = {
   },
 };
 
-const getData = (filters) => {
-  // Gender distribution typically stays relatively stable, but can vary slightly by year
-  const year = parseInt(filters?.year || new Date().getFullYear(), 10);
-  const yearOffset = year - new Date().getFullYear();
-  const baseMale = 49.6;
-  const baseFemale = 50.4;
-  const male = Math.max(45, Math.min(55, baseMale + yearOffset * 0.1));
-  const female = 100 - male;
-  
+// Real data: analyticsData.gender = { male: number, female: number }
+// Falls back to original mock formula when analyticsData is not yet loaded.
+const getData = (filters, analyticsData) => {
+  let male, female;
+
+  if (analyticsData?.gender) {
+    male   = analyticsData.gender.male;
+    female = analyticsData.gender.female;
+  } else {
+    const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
+    const yearOffset = year - new Date().getFullYear();
+    const baseMale   = 49.6;
+    male   = Math.max(45, Math.min(55, baseMale + yearOffset * 0.1));
+    female = 100 - male;
+  }
+
   return {
     labels: ['Male', 'Female'],
     datasets: [
@@ -47,22 +54,22 @@ const getData = (filters) => {
   };
 };
 
-export default function GenderDistribution({ filters }) {
+export default function GenderDistribution({ filters, analyticsData }) {
   const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+  const chartRef  = useRef(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext('2d');
     if (chartRef.current) chartRef.current.destroy();
-    const chartData = getData(filters);
+    const chartData = getData(filters, analyticsData);
     chartRef.current = new Chart(ctx, {
       type: 'doughnut',
       data: chartData,
       options,
     });
     return () => chartRef.current?.destroy();
-  }, [filters]);
+  }, [filters, analyticsData]);
 
   return (
     <div className="h-[280px] w-full relative">

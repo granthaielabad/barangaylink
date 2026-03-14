@@ -2,15 +2,15 @@ import { useState, useRef, useEffect } from 'react';
 import { IoIosArrowDown } from 'react-icons/io';
 import { MdCheck } from 'react-icons/md';
 
-const STATUS_OPTIONS = [
-  { value: 'all', label: 'All Status' },
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'pending', label: 'Pending' },
+const DEFAULT_OPTIONS = [
+  { value: 'all',         label: 'All Status' },
+  { value: 'active',      label: 'Active' },
+  { value: 'inactive',    label: 'Inactive' },
+  { value: 'pending',     label: 'Pending' },
   { value: 'deactivated', label: 'Deactivated' },
 ];
 
-export default function StatusFilter({ value, onChange }) {
+export default function StatusFilter({ value, onChange, options = DEFAULT_OPTIONS }) {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef(null);
 
@@ -22,7 +22,7 @@ export default function StatusFilter({ value, onChange }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const selectedOption = STATUS_OPTIONS.find((opt) => opt.value === value) || STATUS_OPTIONS[0];
+  const selectedOption = options.find((opt) => opt.value === value) || options[0];
 
   return (
     <div ref={ref} className="relative inline-block">
@@ -37,7 +37,7 @@ export default function StatusFilter({ value, onChange }) {
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-          {STATUS_OPTIONS.map((option) => (
+          {options.map((option) => (
             <button
               key={option.value}
               type="button"

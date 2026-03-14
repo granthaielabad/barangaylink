@@ -40,14 +40,24 @@ const options = {
   },
 };
 
-const getData = (filters) => {
-  const year = parseInt(filters?.year || new Date().getFullYear(), 10);
-  const yearOffset = year - new Date().getFullYear();
-  const baseData = [130, 155, 120, 140, 110, 157];
-  const data = baseData.map((val) => Math.max(0, Math.round(val + yearOffset * 5)));
-  
+// Real data: analyticsData.householdsPerPurok = [{ name, count }, ...]
+// Falls back to original mock data when analyticsData is not yet loaded.
+const getData = (filters, analyticsData) => {
+  let labels, data;
+
+  if (analyticsData?.householdsPerPurok?.length) {
+    labels = analyticsData.householdsPerPurok.map((p) => p.name);
+    data   = analyticsData.householdsPerPurok.map((p) => p.count);
+  } else {
+    const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
+    const yearOffset = year - new Date().getFullYear();
+    const baseData   = [130, 155, 120, 140, 110, 157];
+    labels = ['Purok 1', 'Purok 2', 'Purok 3', 'Purok 4', 'Purok 5', 'Purok 6'];
+    data   = baseData.map((val) => Math.max(0, Math.round(val + yearOffset * 5)));
+  }
+
   return {
-    labels: ['Purok 1', 'Purok 2', 'Purok 3', 'Purok 4', 'Purok 5', 'Purok 6'],
+    labels,
     datasets: [
       {
         data,
@@ -59,22 +69,22 @@ const getData = (filters) => {
   };
 };
 
-export default function HouseholdsPerPurok({ filters }) {
+export default function HouseholdsPerPurok({ filters, analyticsData }) {
   const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+  const chartRef  = useRef(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const ctx = canvasRef.current.getContext('2d');
     if (chartRef.current) chartRef.current.destroy();
-    const chartData = getData(filters);
+    const chartData = getData(filters, analyticsData);
     chartRef.current = new Chart(ctx, {
       type: 'bar',
       data: chartData,
       options,
     });
     return () => chartRef.current?.destroy();
-  }, [filters]);
+  }, [filters, analyticsData]);
 
   return (
     <div className="h-[280px] w-full relative">

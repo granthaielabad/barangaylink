@@ -1,7 +1,11 @@
 import { IoLocationOutline } from 'react-icons/io5';
+import { BARANGAY } from '../../../../../core/constants';
 
 const inputClass =
   'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
+
+const lockedInputClass =
+  'w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-500 text-base cursor-not-allowed select-none';
 
 export default function AddressInformationForm({ value = {}, onChange }) {
   const update = (field, val) => onChange?.({ ...value, [field]: val });
@@ -17,21 +21,27 @@ export default function AddressInformationForm({ value = {}, onChange }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">House No.</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            House No. <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             value={value.houseNo ?? ''}
             onChange={(e) => update('houseNo', e.target.value)}
             className={inputClass}
+            required
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Street</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Street <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
             value={value.street ?? ''}
             onChange={(e) => update('street', e.target.value)}
             className={inputClass}
+            required
           />
         </div>
         <div>
@@ -40,6 +50,7 @@ export default function AddressInformationForm({ value = {}, onChange }) {
             type="text"
             value={value.purok ?? ''}
             onChange={(e) => update('purok', e.target.value)}
+            placeholder="e.g. Purok 1, Zone 3"
             className={inputClass}
           />
         </div>
@@ -47,9 +58,9 @@ export default function AddressInformationForm({ value = {}, onChange }) {
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Barangay</label>
           <input
             type="text"
-            value={value.barangay ?? ''}
-            onChange={(e) => update('barangay', e.target.value)}
-            className={inputClass}
+            value={BARANGAY}
+            readOnly
+            className={lockedInputClass}
           />
         </div>
       </div>

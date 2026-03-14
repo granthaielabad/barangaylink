@@ -22,7 +22,7 @@ export default function Privacy() {
         <div className="py-12 md:py-20 px-4 md:px-8 lg:px-12 container mx-auto">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-[#005F02]">Privacy Policy</h1>
             <p className="text-base md:text-lg mb-10 leading-relaxed">
-                The Resident and Houshold Registry System values the privacy and protection of personal information of all residents and barangay officials. This Privacy Policy explains how the system collects, uses, stores, and protects personal data in compliance with data privacy standards and to ensure secure barangay services.
+                The Resident and Household Registry System values the privacy and protection of personal information of all residents and barangay officials. This Privacy Policy explains how the system collects, uses, stores, and protects personal data in compliance with data privacy standards and to ensure secure barangay services.
             </p>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-32">
