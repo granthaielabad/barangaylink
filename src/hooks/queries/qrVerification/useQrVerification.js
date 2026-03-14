@@ -1,4 +1,3 @@
-// src/hooks/queries/qrVerification/useQrVerification.js
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { verifyQrToken } from '../../../services/supabase/eidService';
 import { supabase } from '../../../services/supabase/client';

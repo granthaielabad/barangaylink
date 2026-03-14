@@ -1,4 +1,3 @@
-// src/features/dashboard/components/residents/ResidentAddEdit/PersonalInformationForm.jsx
 import { FiUser } from 'react-icons/fi';
 import { FormSelect } from '../../../../../shared';
 import {

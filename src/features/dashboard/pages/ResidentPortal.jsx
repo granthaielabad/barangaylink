@@ -1,4 +1,3 @@
-// src/features/dashboard/pages/ResidentPortal.jsx
 // ─────────────────────────────────────────────────────────────────────────────
 // Self-service portal for Residents.
 // Three sections:  My Profile · My eID · My Household

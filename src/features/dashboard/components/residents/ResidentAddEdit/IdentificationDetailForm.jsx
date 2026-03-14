@@ -1,4 +1,3 @@
-// src/features/dashboard/components/residents/ResidentAddEdit/IdentificationDetailForm.jsx
 import { IoInformationCircleOutline } from 'react-icons/io5';
 import { FormSelect } from '../../../../../shared';
 import { RESIDENT_STATUS_FORM_OPTIONS } from '../../../../../core/constants';

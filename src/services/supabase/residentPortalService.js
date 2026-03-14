@@ -1,4 +1,3 @@
-// src/services/supabase/residentPortalService.js
 // ─────────────────────────────────────────────────────────────────────────────
 // All queries for the Resident self-service portal.
 // RLS automatically scopes every query to auth.uid() — no manual filtering

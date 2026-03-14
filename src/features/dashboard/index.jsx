@@ -1,4 +1,3 @@
-// src/features/dashboard/index.js
 // Barrel export — keeps AppRoutes clean and import paths short.
 export { default as Dashboard }       from './pages/Dashboard';
 export { default as Analytics }       from './pages/Analytics';

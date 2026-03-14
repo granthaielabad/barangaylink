@@ -1,4 +1,3 @@
-// src/hooks/queries/resident/useResidentPortal.js
 import { useQuery } from '@tanstack/react-query';
 import {
   getMyResidentProfile,
