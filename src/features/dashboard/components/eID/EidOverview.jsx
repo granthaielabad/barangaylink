@@ -60,9 +60,9 @@ export default function EidOverview({ stats }) {
                 <div
                   className={`flex items-center justify-center w-9 h-9 rounded-md ${item.iconBgClass}`}
                 >
-                  <Icon className="w-7 h-7" />
+                  <Icon className="w-5 h-5 xl:w-7 xl:h-7" />
                 </div>
-                <div className={`text-base font-semibold ${item.textClass}`}>
+                <div className={`text-sm md:text-sm xl:text-lg font-semibold ${item.textClass}`}>
                   <span className="mr-1">{item.label}:</span>
                   <span>{item.value.toLocaleString()}</span>
                 </div>

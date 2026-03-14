@@ -31,7 +31,7 @@ const QrCanvas = forwardRef(function QrCanvas({ token, size, onError }, ref) {
 });
 
 // ── Card-sized QR with hover zoom indicator ───────────────────
-function QrThumbnail({ token, size = 72, onExpand }) {
+function QrThumbnail({ token, size = 50, onExpand }) {
   const [hovered, setHovered] = useState(false);
   const [error,   setError]   = useState(false);
 
@@ -41,7 +41,7 @@ function QrThumbnail({ token, size = 72, onExpand }) {
         className="flex items-center justify-center bg-gray-100 border border-gray-300 rounded"
         style={{ width: size, height: size }}
       >
-        <span className="text-[8px] text-gray-400 text-center leading-tight px-1">No QR</span>
+        <span className="text-[10px] text-gray-400 text-center leading-tight px-1">No QR</span>
       </div>
     );
   }
@@ -177,7 +177,7 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
 
   return (
     <>
-      <article className="relative bg-white rounded-sm border border-gray-200 border-b-6 border-b-[#0F8A1C] shadow-sm px-4 py-4 flex items-center justify-center w-full min-h-[160px] sm:min-h-[200px] lg:min-h-[250px]">
+      <article className="relative bg-white rounded-lg border border-gray-200 border-b-6 border-b-[#0F8A1C] shadow-sm py-4 flex flex-col justify-center w-full min-h-[160px] sm:min-h-[180px] sm:min-w-[370px] lg:min-h-[200px] lg:min-w-[370px] xl:min-h-[220px] xl:min-w-[400px]">
 
         {/* Actions menu */}
         <div ref={menuRef} className="absolute top-3 right-3 z-20">
@@ -221,30 +221,41 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
         </div>
 
         {/* Card body */}
-        <div className="flex items-center gap-3 pl-3 sm:pl-8 lg:pl-10 w-full pr-10">
+        <div className="flex items-center gap-3 sm:gap-5 w-full pl-3 sm:pl-6 lg:pl-8 pr-16 sm:pr-24 lg:pr-18">
+          {/* Photo */}
           <div className="shrink-0">
             <EIdProfile
               name={name}
               photoUrl={photoUrl}
-              className="!w-[60px] !h-[60px] sm:!w-[90px] sm:!h-[90px]"
+              className="!w-[50px] !h-[50px] sm:!w-[60px] sm:!h-[60px] md:!w-[70px] md:!h-[70px] lg:!w-[80px] lg:!h-[80px] xl:!w-[100px] xl:!h-[100px]"
             />
           </div>
-          <div className="flex-1 space-y-1 min-w-0">
-            <p className="text-sm sm:text-base text-gray-800 truncate">
+
+          {/* Info */}
+          <div className="flex-1 space-y-0.5 sm:space-y-1 min-w-0">
+            <p className="text-xs sm:text-sm md:text-[14px] lg:text-[14px] xl:text-[16px] leading-snug ">
               <span className="font-semibold">ID:</span> <span>{idNumber}</span>
             </p>
-            <p className="text-sm sm:text-base text-gray-800 truncate">
+            <p className="text-xs sm:text-sm md:text-[14px] lg:text-[14px] xl:text-[16px] leading-snug">
               <span className="font-semibold">Name:</span> <span>{name}</span>
             </p>
-            <p className="text-sm sm:text-base text-gray-800 truncate">
+            <p className="text-xs sm:text-sm md:text-[14px] lg:text-[14px] xl:text-[16px] leading-snug pr-6">
               <span className="font-semibold">Address:</span> <span>{address}</span>
             </p>
           </div>
         </div>
 
         {/* QR thumbnail — bottom-right */}
-        <div className="absolute bottom-3 right-3">
-          <QrThumbnail token={qrToken} size={72} onExpand={openLightbox} />
+        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4">
+          <div className="hidden sm:block lg:hidden">
+            <QrThumbnail token={qrToken} size={55} onExpand={openLightbox} />
+          </div>
+          <div className="hidden lg:block">
+            <QrThumbnail token={qrToken} size={60} onExpand={openLightbox} />
+          </div>
+          <div className="block sm:hidden">
+            <QrThumbnail token={qrToken} size={50} onExpand={openLightbox} />
+          </div>
         </div>
 
       </article>
