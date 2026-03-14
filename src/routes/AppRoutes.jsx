@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { LandingPage, Privacy, Terms, Contact } from '../features/landing'
 import { ScrollToTop } from "../shared";
 import { Login, SignUp, ForgotPassword } from '../features/auth'
-import { Dashboard, Analytics, Residents, Households, Eid, QRVerification, UserAccount, ResidentPortal } from '../features/dashboard'
+import { Dashboard, Analytics, Residents, Households, Eid, QRVerification, UserAccount, ResidentPortalLayout, ResidentProfilePage, ResidentEIdPage } from '../features/dashboard'
 import ProtectedRoute from './ProtectedRoute'
 import RoleGuard from './RoleGuard'
 
@@ -50,7 +50,11 @@ function AppRoutes() {
 
           {/* Resident only — self-service portal */}
           <Route element={<RoleGuard roles={['resident']} />}>
-            <Route path="/resident-portal" element={<ResidentPortal />} />
+            <Route path="/resident-portal" element={<ResidentPortalLayout />}>
+              <Route index element={<Navigate to="/resident-portal/profile" replace />} />
+              <Route path="profile" element={<ResidentProfilePage />} />
+              <Route path="eid"     element={<ResidentEIdPage />} />
+            </Route>
           </Route>
 
           {/* All authenticated roles */}
