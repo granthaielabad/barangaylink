@@ -1,9 +1,8 @@
-
 import { FiUser, FiMapPin, FiHome, FiAlertCircle } from 'react-icons/fi';
 import { useMyResidentProfile, useMyHousehold } from '../../../hooks/queries/resident/useResidentPortal';
 import SectionCard from '../components/ResidentPortal/SectionCard';
 
-//  Helpers 
+// ─── Helpers ────────────────────────────────────────────────────────────────
 function fmt(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
@@ -18,8 +17,7 @@ function age(dob) {
 
 function val(v) { return v || '—'; }
 
-
-//  Field Row
+// ─── Field Row ───────────────────────────────────────────────────────────────
 function FieldRow({ fields }) {
   return (
     <div className="grid grid-cols-2 gap-x-8 gap-y-5">
@@ -33,7 +31,7 @@ function FieldRow({ fields }) {
   );
 }
 
-//  Skeleton 
+// ─── Skeleton ────────────────────────────────────────────────────────────────
 function Skeleton() {
   return (
     <div className="space-y-6">
@@ -41,7 +39,7 @@ function Skeleton() {
         <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4 animate-pulse">
           <div className="h-4 w-40 bg-gray-200 rounded" />
           <div className="grid grid-cols-2 gap-4">
-            {[1,2,3,4].map((j) => (
+            {[1, 2, 3, 4].map((j) => (
               <div key={j} className="space-y-2">
                 <div className="h-2.5 w-20 bg-gray-100 rounded" />
                 <div className="h-4 w-32 bg-gray-200 rounded" />
@@ -54,7 +52,7 @@ function Skeleton() {
   );
 }
 
-// Not Linked Notice
+// ─── Not Linked Notice ───────────────────────────────────────────────────────
 function NotLinked({ message }) {
   return (
     <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
@@ -67,7 +65,7 @@ function NotLinked({ message }) {
   );
 }
 
-// MAIN PAGE
+// ─── Page ────────────────────────────────────────────────────────────────────
 export default function ResidentProfilePage() {
   const { data: resident, isLoading: loadingProfile } = useMyResidentProfile();
   const { data: household, isLoading: loadingHousehold } = useMyHousehold();
@@ -91,9 +89,16 @@ export default function ResidentProfilePage() {
     ? resident.status.charAt(0).toUpperCase() + resident.status.slice(1)
     : 'Active';
 
+  // Address fields: resident stores address_line; detailed breakdown
+  // lives on the household row (house_no, street) and puroks (name).
+  const houseNo = household?.house_no ?? resident.households?.house_no;
+  const street  = household?.street  ?? resident.households?.street;
+  const purok   = resident.puroks?.name ?? household?.puroks?.name;
+
   return (
     <div className="space-y-5 mx-auto max-w-7xl">
-      {/*  Profile Header Card*/}
+
+      {/* ── Profile Header Card ─────────────────────────────── */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-center gap-5 border-t-4 border-t-[#005F02]">
         <div className="w-24 h-24 rounded-sm bg-gray-200 border border-gray-300 flex items-center justify-center overflow-hidden shrink-0">
           {resident.photo_url ? (
@@ -107,49 +112,47 @@ export default function ResidentProfilePage() {
           <p className="text-sm text-gray-500 mt-0.5">
             Resident No.: {resident.resident_no ?? '—'}
           </p>
-          <span
-            className={`inline-flex items-center mt-2 px-5 py-0.5 rounded-lg text-sm font-semibold border ${
-              resident.status === 'active'
-                ? 'bg-[#BFE8BF] text-emerald-700 border-emerald-200'
-                : 'bg-gray-100 text-gray-500 border-gray-200'
-            }`}
-          >
+          <span className={`inline-flex items-center mt-2 px-5 py-0.5 rounded-lg text-sm font-semibold border ${
+            resident.status === 'active'
+              ? 'bg-[#BFE8BF] text-emerald-700 border-emerald-200'
+              : 'bg-gray-100 text-gray-500 border-gray-200'
+          }`}>
             {statusLabel}
           </span>
         </div>
       </div>
 
-      {/* Personal Information  */}
+      {/* ── Personal Information ────────────────────────────── */}
       <SectionCard icon={FiUser} title="Personal Information">
         <FieldRow
           fields={[
-            { label: 'Last Name',     value: val(resident.last_name) },
-            { label: 'First Name',    value: val(resident.first_name) },
-            { label: 'Middle Name',   value: val(resident.middle_name) || 'N/A' },
-            { label: 'Suffix',        value: val(resident.suffix) },
-            { label: 'Birthdate',     value: fmt(resident.date_of_birth) },
-            { label: 'Sex',           value: val(resident.sex) },
-            { label: 'Age',           value: age(resident.date_of_birth) ? `${age(resident.date_of_birth)}` : '—' },
-            { label: 'Civil Status',  value: val(resident.civil_status) },
-            { label: 'Blood Type',    value: val(resident.blood_type) },
+            { label: 'Last Name',      value: val(resident.last_name) },
+            { label: 'First Name',     value: val(resident.first_name) },
+            { label: 'Middle Name',    value: val(resident.middle_name) || 'N/A' },
+            { label: 'Suffix',         value: val(resident.suffix) },
+            { label: 'Birthdate',      value: fmt(resident.date_of_birth) },
+            { label: 'Sex',            value: val(resident.sex) },
+            { label: 'Age',            value: age(resident.date_of_birth) ? `${age(resident.date_of_birth)}` : '—' },
+            { label: 'Civil Status',   value: val(resident.civil_status) },
+            { label: 'Blood Type',     value: val(resident.blood_type) },
             { label: 'Contact Number', value: val(resident.contact_number) },
           ]}
         />
       </SectionCard>
 
-      {/*Address Information  */}
+      {/* ── Address Information ─────────────────────────────── */}
       <SectionCard icon={FiMapPin} title="Address Information">
         <FieldRow
           fields={[
-            { label: 'House No.',   value: val(resident.house_no) },
-            { label: 'Purok / Zone', value: val(resident.puroks?.name ?? resident.purok_zone) },
-            { label: 'Street',     value: val(resident.street) },
-            { label: 'Barangay',   value: 'San Bartolome' },
+            { label: 'House No.',    value: val(houseNo) },
+            { label: 'Purok / Zone', value: val(purok) },
+            { label: 'Street',       value: val(street) },
+            { label: 'Barangay',     value: 'San Bartolome' },
           ]}
         />
-      </SectionCard >
+      </SectionCard>
 
-      {/* Household Information */}
+      {/* ── Household Information ───────────────────────────── */}
       <SectionCard icon={FiHome} title="Household Information" className="border-b-4 border-b-[#005F02]">
         {loadingHousehold ? (
           <div className="animate-pulse space-y-3">
@@ -161,16 +164,17 @@ export default function ResidentProfilePage() {
         ) : (
           <FieldRow
             fields={[
-              { label: 'Household No.',    value: val(household.household_no) },
-              { label: 'Household Head',   value: val(household.head_name) },
-              { label: 'Household Members', value: household.members?.length ? `${household.members.length}` : '—' },
-              { label: 'Household Status', value: household.status
+              { label: 'Household No.',      value: val(household.household_no) },
+              { label: 'Ownership Type',     value: val(household.ownership_type) },
+              { label: 'Household Members',  value: household.members?.length ? `${household.members.length}` : '—' },
+              { label: 'Household Status',   value: household.status
                   ? household.status.charAt(0).toUpperCase() + household.status.slice(1)
                   : 'Active' },
             ]}
           />
         )}
       </SectionCard>
+
     </div>
   );
 }

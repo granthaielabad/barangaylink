@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -7,7 +6,7 @@ import {
 } from 'react-icons/fi';
 import { useMyEid } from '../../../hooks/queries/resident/useResidentPortal';
 
-// ─── Helpers ────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 function fmt(dateStr) {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
@@ -28,7 +27,7 @@ function fullNameLastFirst(r) {
     .filter(Boolean).join(' ') || '—';
 }
 
-// ─── QR Canvas ───────────────────────────────────────────────
+// ─── QR Canvas ───────────────────────────────────────────────────────────────
 const QrCanvas = forwardRef(function QrCanvas({ token, size, onError }, ref) {
   const internalRef = useRef(null);
   const canvasRef = ref || internalRef;
@@ -47,7 +46,7 @@ const QrCanvas = forwardRef(function QrCanvas({ token, size, onError }, ref) {
   return <canvas ref={canvasRef} width={size} height={size} className="block" />;
 });
 
-// ─── QR Lightbox ─────────────────────────────────────────────
+// ─── QR Lightbox ─────────────────────────────────────────────────────────────
 function QrLightbox({ token, idNumber, name, onClose }) {
   const canvasRef = useRef(null);
 
@@ -96,7 +95,7 @@ function QrLightbox({ token, idNumber, name, onClose }) {
   );
 }
 
-// Not Linked Notice
+// ─── Not Linked Notice ────────────────────────────────────────────────────────
 function NotLinked({ message }) {
   return (
     <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
@@ -109,7 +108,6 @@ function NotLinked({ message }) {
   );
 }
 
-// Status colors
 const STATUS_COLOR = {
   Active:    'bg-emerald-100 text-emerald-700 border-emerald-200',
   Suspended: 'bg-amber-100 text-amber-700 border-amber-200',
@@ -117,7 +115,7 @@ const STATUS_COLOR = {
   Expired:   'bg-gray-100 text-gray-500 border-gray-200',
 };
 
-// MAIN PAGE
+// ─── Page ────────────────────────────────────────────────────────────────────
 export default function ResidentEIdPage() {
   const [qrOpen, setQrOpen] = useState(false);
   const { data: eid, isLoading } = useMyEid();
@@ -160,8 +158,9 @@ export default function ResidentEIdPage() {
 
   return (
     <div className="space-y-5 max-w-4xl">
-      {/* Status banner */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-5">
+
+        {/* Status banner */}
         <div className={`flex items-center gap-2.5 px-4 py-2.5 rounded-lg border text-sm font-semibold ${STATUS_COLOR[card.status] ?? STATUS_COLOR.Expired}`}>
           <FiShield className="w-4 h-4 shrink-0" />
           eID Status: {card.status}
@@ -259,7 +258,7 @@ export default function ResidentEIdPage() {
         {/* Detail chips row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: 'ID Number',   value: card.idNumber,           mono: true },
+            { label: 'ID Number',   value: card.idNumber,  mono: true },
             { label: 'Date Issued', value: fmt(card.issuedAt) },
             { label: 'Valid Until', value: fmt(card.expiresAt) },
             { label: 'Purok',       value: card.purok || '—' },
