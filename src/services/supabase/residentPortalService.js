@@ -1,3 +1,4 @@
+// src/services/supabase/residentPortalService.js
 // ─────────────────────────────────────────────────────────────────────────────
 // All queries for the Resident self-service portal.
 // RLS automatically scopes every query to auth.uid() — no manual filtering
@@ -76,7 +77,7 @@ export async function getMyHousehold() {
     .from('households')
     .select(`
       id, household_no, house_no, street, ownership_type,
-      monthly_income_range, created_at,
+      monthly_income, created_at,
       puroks ( id, name )
     `)
     .eq('id', resident.household_id)
@@ -84,12 +85,10 @@ export async function getMyHousehold() {
 
   if (hhErr) throw hhErr;
 
-  // Fetch all members of this household (residents with same household_id)
-  // RLS allows residents to see rows in their own purok — members will show
-  // if they share the household
+  // Fetch all members of this household
   const { data: members, error: memErr } = await supabase
     .from('residents')
-    .select('id, first_name, middle_name, last_name, suffix, sex, date_of_birth, relationship_to_head, photo_url, status')
+    .select('id, first_name, middle_name, last_name, suffix, sex, date_of_birth, photo_url, status')
     .eq('household_id', resident.household_id)
     .order('last_name', { ascending: true });
 
