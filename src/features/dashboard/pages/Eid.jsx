@@ -11,6 +11,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
 import { uploadResidentPhoto } from '../../../services/supabase/residentService';
 import toast from 'react-hot-toast';
+import { SORT_FIELDS } from '../../../core/constants';
 
 export default function Eid() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -32,13 +33,14 @@ export default function Eid() {
   const page      = useEidFilters((s) => s.page);
   const pageSize  = useEidFilters((s) => s.pageSize);
   const setSearch = useEidFilters((s) => s.setSearch);
+  const setStatus = useEidFilters((s) => s.setStatus);
   const setSortBy = useEidFilters((s) => s.setSortBy);
   const setOrder  = useEidFilters((s) => s.setOrder);
   const setPage   = useEidFilters((s) => s.setPage);
 
   const { data, isLoading } = useEids();
   const { data: stats } = useEidStats();
-  const { issue, revoke, suspend, remove } = useMutateEid();
+  const { issue, suspend, remove } = useMutateEid();
 
   const eids = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -111,8 +113,22 @@ export default function Eid() {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                 <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Filter By:</span>
+                  <SortFilter
+                    value={sortBy === 'eid_number' ? (['active', 'suspended'].includes(useEidFilters.getState().status) ? useEidFilters.getState().status : sortBy) : sortBy}
+                    onChange={(v) => {
+                      if (['active', 'suspended'].includes(v)) {
+                         setStatus(v);
+                         setSortBy('eid_number');
+                      } else {
+                         setStatus('all');
+                         setSortBy(v);
+                      }
+                      setPage(1);
+                    }}
+                    options={SORT_FIELDS.EID}
+                  />
                   <OrderFilter value={order} onChange={setOrder} />
-                  <SortFilter value={sortBy} onChange={setSortBy} />
                 </div>
                 <SearchBox
                   value={search}

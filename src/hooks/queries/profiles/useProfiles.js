@@ -14,9 +14,9 @@ const profileKeys = {
 
 export function useProfiles({
   page = 1, pageSize = 8, search = '',
-  role = 'all', sortBy = 'created_at', order = 'desc',
+  role = 'all', status = 'all', sortBy = 'created_at', order = 'desc',
 } = {}) {
-  const params = { page, pageSize, search, role, sortBy, order };
+  const params = { page, pageSize, search, role, status, sortBy, order };
   return useQuery({
     queryKey:       profileKeys.list(params),
     queryFn:        () => getProfiles(params),

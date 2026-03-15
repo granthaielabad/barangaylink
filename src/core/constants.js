@@ -63,16 +63,33 @@ export const PAGE_SIZE = 8;
 
 export const SORT_FIELDS = {
   RESIDENTS: [
-    { value: 'last_name',   label: 'Last Name' },
-    { value: 'created_at',  label: 'Date Added' },
-    { value: 'status',      label: 'Status' },
+    { value: 'resident_no', label: 'Resident No.' },
+    { value: 'last_name', label: 'Name (A–Z / Z–A)' },
+    { value: 'created_at', label: 'Date Added' },
   ],
   HOUSEHOLDS: [
-    { value: 'created_at',  label: 'Date Added' },
-    { value: 'house_no',    label: 'House No.' },
-    { value: 'status',      label: 'Status' },
+    { value: 'household_no', label: 'Household No.' },
+    { value: 'created_at', label: 'Date Added' },
+  ],
+  EID: [
+    { value: 'eid_number', label: 'eID No.' },
+    { value: 'issued_at', label: 'Issued Date' },
+    { value: 'active', label: 'Active' },
+    { value: 'suspended', label: 'Inactive' },
+  ],
+  USER_ACCOUNTS: [
+    { value: 'created_at:desc', label: 'Date Added ↓ (Newest)' },
+    { value: 'created_at:asc',  label: 'Date Added ↑ (Oldest)' },
+    { value: 'full_name:asc',   label: 'Name (A-Z)' },
+    { value: 'full_name:desc',  label: 'Name (Z-A)' },
   ],
 };
+
+export const USER_ACCOUNT_STATUS_OPTIONS = [
+  { value: 'all',      label: 'All Status' },
+  { value: 'active',   label: 'Enabled' },
+  { value: 'inactive', label: 'Disabled' },
+];
 
 export const CIVIL_STATUS_OPTIONS = [
   { value: 'single',    label: 'Single' },
