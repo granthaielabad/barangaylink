@@ -177,7 +177,7 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
 
   return (
     <>
-      <article className="relative bg-white rounded-lg border border-gray-200 border-b-6 border-b-[#0F8A1C] shadow-sm py-4 flex flex-col justify-center w-full min-h-[160px] sm:min-h-[180px] sm:min-w-[370px] lg:min-h-[200px] lg:min-w-[370px] xl:min-h-[220px] xl:min-w-[400px]">
+      <article className="relative bg-white rounded-lg border border-gray-200 border-b-6 border-b-[#0F8A1C] shadow-sm py-4 flex flex-col justify-center w-full min-h-[160px] sm:min-h-[180px] sm:min-w-[370px] lg:min-h-[200px] lg:min-w-[370px] xl:min-h-[250px] xl:min-w-[370px]">
 
         {/* Actions menu */}
         <div ref={menuRef} className="absolute top-3 right-3 z-20">

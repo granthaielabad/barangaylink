@@ -9,18 +9,23 @@ const VIEW = 'profiles_with_email';
  */
 export async function getProfiles({
   page = 1, pageSize = 8, search = '',
-  role = 'all', sortBy = 'created_at', order = 'desc',
+  role = 'all', status = 'all', sortBy = 'created_at', order = 'desc',
 } = {}) {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
 
   let query = supabase
-    .from(VIEW)
-    .select('id, role, full_name, email, is_active, created_at, purok_id', { count: 'exact' })
+    .from('profiles') // Replace VIEW if email
+    .select('id, role, full_name, is_active, created_at, purok_id', { count: 'exact' })
     .range(from, to)
     .order(sortBy, { ascending: order === 'asc' });
 
   if (role !== 'all')    query = query.eq('role', role);
+  if (status && status !== 'all') {
+    if (status === 'active') query = query.eq('is_active', true);
+    else if (status === 'inactive') query = query.eq('is_active', false);
+    else query = query.eq('status', status);
+  }
   if (search.trim())     query = query.ilike('full_name', `%${search}%`);
 
   const { data, error, count } = await query;
@@ -40,7 +45,7 @@ export async function getProfiles({
  */
 export async function getProfileRoleCounts() {
   const { data, error } = await supabase
-    .from(VIEW)
+    .from('profiles')
     .select('role');
   if (error) throw error;
   const counts = { all: 0, superadmin: 0, staff: 0, resident: 0 };

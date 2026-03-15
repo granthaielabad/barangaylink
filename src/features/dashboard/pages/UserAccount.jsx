@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import { UserTable, RoleTabs } from '../components/UserAccount';
-import { SortFilter, OrderFilter, Pagination, SearchBox, DeleteModal } from '../../../shared';
+import { ActionDropdown, SortFilter, StatusFilter, Pagination, SearchBox, DeleteModal } from '../../../shared';
 import { useProfiles, useProfileRoleCounts, useMutateProfile } from '../../../hooks/queries/profiles/useProfiles';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
@@ -11,12 +11,7 @@ import { signOut } from '../../../services/supabase/authService';
 import toast from 'react-hot-toast';
 
 const PAGE_SIZE = 8;
-
-// Map UI sort key → DB column + direction
-const SORT_MAP = {
-  'full_name':   { sortBy: 'full_name',  order: 'asc'  },
-  'created_at':  { sortBy: 'created_at', order: 'desc' },
-};
+import { SORT_FIELDS, USER_ACCOUNT_STATUS_OPTIONS } from '../../../core/constants';
 
 // Map RoleTabs UI labels → DB role values
 const ROLE_TAB_TO_DB = {
@@ -29,8 +24,8 @@ const ROLE_TAB_TO_DB = {
 export default function UserManagement() {
   const [sidebarOpen,      setSidebarOpen]      = useState(false);
   const [search,           setSearch]           = useState('');
-  const [sortBy,           setSortBy]           = useState('full_name');
-  const [order,            setOrder]            = useState('asc');
+  const [sortBy,           setSortBy]           = useState('created_at:desc');
+  const [status,           setStatus]           = useState('all');
   const [roleFilter,       setRoleFilter]       = useState('all');
   const [page,             setPage]             = useState(1);
   const [deleteModalOpen,  setDeleteModalOpen]  = useState(false);
@@ -40,13 +35,14 @@ export default function UserManagement() {
   const { profile, isSuperadmin } = useAuth();
   const clearAuth   = useAuthStore((s) => s.clearAuth);
 
-  const dbSort = SORT_MAP[sortBy]?.sortBy ?? 'full_name';
+  const [dbSort, dbOrder] = sortBy.split(':');
 
   // Paginated user list
   const { data, isLoading } = useProfiles({
     page, pageSize: PAGE_SIZE, search,
     role: ROLE_TAB_TO_DB[roleFilter] ?? 'all',
-    sortBy: dbSort, order,
+    status,
+    sortBy: dbSort, order: dbOrder,
   });
 
   // Accurate role counts across ALL users (not just current page)
@@ -62,7 +58,7 @@ export default function UserManagement() {
   const tableUsers = profiles.map((p) => ({
     id:     p.id,
     name:   p.full_name ?? '—',
-    email:  p.email     ?? '—',          // ← now populated from profiles_with_email view
+    email:  p.residents?.[0]?.email ?? p.email ?? '—',
     role:   p.role ? p.role.charAt(0).toUpperCase() + p.role.slice(1).replace('_', ' ') : '—',
     access: p.role === 'superadmin' ? 'Full Access'
           : p.role === 'staff'      ? 'Limited Access'
@@ -118,10 +114,17 @@ export default function UserManagement() {
                   placeholder="Search by name"
                 />
                 <div className="flex items-center gap-2">
-                  {/* SortFilter: sort column */}
-                  <SortFilter value={sortBy} onChange={(v) => { setSortBy(v); setPage(1); }} />
-                  {/* OrderFilter: asc / desc — separate state, not the same as sortBy */}
-                  <OrderFilter value={order} onChange={(v) => { setOrder(v); setPage(1); }} />
+                  <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Filter By:</span>
+                  <StatusFilter
+                    value={status}
+                    onChange={(v) => { setStatus(v); setPage(1); }}
+                    options={USER_ACCOUNT_STATUS_OPTIONS}
+                  />
+                  <SortFilter
+                    value={sortBy}
+                    onChange={(v) => { setSortBy(v); setPage(1); }}
+                    options={SORT_FIELDS.USER_ACCOUNTS}
+                  />
                 </div>
               </div>
             </div>
