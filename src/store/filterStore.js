@@ -10,8 +10,8 @@ import { devtools } from 'zustand/middleware';
 const defaultFilters = {
   search: '',
   status: 'all',
-  sortBy: 'created_at',
-  order: 'desc',
+  sortBy: 'resident_no',
+  order: 'asc',
   page: 1,
   pageSize: 8,
 };
@@ -53,14 +53,20 @@ export const useResidentFilters = create(
 );
 
 export const useHouseholdFilters = create(
-  devtools(createFilterSlice('households'), { name: 'household-filters' })
+  devtools(
+    (set, get) => ({
+      ...createFilterSlice('households')(set, get),
+      sortBy: 'household_no', // override: households has no resident_no column
+    }),
+    { name: 'household-filters' }
+  )
 );
 
 export const useEidFilters = create(
   devtools(
     (set, get) => ({
       ...createFilterSlice('eid')(set, get),
-      sortBy: 'issued_at', // override: electronic_ids has no created_at column
+      sortBy: 'eid_number', // override: electronic_ids has no resident_no or created_at column
     }),
     { name: 'eid-filters' }
   )
