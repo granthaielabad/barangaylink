@@ -53,12 +53,26 @@ const QrCanvas = forwardRef(function QrCanvas({ token, size, onError }, ref) {
   return <canvas ref={canvasRef} width={size} height={size} className="block" />;
 });
 
+// ── Locked field styles (identical to admin EidForms) ──
+const lockedWrap  = 'flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50';
+const lockedIcon  = 'bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-200 text-gray-400';
+const lockedText  = 'flex-1 px-4 py-2.5 bg-gray-50 text-gray-500 text-base cursor-not-allowed select-none';
+
+const LockedField = ({ label, icon: Icon, value: v }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+    <div className={lockedWrap}>
+      {Icon && <div className={lockedIcon}><Icon className="w-5 h-5" /></div>}
+      <span className={lockedText}>{v || '—'}</span>
+    </div>
+  </div>
+);
+
 // ─── Apply for eID Modal ─────────────────────────────────────────────────────
 // Matches the admin "Create New eID" modal design exactly.
 // All fields are read-only from resident profile. Only photo is interactable.
 function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const [photoPreview, setPhotoPreview] = useState(resident?.photo_url ?? null);
-  const [photoFile,    setPhotoFile]    = useState(null);
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -72,27 +86,11 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) { alert('File size must be under 2MB.'); return; }
     if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPG files are supported.'); return; }
-    setPhotoFile(file);
     const reader = new FileReader();
     reader.onload = (ev) => setPhotoPreview(ev.target.result);
     reader.readAsDataURL(file);
     e.target.value = '';
   };
-
-  // ── Locked field styles (identical to admin EidForms) ──
-  const lockedWrap  = 'flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50';
-  const lockedIcon  = 'bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-200 text-gray-400';
-  const lockedText  = 'flex-1 px-4 py-2.5 bg-gray-50 text-gray-500 text-base cursor-not-allowed select-none';
-
-  const LockedField = ({ label, icon: Icon, value: v }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
-      <div className={lockedWrap}>
-        {Icon && <div className={lockedIcon}><Icon className="w-5 h-5" /></div>}
-        <span className={lockedText}>{v || '—'}</span>
-      </div>
-    </div>
-  );
 
   const sex = resident?.sex === 'M' ? 'Male' : resident?.sex === 'F' ? 'Female' : resident?.sex ?? '';
 
@@ -500,8 +498,6 @@ export default function ResidentEIdPage() {
 
   const isLoading = loadingEid || loadingApp;
 
-  const hasActiveEid   = !!eid && eid.status === 'active';
-  const hasInactiveEid = !!eid && eid.status !== 'active';
   const hasPending     = !eid && !!application;
 
   if (isLoading) {
@@ -666,6 +662,7 @@ export default function ResidentEIdPage() {
         )}
         {qrOpen && <QrLightbox eid={eid} onClose={() => setQrOpen(false)} />}
       </div>
+      </div>
     );
   }
 
@@ -721,4 +718,5 @@ export default function ResidentEIdPage() {
       )}
     </div>
   );
+  
 }
