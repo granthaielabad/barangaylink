@@ -576,7 +576,7 @@ export default function ResidentEIdPage() {
         </div>
 
         {/* Footer note */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center p-8">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center space-y-3">
           <p className="text-sm text-gray-500">
             For inquiries about your application, please contact the barangay office.
           </p>
@@ -608,7 +608,7 @@ export default function ResidentEIdPage() {
       : { label: 'eID Inactive', desc: `Your eID is currently ${eid.status}. Please renew or contact the Barangay Office for assistance.`, bg: 'bg-amber-50 border-amber-200', icon: <FiAlertCircle className="w-5 h-5 text-amber-500" />, iconBg: 'bg-amber-100', textColor: 'text-amber-700' };
 
     return (
-      <div className="space-y-5 max-w-3xl">
+      <div className="space-y-5 max-w-7xl mx-auto">
         {/* Status banner */}
         <div className={`rounded-xl border p-5 flex gap-4 items-start ${statusCfg.bg}`}>
           <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${statusCfg.iconBg}`}>
@@ -670,15 +670,15 @@ export default function ResidentEIdPage() {
 
   // ── STATE 1: No eID, no application ─────────────────────────────────────────
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-5 max-w-7xl mx-auto">
       {/* No eID info banner */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 flex gap-4 items-start">
         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
           <FiAlertCircle className="w-5 h-5 text-blue-600" />
         </div>
         <div>
-          <p className="font-bold text-blue-800 text-lg">No eID Found</p>
-          <p className="text-sm text-blue-700 mt-1">
+          <p className="font-semibold text-blue-800 text-[20px]">No eID Found</p>
+          <p className="text-base text-blue-700 mt-0.5 leading-relaxed">
             You haven't applied for a Barangay Electronic ID yet. An eID provides you with official identification within the barangay and allows you to access various barangay services more conveniently.
           </p>
           <ul className="mt-2 space-y-1">
@@ -696,7 +696,7 @@ export default function ResidentEIdPage() {
       </div>
 
       {/* Apply CTA card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-10 flex flex-col items-center text-center">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-16 flex flex-col items-center text-center">
         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
           <FiCreditCard className="w-8 h-8 text-gray-400" />
         </div>
