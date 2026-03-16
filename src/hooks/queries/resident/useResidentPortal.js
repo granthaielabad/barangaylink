@@ -1,4 +1,7 @@
+// src/hooks/queries/resident/useResidentPortal.js
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { supabase } from '../../../services/supabase/client';
 import {
   getMyResidentProfile,
   getMyEid,
@@ -40,6 +43,25 @@ export function useMyHousehold() {
 }
 
 export function useMyEidApplication() {
+  const qc = useQueryClient();
+
+  // Realtime subscription — update cache instantly when staff changes status
+  useEffect(() => {
+    const channel = supabase
+      .channel('eid-application-changes')
+      .on('postgres_changes', {
+        event:  'UPDATE',
+        schema: 'public',
+        table:  'eid_applications',
+      }, () => {
+        qc.invalidateQueries({ queryKey: ['resident-portal', 'eid-application'] });
+        qc.invalidateQueries({ queryKey: ['resident-portal', 'eid'] });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [qc]);
+
   return useQuery({
     queryKey: ['resident-portal', 'eid-application'],
     queryFn:  getMyEidApplication,

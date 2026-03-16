@@ -1,7 +1,16 @@
+// src/features/dashboard/pages/ResidentEIdPage.jsx
+// ─────────────────────────────────────────────────────────────────────────────
+// Resident Portal — eID page.
+// 4 states:
+//   1. No eID, no application  → "No eID Found" info + "Apply for eID" CTA
+//   2. Application pending      → "Application Pending" status + progress tracker
+//   3. eID active               → Full eID card + Download + Renew eID
+//   4. eID expired/revoked      → Status banner + card (greyed) + Renew CTA
+// ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  FiUser, FiCreditCard, FiDownload, FiZoomIn, FiX,
+  FiUser, FiCreditCard, FiDownload, FiZoomIn, FiX, FiXCircle,
   FiAlertCircle, FiCheckCircle, FiClock, FiRefreshCw, FiPlus,
   FiMapPin, FiPhone, FiMail, FiCalendar, FiCamera,
 } from 'react-icons/fi';
@@ -449,30 +458,40 @@ const PROGRESS_STEPS = [
   { key: 'submitted',    label: 'Application Submitted' },
   { key: 'under_review', label: 'Under Review' },
   { key: 'approved',     label: 'Approval Pending' },
-  { key: 'generated',   label: 'eID Generation' },
+  { key: 'generated',    label: 'eID Generation' },
 ];
 
-const STATUS_TO_STEP = {
-  pending:      1, // submitted done
-  under_review: 2, // under review done
-  approved:     3, // approval done
-  rejected:     0,
+// How many steps are COMPLETED for each application status:
+//   pending       → step 1 done (submitted)
+//   under_review  → steps 1–2 done
+//   approved      → steps 1–3 done
+//   (eid exists)  → all 4 done  (handled by parent passing eidIssued=true)
+const STATUS_TO_COMPLETED = {
+  pending:      1,
+  under_review: 2,
+  approved:     3,
+  rejected:     1, // stays at submitted, shown with error styling
 };
 
-function ProgressTracker({ status }) {
-  const completedUpTo = STATUS_TO_STEP[status] ?? 1;
+function ProgressTracker({ status, eidIssued = false }) {
+  const completedUpTo = eidIssued ? 4 : (STATUS_TO_COMPLETED[status] ?? 1);
+  const isRejected    = status === 'rejected';
+
   return (
     <div className="space-y-3 mt-4">
       {PROGRESS_STEPS.map((step, i) => {
-        const done = i < completedUpTo;
+        const done    = i < completedUpTo;
+        const current = i === completedUpTo && !isRejected; // the active in-progress step
         return (
           <div key={step.key} className="flex items-center gap-3">
             {done ? (
               <FiCheckCircle className="w-5 h-5 text-[#005F02] shrink-0" />
+            ) : current ? (
+              <FiClock className="w-5 h-5 text-blue-500 shrink-0 animate-pulse" />
             ) : (
               <span className="w-5 h-5 rounded-full border-2 border-gray-300 bg-gray-100 shrink-0 inline-block" />
             )}
-            <span className={`text-sm ${done ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${done ? 'text-gray-800 font-medium' : current ? 'text-blue-700 font-medium' : 'text-gray-400'}`}>
               {step.label}
             </span>
           </div>
@@ -497,10 +516,9 @@ export default function ResidentEIdPage() {
 
   const isLoading = loadingEid || loadingApp;
 
-  // Determine which state we're in
-  const hasActiveEid  = !!eid && eid.status === 'active';
+  const hasActiveEid   = !!eid && eid.status === 'active';
   const hasInactiveEid = !!eid && eid.status !== 'active';
-  const hasPending    = !eid && !!application && application.status !== 'rejected';
+  const hasPending     = !eid && !!application; // show application status for all states incl. rejected
 
   if (isLoading) {
     return (
@@ -515,14 +533,28 @@ export default function ResidentEIdPage() {
     return (
       <div className="space-y-5 max-w-3xl">
         {/* Status banner */}
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 flex gap-4 items-start">
-          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-            <FiClock className="w-5 h-5 text-orange-500" />
+        <div className={`rounded-xl border p-5 flex gap-4 items-start ${
+          application.status === 'rejected'
+            ? 'bg-red-50 border-red-200'
+            : 'bg-orange-50 border-orange-200'
+        }`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+            application.status === 'rejected' ? 'bg-red-100' : 'bg-orange-100'
+          }`}>
+            {application.status === 'rejected'
+              ? <FiXCircle className="w-5 h-5 text-red-500" />
+              : <FiClock className="w-5 h-5 text-orange-500" />
+            }
           </div>
           <div>
-            <p className="font-bold text-orange-700 text-lg">Application Pending</p>
-            <p className="text-sm text-orange-600 mt-0.5">
-              Your eID application is currently being processed. You will be notified once your application has been reviewed and approved.
+            <p className={`font-bold text-lg ${application.status === 'rejected' ? 'text-red-700' : 'text-orange-700'}`}>
+              {application.status === 'rejected' ? 'Application Rejected' : 'Application Pending'}
+            </p>
+            <p className={`text-sm mt-0.5 ${application.status === 'rejected' ? 'text-red-600' : 'text-orange-600'}`}>
+              {application.status === 'rejected'
+                ? 'Your eID application was not approved. Please contact the Barangay Office for assistance or submit a new application.'
+                : 'Your eID application is currently being processed. You will be notified once your application has been reviewed and approved.'
+              }
             </p>
           </div>
         </div>
@@ -553,16 +585,31 @@ export default function ResidentEIdPage() {
 
           <div className="mt-5 pt-4 border-t border-gray-100">
             <p className="text-sm text-gray-500 font-medium mb-2">Application Progress</p>
-            <ProgressTracker status={application.status} />
+            <ProgressTracker status={application.status} eidIssued={false} />
           </div>
         </div>
 
-        {/* Footer note */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
+        {/* Footer note + re-apply if rejected */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center space-y-3">
           <p className="text-sm text-gray-500">
             For inquiries about your application, please contact the barangay office.
           </p>
+          {application.status === 'rejected' && (
+            <button type="button" onClick={() => setApplyOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] transition-colors">
+              <FiPlus className="w-4 h-4" /> Submit New Application
+            </button>
+          )}
         </div>
+
+        {applyOpen && (
+          <ApplyModal
+            resident={resident}
+            onClose={() => setApplyOpen(false)}
+            onSubmit={(payload) => { submitApp(payload); setApplyOpen(false); }}
+            isPending={submittingApp}
+          />
+        )}
       </div>
     );
   }
