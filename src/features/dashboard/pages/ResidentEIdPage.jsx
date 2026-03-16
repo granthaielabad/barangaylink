@@ -1,12 +1,3 @@
-// src/features/dashboard/pages/ResidentEIdPage.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Resident Portal — eID page.
-// 4 states:
-//   1. No eID, no application  → "No eID Found" info + "Apply for eID" CTA
-//   2. Application pending      → "Application Pending" status + progress tracker
-//   3. eID active               → Full eID card + Download + Renew eID
-//   4. eID expired/revoked      → Status banner + card (greyed) + Renew CTA
-// ─────────────────────────────────────────────────────────────────────────────
 import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -103,8 +94,6 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
     </div>
   );
 
-  const fullName = [resident?.first_name, resident?.middle_name, resident?.last_name, resident?.suffix]
-    .filter(Boolean).join(' ') || '—';
   const sex = resident?.sex === 'M' ? 'Male' : resident?.sex === 'F' ? 'Female' : resident?.sex ?? '';
 
   const handleSubmit = (e) => {
@@ -240,8 +229,8 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
 
 // ─── Renew eID Modal ─────────────────────────────────────────────────────────
 function RenewModal({ eid, onClose, onSubmit, isPending }) {
-  const [address,  setAddress]  = useState(eid?.residents?.address_line ?? '');
-  const [contact,  setContact]  = useState(eid?.residents?.contact_number ?? '');
+  const [address,   setAddress]   = useState(eid?.residents?.address_line ?? '');
+  const [contact,   setContact]   = useState(eid?.residents?.contact_number ?? '');
   const [certified, setCertified] = useState(false);
 
   useEffect(() => {
@@ -453,7 +442,7 @@ function QrLightbox({ eid, onClose }) {
   );
 }
 
-// ─── Progress Step ────────────────────────────────────────────────────────────
+// ─── Progress Tracker ────────────────────────────────────────────────────────
 const PROGRESS_STEPS = [
   { key: 'submitted',    label: 'Application Submitted' },
   { key: 'under_review', label: 'Under Review' },
@@ -461,16 +450,11 @@ const PROGRESS_STEPS = [
   { key: 'generated',    label: 'eID Generation' },
 ];
 
-// How many steps are COMPLETED for each application status:
-//   pending       → step 1 done (submitted)
-//   under_review  → steps 1–2 done
-//   approved      → steps 1–3 done
-//   (eid exists)  → all 4 done  (handled by parent passing eidIssued=true)
 const STATUS_TO_COMPLETED = {
   pending:      1,
   under_review: 2,
   approved:     3,
-  rejected:     1, // stays at submitted, shown with error styling
+  rejected:     1,
 };
 
 function ProgressTracker({ status, eidIssued = false }) {
@@ -481,7 +465,7 @@ function ProgressTracker({ status, eidIssued = false }) {
     <div className="space-y-3 mt-4">
       {PROGRESS_STEPS.map((step, i) => {
         const done    = i < completedUpTo;
-        const current = i === completedUpTo && !isRejected; // the active in-progress step
+        const current = i === completedUpTo && !isRejected;
         return (
           <div key={step.key} className="flex items-center gap-3">
             {done ? (
@@ -507,9 +491,9 @@ export default function ResidentEIdPage() {
   const [renewOpen,  setRenewOpen]  = useState(false);
   const [qrOpen,     setQrOpen]     = useState(false);
 
-  const { data: eid,         isLoading: loadingEid  } = useMyEid();
-  const { data: application, isLoading: loadingApp  } = useMyEidApplication();
-  const { data: resident                             } = useMyResidentProfile();
+  const { data: eid,         isLoading: loadingEid } = useMyEid();
+  const { data: application, isLoading: loadingApp } = useMyEidApplication();
+  const { data: resident                            } = useMyResidentProfile();
 
   const { mutate: submitApp,   isPending: submittingApp   } = useSubmitEidApplication();
   const { mutate: submitRenew, isPending: submittingRenew } = useSubmitEidRenewal();
@@ -518,7 +502,7 @@ export default function ResidentEIdPage() {
 
   const hasActiveEid   = !!eid && eid.status === 'active';
   const hasInactiveEid = !!eid && eid.status !== 'active';
-  const hasPending     = !eid && !!application; // show application status for all states incl. rejected
+  const hasPending     = !eid && !!application;
 
   if (isLoading) {
     return (
@@ -528,73 +512,75 @@ export default function ResidentEIdPage() {
     );
   }
 
-  // ── STATE 2: Application pending ────────────────────────────────────────────
+  // ── STATE 2: Application submitted / in-progress / rejected ─────────────────
   if (hasPending) {
+    const isRejected = application.status === 'rejected';
     return (
-      <div className="space-y-5 max-w-3xl">
-        {/* Status banner */}
-        <div className={`rounded-xl border p-5 flex gap-4 items-start ${
-          application.status === 'rejected'
-            ? 'bg-red-50 border-red-200'
-            : 'bg-orange-50 border-orange-200'
-        }`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-            application.status === 'rejected' ? 'bg-red-100' : 'bg-orange-100'
-          }`}>
-            {application.status === 'rejected'
-              ? <FiXCircle className="w-5 h-5 text-red-500" />
-              : <FiClock className="w-5 h-5 text-orange-500" />
-            }
+      <div className="space-y-5 max-w-7xl mx-auto">
+
+        {/* Status banner — frontend dev's design, extended for rejected state */}
+        {isRejected ? (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+              <FiXCircle className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <p className="font-semibold text-red-700 text-[20px]">Application Rejected</p>
+              <p className="text-base text-red-600 mt-0.5 leading-relaxed">
+                Your eID application was not approved. Please contact the Barangay Office for assistance or submit a new application.
+              </p>
+            </div>
           </div>
-          <div>
-            <p className={`font-bold text-lg ${application.status === 'rejected' ? 'text-red-700' : 'text-orange-700'}`}>
-              {application.status === 'rejected' ? 'Application Rejected' : 'Application Pending'}
-            </p>
-            <p className={`text-sm mt-0.5 ${application.status === 'rejected' ? 'text-red-600' : 'text-orange-600'}`}>
-              {application.status === 'rejected'
-                ? 'Your eID application was not approved. Please contact the Barangay Office for assistance or submit a new application.'
-                : 'Your eID application is currently being processed. You will be notified once your application has been reviewed and approved.'
-              }
-            </p>
+        ) : (
+          <div className="bg-orange-50 border border-[#F2C96B] rounded-xl p-5 flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
+              <FiClock className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <p className="font-semibold text-[#B45309] text-[20px]">Application Pending</p>
+              <p className="text-base text-[#C2410C] mt-0.5 leading-relaxed">
+                Your eID application is currently being processed. You will be notified once your application has been reviewed and approved.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Application details */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-9 h-9 rounded-lg bg-[#005F02]/10 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-[#005F02]/10 flex items-center justify-center">
               <LuClipboardList className="w-5 h-5 text-[#005F02]" />
             </div>
-            <h2 className="font-bold text-gray-900 text-lg">Application Details</h2>
+            <h2 className="font-semibold text-gray-900 text-[24px]">Application Details</h2>
           </div>
 
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between py-1 border-b border-gray-100">
+            <div className="flex justify-between py-1">
               <span className="text-gray-500">Application Number:</span>
               <span className="font-semibold font-mono">{application.id?.slice(0, 12).toUpperCase()}</span>
             </div>
-            <div className="flex justify-between py-1 border-b border-gray-100">
+            <div className="flex justify-between py-1">
               <span className="text-gray-500">Submitted on:</span>
               <span className="font-semibold">{fmtLong(application.submitted_at)}</span>
             </div>
-            <div className="flex justify-between py-1 border-b border-gray-100">
+            <div className="flex justify-between py-1">
               <span className="text-gray-500">Estimated processing:</span>
               <span className="font-semibold">3-5 business days</span>
             </div>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-gray-100">
+          <div className="mt-5 pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-500 font-medium mb-2">Application Progress</p>
             <ProgressTracker status={application.status} eidIssued={false} />
           </div>
         </div>
 
-        {/* Footer note + re-apply if rejected */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center space-y-3">
+        {/* Footer note */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center p-8">
           <p className="text-sm text-gray-500">
             For inquiries about your application, please contact the barangay office.
           </p>
-          {application.status === 'rejected' && (
+          {isRejected && (
             <button type="button" onClick={() => setApplyOpen(true)}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] transition-colors">
               <FiPlus className="w-4 h-4" /> Submit New Application
@@ -614,18 +600,18 @@ export default function ResidentEIdPage() {
     );
   }
 
-  // ── STATE 3 & 4: Has eID (active or not) ────────────────────────────────────
+  // ── STATE 3 & 4: Has eID (active or inactive) ────────────────────────────────
   if (eid) {
-    const isActive   = eid.status === 'active';
-    const statusCfg  = isActive
-      ? { label: 'eID Active',   desc: 'Your Barangay Electronic ID is active and verified. You can use this for barangay transactions and services.', bg: 'bg-green-50 border-green-200', icon: <FiCheckCircle className="w-5 h-5 text-green-600" />, textColor: 'text-green-700' }
-      : { label: 'eID Inactive', desc: `Your eID is currently ${eid.status}. Please renew or contact the Barangay Office for assistance.`, bg: 'bg-amber-50 border-amber-200', icon: <FiAlertCircle className="w-5 h-5 text-amber-500" />, textColor: 'text-amber-700' };
+    const isActive  = eid.status === 'active';
+    const statusCfg = isActive
+      ? { label: 'eID Active',   desc: 'Your Barangay Electronic ID is active and verified. You can use this for barangay transactions and services.', bg: 'bg-green-50 border-green-200', icon: <FiCheckCircle className="w-5 h-5 text-green-600" />, iconBg: 'bg-green-100', textColor: 'text-green-700' }
+      : { label: 'eID Inactive', desc: `Your eID is currently ${eid.status}. Please renew or contact the Barangay Office for assistance.`, bg: 'bg-amber-50 border-amber-200', icon: <FiAlertCircle className="w-5 h-5 text-amber-500" />, iconBg: 'bg-amber-100', textColor: 'text-amber-700' };
 
     return (
       <div className="space-y-5 max-w-3xl">
         {/* Status banner */}
         <div className={`rounded-xl border p-5 flex gap-4 items-start ${statusCfg.bg}`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isActive ? 'bg-green-100' : 'bg-amber-100'}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${statusCfg.iconBg}`}>
             {statusCfg.icon}
           </div>
           <div>
