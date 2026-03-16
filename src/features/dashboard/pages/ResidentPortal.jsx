@@ -26,24 +26,22 @@ const NAV_SECTIONS = [
 // ─────────────────────────────────────────────────────────────
 function SidebarContent({ onClose }) {
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 h-full flex flex-col">
+    <aside className="w-68 bg-white border-r border-gray-200 h-full flex flex-col">
       {/* Logo */}
-      <div className="px-6 py-6 flex items-center gap-3 border-b border-gray-100">
-        <img src={LogoDashboard} alt="BarangayLink" className="h-11 w-11 shrink-0" />
-        <div>
-          <p className="text-[#005F02] font-black text-lg leading-tight">BarangayLink</p>
-          <p className="text-xs text-gray-500 font-medium">Resident Portal</p>
-        </div>
+      <div className="px-6 py-6 font-medium">
+        <img src={LogoDashboard} alt="Logo" className="w-full" />
       </div>
 
+      <hr className="border-gray-400 opacity-20 mb-5" />
+
       {/* Nav */}
-      <nav className="px-4 pt-5 pb-6 flex-1">
+      <nav className="px-4 pb-6 flex-1">
         {NAV_SECTIONS.map((section) => (
-          <div key={section.title} className="mb-4">
-            <p className="px-3 mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+          <div key={section.title} className="mb-6">
+            <p className="px-3 text-[14px] font-semibold text-gray-500 uppercase tracking-wider">
               {section.title}
             </p>
-            <div className="space-y-1">
+            <div className="mt-2 space-y-1">
               {section.items.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -53,14 +51,14 @@ function SidebarContent({ onClose }) {
                     onClick={onClose}
                     className={({ isActive }) =>
                       [
-                        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                        'flex items-center gap-3 px-2 py-2 rounded-lg text-lg transition-colors',
                         isActive
-                          ? 'bg-[#005F02] text-white'
-                          : 'text-gray-600 hover:bg-gray-100',
+                          ? 'bg-[#005F02]/15 text-[#005F02] font-semibold'
+                          : 'text-gray-700 hover:bg-gray-100',
                       ].join(' ')
                     }
                   >
-                    <Icon className="w-4 h-4 shrink-0" />
+                    <Icon className="w-6 h-6 shrink-0" />
                     <span>{item.label}</span>
                   </NavLink>
                 );

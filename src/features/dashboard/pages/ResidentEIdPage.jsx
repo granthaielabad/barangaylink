@@ -513,52 +513,52 @@ export default function ResidentEIdPage() {
   // ── STATE 2: Application pending ────────────────────────────────────────────
   if (hasPending) {
     return (
-      <div className="space-y-5 max-w-3xl">
+      <div className="space-y-5 max-w-7xl mx-auto">
         {/* Status banner */}
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 flex gap-4 items-start">
+        <div className="bg-orange-50 border border-[#F2C96B] rounded-xl p-5 flex gap-4 items-start p-16">
           <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
             <FiClock className="w-5 h-5 text-orange-500" />
           </div>
           <div>
-            <p className="font-bold text-orange-700 text-lg">Application Pending</p>
-            <p className="text-sm text-orange-600 mt-0.5">
+            <p className="font-semibold text-[#B45309] text-[20px]">Application Pending</p>
+            <p className="text-base text-[#C2410C] mt-0.5 leading-relaxed">
               Your eID application is currently being processed. You will be notified once your application has been reviewed and approved.
             </p>
           </div>
         </div>
 
         {/* Application details */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 p-16">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-9 h-9 rounded-lg bg-[#005F02]/10 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-[#005F02]/10 flex items-center justify-center">
               <LuClipboardList className="w-5 h-5 text-[#005F02]" />
             </div>
-            <h2 className="font-bold text-gray-900 text-lg">Application Details</h2>
+            <h2 className="font-semibold text-gray-900 text-[24px]">Application Details</h2>
           </div>
 
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between py-1 border-b border-gray-100">
+            <div className="flex justify-between py-1">
               <span className="text-gray-500">Application Number:</span>
               <span className="font-semibold font-mono">{application.id?.slice(0, 12).toUpperCase()}</span>
             </div>
-            <div className="flex justify-between py-1 border-b border-gray-100">
+            <div className="flex justify-between py-1">
               <span className="text-gray-500">Submitted on:</span>
               <span className="font-semibold">{fmtLong(application.submitted_at)}</span>
             </div>
-            <div className="flex justify-between py-1 border-b border-gray-100">
+            <div className="flex justify-between py-1">
               <span className="text-gray-500">Estimated processing:</span>
               <span className="font-semibold">3-5 business days</span>
             </div>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-gray-100">
+          <div className="mt-5 pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-500 font-medium mb-2">Application Progress</p>
             <ProgressTracker status={application.status} />
           </div>
         </div>
 
         {/* Footer note */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center p-8">
           <p className="text-sm text-gray-500">
             For inquiries about your application, please contact the barangay office.
           </p>
