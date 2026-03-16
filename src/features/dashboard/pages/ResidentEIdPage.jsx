@@ -145,7 +145,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
               {/* Left: Photo upload — the ONLY interactive element */}
               <div className="flex flex-col items-center sm:m-5 shrink-0 sm:w-40">
                 <div className="relative">
-                  <div className="w-[140px] h-[170px] rounded-lg bg-gray-100 border border-gray-300 overflow-hidden flex items-center justify-center">
+                  <div className="w-[170px] h-[170px] rounded-lg bg-gray-100 border border-gray-300 overflow-hidden flex items-center justify-center">
                     {photoPreview ? (
                       <img src={photoPreview} alt="ID Photo" className="w-full h-full object-cover" />
                     ) : (
@@ -575,7 +575,7 @@ export default function ResidentEIdPage() {
       : { label: 'eID Inactive', desc: `Your eID is currently ${eid.status}. Please renew or contact the Barangay Office for assistance.`, bg: 'bg-amber-50 border-amber-200', icon: <FiAlertCircle className="w-5 h-5 text-amber-500" />, textColor: 'text-amber-700' };
 
     return (
-      <div className="space-y-5 max-w-3xl">
+      <div className="space-y-5 max-w-3xl mx-auto">
         {/* Status banner */}
         <div className={`rounded-xl border p-5 flex gap-4 items-start ${statusCfg.bg}`}>
           <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isActive ? 'bg-green-100' : 'bg-amber-100'}`}>
@@ -637,9 +637,9 @@ export default function ResidentEIdPage() {
 
   // ── STATE 1: No eID, no application ─────────────────────────────────────────
   return (
-    <div className="space-y-5 max-w-3xl">
+    <div className="space-y-5 max-w-7xl mx-auto">
       {/* No eID info banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 flex gap-4 items-start">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 flex gap-4 items-start p-16">
         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
           <FiAlertCircle className="w-5 h-5 text-blue-600" />
         </div>
