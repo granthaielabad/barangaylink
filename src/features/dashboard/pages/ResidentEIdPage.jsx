@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  FiUser, FiCreditCard, FiDownload, FiZoomIn, FiX,
+  FiUser, FiCreditCard, FiDownload, FiZoomIn, FiX, FiXCircle,
   FiAlertCircle, FiCheckCircle, FiClock, FiRefreshCw, FiPlus,
   FiMapPin, FiPhone, FiMail, FiCalendar, FiCamera,
 } from 'react-icons/fi';
@@ -94,8 +94,6 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
     </div>
   );
 
-  const fullName = [resident?.first_name, resident?.middle_name, resident?.last_name, resident?.suffix]
-    .filter(Boolean).join(' ') || '—';
   const sex = resident?.sex === 'M' ? 'Male' : resident?.sex === 'F' ? 'Female' : resident?.sex ?? '';
 
   const handleSubmit = (e) => {
@@ -231,8 +229,8 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
 
 // ─── Renew eID Modal ─────────────────────────────────────────────────────────
 function RenewModal({ eid, onClose, onSubmit, isPending }) {
-  const [address,  setAddress]  = useState(eid?.residents?.address_line ?? '');
-  const [contact,  setContact]  = useState(eid?.residents?.contact_number ?? '');
+  const [address,   setAddress]   = useState(eid?.residents?.address_line ?? '');
+  const [contact,   setContact]   = useState(eid?.residents?.contact_number ?? '');
   const [certified, setCertified] = useState(false);
 
   useEffect(() => {
@@ -444,35 +442,40 @@ function QrLightbox({ eid, onClose }) {
   );
 }
 
-// ─── Progress Step ────────────────────────────────────────────────────────────
+// ─── Progress Tracker ────────────────────────────────────────────────────────
 const PROGRESS_STEPS = [
   { key: 'submitted',    label: 'Application Submitted' },
   { key: 'under_review', label: 'Under Review' },
   { key: 'approved',     label: 'Approval Pending' },
-  { key: 'generated',   label: 'eID Generation' },
+  { key: 'generated',    label: 'eID Generation' },
 ];
 
-const STATUS_TO_STEP = {
-  pending:      1, // submitted done
-  under_review: 2, // under review done
-  approved:     3, // approval done
-  rejected:     0,
+const STATUS_TO_COMPLETED = {
+  pending:      1,
+  under_review: 2,
+  approved:     3,
+  rejected:     1,
 };
 
-function ProgressTracker({ status }) {
-  const completedUpTo = STATUS_TO_STEP[status] ?? 1;
+function ProgressTracker({ status, eidIssued = false }) {
+  const completedUpTo = eidIssued ? 4 : (STATUS_TO_COMPLETED[status] ?? 1);
+  const isRejected    = status === 'rejected';
+
   return (
     <div className="space-y-3 mt-4">
       {PROGRESS_STEPS.map((step, i) => {
-        const done = i < completedUpTo;
+        const done    = i < completedUpTo;
+        const current = i === completedUpTo && !isRejected;
         return (
           <div key={step.key} className="flex items-center gap-3">
             {done ? (
               <FiCheckCircle className="w-5 h-5 text-[#005F02] shrink-0" />
+            ) : current ? (
+              <FiClock className="w-5 h-5 text-blue-500 shrink-0 animate-pulse" />
             ) : (
               <span className="w-5 h-5 rounded-full border-2 border-gray-300 bg-gray-100 shrink-0 inline-block" />
             )}
-            <span className={`text-sm ${done ? 'text-gray-800 font-medium' : 'text-gray-400'}`}>
+            <span className={`text-sm ${done ? 'text-gray-800 font-medium' : current ? 'text-blue-700 font-medium' : 'text-gray-400'}`}>
               {step.label}
             </span>
           </div>
@@ -488,19 +491,18 @@ export default function ResidentEIdPage() {
   const [renewOpen,  setRenewOpen]  = useState(false);
   const [qrOpen,     setQrOpen]     = useState(false);
 
-  const { data: eid,         isLoading: loadingEid  } = useMyEid();
-  const { data: application, isLoading: loadingApp  } = useMyEidApplication();
-  const { data: resident                             } = useMyResidentProfile();
+  const { data: eid,         isLoading: loadingEid } = useMyEid();
+  const { data: application, isLoading: loadingApp } = useMyEidApplication();
+  const { data: resident                            } = useMyResidentProfile();
 
   const { mutate: submitApp,   isPending: submittingApp   } = useSubmitEidApplication();
   const { mutate: submitRenew, isPending: submittingRenew } = useSubmitEidRenewal();
 
   const isLoading = loadingEid || loadingApp;
 
-  // Determine which state we're in
-  const hasActiveEid  = !!eid && eid.status === 'active';
+  const hasActiveEid   = !!eid && eid.status === 'active';
   const hasInactiveEid = !!eid && eid.status !== 'active';
-  const hasPending    = !eid && !!application && application.status !== 'rejected';
+  const hasPending     = !eid && !!application;
 
   if (isLoading) {
     return (
@@ -510,25 +512,41 @@ export default function ResidentEIdPage() {
     );
   }
 
-  // ── STATE 2: Application pending ────────────────────────────────────────────
+  // ── STATE 2: Application submitted / in-progress / rejected ─────────────────
   if (hasPending) {
+    const isRejected = application.status === 'rejected';
     return (
       <div className="space-y-5 max-w-7xl mx-auto">
-        {/* Status banner */}
-        <div className="bg-orange-50 border border-[#F2C96B] rounded-xl p-5 flex gap-4 items-start p-16">
-          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-            <FiClock className="w-5 h-5 text-orange-500" />
+
+        {/* Status banner — frontend dev's design, extended for rejected state */}
+        {isRejected ? (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+              <FiXCircle className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <p className="font-semibold text-red-700 text-[20px]">Application Rejected</p>
+              <p className="text-base text-red-600 mt-0.5 leading-relaxed">
+                Your eID application was not approved. Please contact the Barangay Office for assistance or submit a new application.
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-semibold text-[#B45309] text-[20px]">Application Pending</p>
-            <p className="text-base text-[#C2410C] mt-0.5 leading-relaxed">
-              Your eID application is currently being processed. You will be notified once your application has been reviewed and approved.
-            </p>
+        ) : (
+          <div className="bg-orange-50 border border-[#F2C96B] rounded-xl p-5 flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
+              <FiClock className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <p className="font-semibold text-[#B45309] text-[20px]">Application Pending</p>
+              <p className="text-base text-[#C2410C] mt-0.5 leading-relaxed">
+                Your eID application is currently being processed. You will be notified once your application has been reviewed and approved.
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Application details */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 p-16">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-9 h-9 rounded-full bg-[#005F02]/10 flex items-center justify-center">
               <LuClipboardList className="w-5 h-5 text-[#005F02]" />
@@ -553,32 +571,48 @@ export default function ResidentEIdPage() {
 
           <div className="mt-5 pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-500 font-medium mb-2">Application Progress</p>
-            <ProgressTracker status={application.status} />
+            <ProgressTracker status={application.status} eidIssued={false} />
           </div>
         </div>
 
         {/* Footer note */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center p-8">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center space-y-3">
           <p className="text-sm text-gray-500">
             For inquiries about your application, please contact the barangay office.
           </p>
+          {isRejected && (
+            <button type="button" onClick={() => setApplyOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] transition-colors">
+              <FiPlus className="w-4 h-4" /> Submit New Application
+            </button>
+          )}
         </div>
+
+        {applyOpen && (
+          <ApplyModal
+            resident={resident}
+            onClose={() => setApplyOpen(false)}
+            onSubmit={(payload) => { submitApp(payload); setApplyOpen(false); }}
+            isPending={submittingApp}
+          />
+        )}
       </div>
     );
   }
 
-  // ── STATE 3 & 4: Has eID (active or not) ────────────────────────────────────
+  // ── STATE 3 & 4: Has eID (active or inactive) ────────────────────────────────
   if (eid) {
-    const isActive   = eid.status === 'active';
-    const statusCfg  = isActive
-      ? { label: 'eID Active',   desc: 'Your Barangay Electronic ID is active and verified. You can use this for barangay transactions and services.', bg: 'bg-green-50 border-green-200', icon: <FiCheckCircle className="w-5 h-5 text-green-600" />, textColor: 'text-green-700' }
-      : { label: 'eID Inactive', desc: `Your eID is currently ${eid.status}. Please renew or contact the Barangay Office for assistance.`, bg: 'bg-amber-50 border-amber-200', icon: <FiAlertCircle className="w-5 h-5 text-amber-500" />, textColor: 'text-amber-700' };
+    const isActive  = eid.status === 'active';
+    const statusCfg = isActive
+      ? { label: 'eID Active',   desc: 'Your Barangay Electronic ID is active and verified. You can use this for barangay transactions and services.', bg: 'bg-green-50 border-green-200', icon: <FiCheckCircle className="w-5 h-5 text-green-600" />, iconBg: 'bg-green-100', textColor: 'text-green-700' }
+      : { label: 'eID Inactive', desc: `Your eID is currently ${eid.status}. Please renew or contact the Barangay Office for assistance.`, bg: 'bg-amber-50 border-amber-200', icon: <FiAlertCircle className="w-5 h-5 text-amber-500" />, iconBg: 'bg-amber-100', textColor: 'text-amber-700' };
 
     return (
+      <div className="space-y-5 max-w-7xl mx-auto">
       <div className="space-y-5 max-w-3xl mx-auto">
         {/* Status banner */}
         <div className={`rounded-xl border p-5 flex gap-4 items-start ${statusCfg.bg}`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isActive ? 'bg-green-100' : 'bg-amber-100'}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${statusCfg.iconBg}`}>
             {statusCfg.icon}
           </div>
           <div>
@@ -644,8 +678,8 @@ export default function ResidentEIdPage() {
           <FiAlertCircle className="w-5 h-5 text-blue-600" />
         </div>
         <div>
-          <p className="font-bold text-blue-800 text-lg">No eID Found</p>
-          <p className="text-sm text-blue-700 mt-1">
+          <p className="font-semibold text-blue-800 text-[20px]">No eID Found</p>
+          <p className="text-base text-blue-700 mt-0.5 leading-relaxed">
             You haven't applied for a Barangay Electronic ID yet. An eID provides you with official identification within the barangay and allows you to access various barangay services more conveniently.
           </p>
           <ul className="mt-2 space-y-1">
@@ -663,7 +697,7 @@ export default function ResidentEIdPage() {
       </div>
 
       {/* Apply CTA card */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-10 flex flex-col items-center text-center">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-16 flex flex-col items-center text-center">
         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
           <FiCreditCard className="w-8 h-8 text-gray-400" />
         </div>
