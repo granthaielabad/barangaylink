@@ -1,4 +1,3 @@
-// src/services/supabase/residentPortalService.js
 // ─────────────────────────────────────────────────────────────────────────────
 // All queries for the Resident self-service portal.
 // RLS automatically scopes every query to auth.uid() — no manual filtering
@@ -30,7 +29,68 @@ export async function getMyResidentProfile() {
   return data;
 }
 
-// ── My eID ────────────────────────────────────────────────────────────────────
+// ── My eID Application ───────────────────────────────────────────────────────
+export async function getMyEidApplication() {
+  const { data: resident, error: resErr } = await supabase
+    .from('residents')
+    .select('id')
+    .eq('profile_id', (await supabase.auth.getUser()).data.user?.id)
+    .maybeSingle();
+
+  if (resErr) throw resErr;
+  if (!resident) return null;
+
+  const { data, error } = await supabase
+    .from('eid_applications')
+    .select('id, type, status, submitted_at, id_number, first_name, last_name')
+    .eq('resident_id', resident.id)
+    .order('submitted_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function submitEidApplication(payload) {
+  const { data: resident, error: resErr } = await supabase
+    .from('residents')
+    .select('id')
+    .eq('profile_id', (await supabase.auth.getUser()).data.user?.id)
+    .maybeSingle();
+
+  if (resErr) throw resErr;
+  if (!resident) throw new Error('Resident record not found.');
+
+  const { data, error } = await supabase
+    .from('eid_applications')
+    .insert({ ...payload, resident_id: resident.id })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function submitEidRenewal({ address_line, contact_number }) {
+  const { data: resident, error: resErr } = await supabase
+    .from('residents')
+    .select('id')
+    .eq('profile_id', (await supabase.auth.getUser()).data.user?.id)
+    .maybeSingle();
+
+  if (resErr) throw resErr;
+  if (!resident) throw new Error('Resident record not found.');
+
+  const { data, error } = await supabase
+    .from('eid_applications')
+    .insert({ resident_id: resident.id, type: 'renewal', address_line, contact_number })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
 export async function getMyEid() {
   // Get resident row first (RLS-scoped), then find the linked eID
   const { data: resident, error: resErr } = await supabase
@@ -77,7 +137,7 @@ export async function getMyHousehold() {
     .from('households')
     .select(`
       id, household_no, house_no, street, ownership_type,
-      monthly_income_range, created_at,
+      monthly_income, created_at,
       puroks ( id, name )
     `)
     .eq('id', resident.household_id)
@@ -85,12 +145,10 @@ export async function getMyHousehold() {
 
   if (hhErr) throw hhErr;
 
-  // Fetch all members of this household (residents with same household_id)
-  // RLS allows residents to see rows in their own purok — members will show
-  // if they share the household
+  // Fetch all members of this household
   const { data: members, error: memErr } = await supabase
     .from('residents')
-    .select('id, first_name, middle_name, last_name, suffix, sex, date_of_birth, relationship_to_head, photo_url, status')
+    .select('id, first_name, middle_name, last_name, suffix, sex, date_of_birth, photo_url, status')
     .eq('household_id', resident.household_id)
     .order('last_name', { ascending: true });
 

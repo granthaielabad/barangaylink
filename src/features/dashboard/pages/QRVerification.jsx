@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import { BsQrCode } from 'react-icons/bs';
-import { FiUpload, FiCamera, FiCameraOff, FiCheckCircle, FiXCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiUpload, FiCamera, FiCameraOff, FiCheckCircle, FiXCircle, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
@@ -65,16 +65,53 @@ function CameraScanner({ onDetect, onClose }) {
   const streamRef   = useRef(null);
   const [error, setError] = useState(null);
   const [scanning, setScanning] = useState(false);
+  const [devices, setDevices] = useState([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState('');
+
+  // Get available cameras
+  const refreshDevices = useCallback(async () => {
+    try {
+      const devs = await navigator.mediaDevices.enumerateDevices();
+      const videoDevs = devs.filter(d => d.kind === 'videoinput');
+      setDevices(videoDevs);
+      
+      // If no device is selected yet, try to find the best default
+      if (videoDevs.length > 0 && !selectedDeviceId) {
+        const backCam = videoDevs.find(d => d.label.toLowerCase().includes('back')) || 
+                        videoDevs.find(d => d.label.toLowerCase().includes('droidcam')) ||
+                        videoDevs[0];
+        setSelectedDeviceId(backCam.deviceId);
+      }
+    } catch (err) {
+      console.error('Error listing devices:', err);
+    }
+  }, [selectedDeviceId]);
+
+  useEffect(() => {
+    refreshDevices();
+  }, [refreshDevices]);
 
   // Start camera
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    const startCamera = async () => {
+      setError(null);
+      // Stop previous stream
+      streamRef.current?.getTracks().forEach(t => t.stop());
+
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-        });
+        const constraints = {
+          video: selectedDeviceId 
+            ? { deviceId: { exact: selectedDeviceId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+            : { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
         if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+        
+        // After getting permission, refresh labels
+        refreshDevices();
+
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -82,17 +119,25 @@ function CameraScanner({ onDetect, onClose }) {
           setScanning(true);
         }
       } catch (err) {
-        if (!cancelled) setError(err.name === 'NotAllowedError'
-          ? 'Camera access denied. Please allow camera permission and try again.'
-          : 'Could not access camera. Make sure no other app is using it.');
+        if (!cancelled) {
+          console.error('Camera error:', err);
+          setError(err.name === 'NotAllowedError'
+            ? 'Camera access denied. Please allow camera permission in your browser.'
+            : 'Could not access this camera. It might be used by another app or is not connected.');
+        }
       }
-    })();
+    };
+
+    if (selectedDeviceId || devices.length === 0) {
+      startCamera();
+    }
+    
     return () => {
       cancelled = true;
       streamRef.current?.getTracks().forEach(t => t.stop());
       cancelAnimationFrame(rafRef.current);
     };
-  }, []);
+  }, [selectedDeviceId, devices.length, refreshDevices]);
 
   // Scan frames
   useEffect(() => {
@@ -131,14 +176,45 @@ function CameraScanner({ onDetect, onClose }) {
 
   return (
     <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
+      {/* Device Selector Overlay - Always visible if devices exist */}
+      {devices.length > 0 && (
+        <div className="absolute top-2 left-2 right-12 z-20 flex gap-1">
+          <select 
+            value={selectedDeviceId}
+            onChange={(e) => setSelectedDeviceId(e.target.value)}
+            className="flex-1 bg-black/60 text-white text-[10px] py-1.5 px-2 rounded border border-white/20 outline-none backdrop-blur-md"
+          >
+            {devices.map((device, idx) => (
+              <option key={device.deviceId} value={device.deviceId} className="bg-gray-900">
+                {device.label || `Camera ${idx + 1}`}
+              </option>
+            ))}
+          </select>
+          <button 
+            onClick={refreshDevices}
+            className="bg-black/60 text-white p-1.5 rounded border border-white/20 hover:bg-black/80"
+            title="Refresh devices"
+          >
+            <FiRefreshCw className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
       {error ? (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-2 p-4 text-center">
-          <FiCameraOff className="w-10 h-10 text-red-400" />
-          <p className="text-sm">{error}</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white gap-3 p-6 text-center bg-gray-900">
+          <FiCameraOff className="w-12 h-12 text-red-400" />
+          <p className="text-sm max-w-[250px] leading-relaxed text-gray-300">{error}</p>
+          <button 
+            onClick={() => setSelectedDeviceId(selectedDeviceId)} 
+            className="text-xs font-semibold px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full border border-white/10 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       ) : (
         <>
           <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
+          
           {/* Scanning reticle */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="w-44 h-44 relative">
@@ -159,7 +235,7 @@ function CameraScanner({ onDetect, onClose }) {
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1.5 hover:bg-black/70 transition-colors"
+        className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1.5 hover:bg-black/70 transition-colors z-20"
         aria-label="Stop camera"
       >
         <FiCameraOff className="w-4 h-4" />

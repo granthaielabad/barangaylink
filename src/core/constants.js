@@ -1,4 +1,3 @@
-// src/core/constants.js
 // ─────────────────────────────────────────────────────────────
 // Single source of truth for all domain constants.
 // Import from here — never hardcode strings in components.

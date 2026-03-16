@@ -1,4 +1,3 @@
-// src/services/supabase/residentService.js
 // ─────────────────────────────────────────────────────────────
 // All Supabase queries for the `residents` table.
 // Server-side filtering, sorting, and pagination —

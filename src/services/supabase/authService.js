@@ -1,3 +1,4 @@
+// src/services/supabase/authService.js
 import { supabase } from './client';
 
 export async function signIn({ email, password }) {
@@ -48,8 +49,9 @@ export async function getMyProfile(userId) {
     .from('profiles')
     .select('id, role, full_name, avatar_url, purok_id, is_active')
     .eq('id', userId)
-    .single();
+    .maybeSingle();  // returns null instead of throwing 406 when row is missing
   if (error) throw error;
+  if (!data) throw new Error('Profile not found. Please log in again.');
   return data;
 }
 
