@@ -99,8 +99,8 @@ export default function ResidentProfilePage() {
     <div className="space-y-5 mx-auto max-w-7xl">
 
       {/* ── Profile Header Card ─────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-center gap-5 border-t-4 border-t-[#005F02]">
-        <div className="w-24 h-24 rounded-sm bg-gray-200 border border-gray-300 flex items-center justify-center overflow-hidden shrink-0">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-center gap-5 border-t-4 border-t-[#005F02] pb-10">
+        <div className="w-32 h-32 rounded-sm bg-gray-200 border border-gray-300 flex items-center justify-center overflow-hidden shrink-0">
           {resident.photo_url ? (
             <img src={resident.photo_url} alt="Profile" className="w-full h-full object-cover" />
           ) : (
@@ -123,7 +123,7 @@ export default function ResidentProfilePage() {
       </div>
 
       {/* ── Personal Information ────────────────────────────── */}
-      <SectionCard icon={FiUser} title="Personal Information">
+      <SectionCard icon={FiUser} title="Personal Information" className="pb-10">
         <FieldRow
           fields={[
             { label: 'Last Name',      value: val(resident.last_name) },
@@ -141,7 +141,7 @@ export default function ResidentProfilePage() {
       </SectionCard>
 
       {/* ── Address Information ─────────────────────────────── */}
-      <SectionCard icon={FiMapPin} title="Address Information">
+      <SectionCard icon={FiMapPin} title="Address Information" className="pb-10">
         <FieldRow
           fields={[
             { label: 'House No.',    value: val(houseNo) },
@@ -150,10 +150,10 @@ export default function ResidentProfilePage() {
             { label: 'Barangay',     value: 'San Bartolome' },
           ]}
         />
-      </SectionCard>
+      </SectionCard >
 
       {/* ── Household Information ───────────────────────────── */}
-      <SectionCard icon={FiHome} title="Household Information" className="border-b-4 border-b-[#005F02]">
+      <SectionCard icon={FiHome} title="Household Information" className="border-b-4 border-b-[#005F02] pb-10">
         {loadingHousehold ? (
           <div className="animate-pulse space-y-3">
             <div className="h-3 w-28 bg-gray-200 rounded" />
