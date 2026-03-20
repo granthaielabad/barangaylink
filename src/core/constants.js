@@ -59,6 +59,14 @@ export const DOCUMENT_REQUEST_STATUS = {
   REJECTED:   'rejected',
 };
 
+export const REQUEST_STATUS_FILTER_OPTIONS = [
+  { value: 'all',        label: 'All Status' },
+  { value: 'pending',    label: 'Pending' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'approved',   label: 'Approved' },
+  { value: 'rejected',   label: 'Rejected' },
+];
+
 export const PAGE_SIZE = 8;
 
 export const SORT_FIELDS = {
@@ -82,6 +90,12 @@ export const SORT_FIELDS = {
     { value: 'created_at:asc',  label: 'Date Added ↑ (Oldest)' },
     { value: 'full_name:asc',   label: 'Name (A-Z)' },
     { value: 'full_name:desc',  label: 'Name (Z-A)' },
+  ],
+  REQUESTS: [
+    { value: 'created_at', label: 'Date Requested' },
+    { value: 'request_no', label: 'Request No.'},
+    { value: 'last_name', label: 'Resident Name:'},
+    { value: 'document_type', label: 'Document Type:'},
   ],
 };
 

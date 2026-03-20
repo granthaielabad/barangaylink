@@ -4,7 +4,7 @@ import { ScrollToTop } from "../shared";
 import { Login, SignUp, ForgotPassword } from '../features/auth'
 import {
   Dashboard, Analytics, Residents, Households, Eid,
-  QRVerification, UserAccount,
+  QRVerification, RequestPage, UserAccount,
   ResidentPortalLayout, ResidentProfilePage, ResidentEIdPage, ResidentRequestPage
 } from '../features/dashboard'
 import ProtectedRoute from './ProtectedRoute'
@@ -51,6 +51,7 @@ function AppRoutes() {
             <Route path="/households"      element={<Households />} />
             <Route path="/eid"             element={<Eid />} />
             <Route path="/qr-verification" element={<QRVerification />} />
+            <Route path="/certificate-request" element={<RequestPage />} />
           </Route>
 
           {/* Resident only — self-service portal */}

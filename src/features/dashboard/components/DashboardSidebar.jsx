@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { Logo } from '../../../shared';
-import { FiHome, } from 'react-icons/fi';
+import { FiHome, FiFileText } from 'react-icons/fi';
 import { PiUsersThree, PiUsers } from "react-icons/pi";
 import { BsQrCode, } from 'react-icons/bs'
 import { FaRegAddressCard } from "react-icons/fa";
@@ -23,6 +23,7 @@ const navSections = [
       { to: '/residents', label: 'Residents', icon: PiUsersThree },
       { to: '/households', label: 'Households', icon: FiHome },
       { to: '/eid', label: 'eID', icon: FaRegAddressCard },
+      { to: '/certificate-request', label: 'Certificate Request', icon: FiFileText },
       { to: '/qr-verification', label: 'QR Verification', icon: BsQrCode },
       { to: '/user-account', label: 'User', icon: PiUsers }
     ],
