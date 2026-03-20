@@ -6,6 +6,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
 import toast from 'react-hot-toast';
 import { FiUser, FiCreditCard } from 'react-icons/fi';
+import { LuFilePen } from "react-icons/lu";
 import LogoDashboard from '../../../assets/images/logo-dashboard.svg';
 
 // ─────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ const NAV_SECTIONS = [
     items: [
       { to: '/resident-portal/profile', label: 'Resident Profile', icon: FiUser },
       { to: '/resident-portal/eid',     label: 'eID',              icon: FiCreditCard },
+      { to: '/resident-portal/request-certificate', label: 'Request Certificate', icon: LuFilePen },
     ],
   },
 ];
@@ -114,7 +116,11 @@ export default function ResidentPortal() {
   const { profile } = useAuth();
   const clearAuth   = useAuthStore((s) => s.clearAuth);
 
-  const pageTitle = location.pathname.includes('/eid') ? 'eID' : 'Resident Profile';
+  const pageTitle = location.pathname.includes('/eid') 
+    ? 'eID' 
+    : location.pathname.includes('/request-certificate')
+    ? 'Request Certificate'
+    : 'Resident Profile';
 
   const handleLogout = async () => {
     try {
