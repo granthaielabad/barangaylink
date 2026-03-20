@@ -78,7 +78,7 @@ export default function ResidentRequestPage() {
   };
 
   return (
-    <div className="max-w mx-16 space-y-10">
+    <div className="max-w mx-8 space-y-10">
       
       {/* Available Documents Section */}
       <section>
