@@ -3,8 +3,9 @@ import DateRangeFilter from './filters/DateRangeFilter';
 import YearFilter      from './filters/YearFilter';
 import FilterAll       from './filters/FilterAll';
 import CategoryFilter  from './filters/CategoryFilter';
+import { ExportButton } from '../../../../shared';
 
-export default function Filters({ onFilterChange }) {
+export default function Filters({ onFilterChange, onExport }) {
   const [dateRange,      setDateRange]      = useState('last30');
   const [dateRangeLabel, setDateRangeLabel] = useState('Last 30 days');
   const [customStart,    setCustomStart]    = useState('');
@@ -67,6 +68,9 @@ export default function Filters({ onFilterChange }) {
           selectedCategory={category}
           onCategoryChange={handleCategoryChange}
         />
+        <div className="ml-auto">
+          <ExportButton onExport={onExport} />
+        </div>
       </div>
     </div>
   );

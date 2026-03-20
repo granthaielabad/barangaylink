@@ -13,6 +13,7 @@ import {
   useSubmitEidApplication,
   useSubmitEidRenewal,
 } from '../../../hooks/queries/resident/useResidentPortal';
+import ValidIdForm from '../components/Residents/ResidentAddEdit/ValidIdForm';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(dateStr) {
@@ -73,6 +74,11 @@ const LockedField = ({ label, icon: Icon, value: v }) => (
 // All fields are read-only from resident profile. Only photo is interactable.
 function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const [photoPreview, setPhotoPreview] = useState(resident?.photo_url ?? null);
+  const [validIdData, setValidIdData] = useState({
+    validIdType:   resident?.valid_id_type   ?? '',
+    validIdNumber: resident?.valid_id_number ?? '',
+    validIdFile:   null,
+  });
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -97,17 +103,20 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
-      first_name:     resident?.first_name,
-      middle_name:    resident?.middle_name,
-      last_name:      resident?.last_name,
-      suffix:         resident?.suffix,
-      date_of_birth:  resident?.date_of_birth,
-      sex:            resident?.sex,
-      address_line:   resident?.address_line,
-      contact_number: resident?.contact_number,
-      email:          resident?.email,
-      id_number:      resident?.id_number,
-      photo_url:      photoPreview,
+      first_name:      resident?.first_name,
+      middle_name:     resident?.middle_name,
+      last_name:       resident?.last_name,
+      suffix:          resident?.suffix,
+      date_of_birth:   resident?.date_of_birth,
+      sex:             resident?.sex,
+      address_line:    resident?.address_line,
+      contact_number:  resident?.contact_number,
+      email:           resident?.email,
+      id_number:       resident?.id_number,
+      photo_url:       photoPreview,
+      valid_id_type:   validIdData.validIdType   || null,
+      valid_id_number: validIdData.validIdNumber || null,
+      valid_id_file:   validIdData.validIdFile   ?? null,
     });
   };
 
@@ -204,6 +213,13 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
               <LockedField label="Address:" icon={FiMapPin} value={resident?.address_line} />
               <LockedField label="Contact Number:" icon={FiPhone} value={resident?.contact_number} />
               <LockedField label="Email Address:" icon={FiMail} value={resident?.email} />
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-gray-100">
+              <ValidIdForm
+                value={validIdData}
+                onChange={setValidIdData}
+              />
             </div>
           </div>
 
