@@ -5,10 +5,11 @@ import { Login, SignUp, ForgotPassword } from '../features/auth'
 import {
   Dashboard, Analytics, Residents, Households, Eid,
   QRVerification, UserAccount,
-  ResidentPortalLayout, ResidentProfilePage, ResidentEIdPage,
+  ResidentPortalLayout, ResidentProfilePage, ResidentEIdPage, ResidentRequestPage
 } from '../features/dashboard'
 import ProtectedRoute from './ProtectedRoute'
 import RoleGuard from './RoleGuard'
+
 
 function AppRoutes() {
   return (
@@ -58,6 +59,7 @@ function AppRoutes() {
               <Route index element={<Navigate to="/resident-portal/profile" replace />} />
               <Route path="profile" element={<ResidentProfilePage />} />
               <Route path="eid"     element={<ResidentEIdPage />} />
+              <Route path="request-certificate" element={<ResidentRequestPage />} />
             </Route>
           </Route>
 
