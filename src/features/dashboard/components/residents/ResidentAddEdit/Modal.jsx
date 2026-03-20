@@ -3,6 +3,7 @@ import { PiUserPlus } from 'react-icons/pi';
 import PersonalInformationForm from './PersonalInformationForm';
 import AddressInformationForm from './AddressInformationForm';
 import IdentificationDetailForm from './IdentificationDetailForm';
+import ValidIdForm from './ValidIdForm';
 import { BARANGAY } from '../../../../../core/constants';
 
 const emptyForm = {
@@ -17,6 +18,9 @@ const emptyForm = {
   },
   identification: {
     philhealthNo: '', sssNo: '', tinNo: '', idNumber: '', status: 'active',
+  },
+  validId: {
+    validIdType: '', validIdNumber: '', validIdFile: null,
   },
 };
 
@@ -55,6 +59,11 @@ function buildEditForm(raw) {
       idNumber:     raw.id_number     ?? '',
       status:       raw.status        ?? 'active',
     },
+    validId: {
+      validIdType:   raw.valid_id_type   ?? '',
+      validIdNumber: raw.valid_id_number ?? '',
+      validIdFile:   null,
+    },
   };
 }
 
@@ -90,7 +99,7 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
   // Flatten form sections into the shape Residents.jsx handleAddResident expects
   const handleSubmit = (e) => {
     e.preventDefault();
-    const { personal, address, identification } = formData;
+    const { personal, address, identification, validId } = formData;
 
     onSubmit?.({
       // Personal
@@ -121,6 +130,10 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
       tinNo:        identification.tinNo        || null,
       idNumber:     identification.idNumber     || null,
       status:       identification.status       || 'active',
+      // Valid ID
+      validIdType:   validId.validIdType   || null,
+      validIdNumber: validId.validIdNumber || null,
+      validIdFile:   validId.validIdFile   ?? null,
     });
 
     if (mode === 'add') setFormData(emptyForm);
@@ -166,6 +179,10 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
             <IdentificationDetailForm
               value={formData.identification}
               onChange={(v) => setFormData((d) => ({ ...d, identification: v }))}
+            />
+            <ValidIdForm
+              value={formData.validId}
+              onChange={(v) => setFormData((d) => ({ ...d, validId: v }))}
             />
           </div>
 

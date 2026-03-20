@@ -59,7 +59,10 @@ export default function Analytics() {
         />
 
         <section className="px-5 py-7">
-          <Filters onFilterChange={setFilters} />
+          <Filters
+            onFilterChange={setFilters}
+            onExport={(format) => toast.success(`Exporting as ${format.toUpperCase()}…`)}
+          />
           <AnalyticsCards filters={filters} analyticsData={analyticsData} />
 
           {/* Demographic Section */}

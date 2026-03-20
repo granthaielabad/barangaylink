@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { IoMdAdd } from 'react-icons/io';
 import EidForms from '../EidForms';
+import ValidIdForm from '../../../Residents/ResidentAddEdit/ValidIdForm';
 
 const initialFormData = {
   idNumber: '',
@@ -13,6 +14,9 @@ const initialFormData = {
   address: '',
   contactNumber: '',
   emailAddress: '',
+  validIdType:   '',
+  validIdNumber: '',
+  validIdFile:   null,
 };
 
 function parseNameToFormData(name) {
@@ -99,6 +103,9 @@ export default function EidAddEditModal({
       gender: formData.gender,
       contactNumber: formData.contactNumber,
       emailAddress: formData.emailAddress,
+      validIdType:   formData.validIdType   || null,
+      validIdNumber: formData.validIdNumber || null,
+      validIdFile:   formData.validIdFile   ?? null,
     };
     onSubmit?.(eid);
     setFormData(initialFormData);
@@ -150,8 +157,12 @@ export default function EidAddEditModal({
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           {/* Form body */}
-          <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
             <EidForms value={formData} onChange={setFormData} fullName={fullName} />
+            <ValidIdForm
+              value={{ validIdType: formData.validIdType, validIdNumber: formData.validIdNumber, validIdFile: formData.validIdFile }}
+              onChange={(v) => setFormData((d) => ({ ...d, ...v }))}
+            />
           </div>
 
           {/* Footer */}
