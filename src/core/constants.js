@@ -43,6 +43,13 @@ export const EID_STATUS = {
   EXPIRED: 'expired',
 };
 
+export const EID_STATUS_FILTER_OPTIONS = [
+  { value: 'all',       label: 'All Status' },
+  { value: 'active',    label: 'Active' },
+  { value: 'suspended', label: 'Inactive' },
+  { value: 'revoked',   label: 'Deactive' },
+];
+
 export const DOCUMENT_TYPES = [
   { value: 'barangay_clearance',        label: 'Barangay Clearance' },
   { value: 'certificate_of_residency',  label: 'Certificate of Residency' },

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
-import { EidOverview, EidCard, EidAddEditModal } from '../components/eID';
+import { EidOverview, EidCard, EidAddEditModal } from '../components/EId';
 import { SearchBox, SortFilter, OrderFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
 import { useEids, useEidStats, useMutateEid } from '../../../hooks/queries/eid/useEids';
 import { useEidFilters } from '../../../store/filterStore';
@@ -99,7 +99,7 @@ export default function Eid() {
 
       <main className="flex-1 overflow-auto">
         <DashboardHeader
-          title="eID"
+          title="eID Records"
           userName={profile?.full_name ?? ''}
           userRole={profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : ''}
           onLogout={handleLogout}
@@ -160,6 +160,7 @@ export default function Eid() {
                     onEdit={(e) => { setSelectedEid(e); setEidFormMode('edit'); setEidFormModalOpen(true); }}
                     onDeactivate={(e) => { setSelectedEid(e); setDeactivateModalOpen(true); }}
                     onDelete={(e) => { setSelectedEid(e); setDeleteModalOpen(true); }}
+                    onView={(e) => toast(`Viewing eID Record for ${e.name}`)}
                   />
                 ))}
                 {cardEids.length === 0 && (

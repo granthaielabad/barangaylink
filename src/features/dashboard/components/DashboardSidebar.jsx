@@ -22,7 +22,8 @@ const navSections = [
     items: [
       { to: '/residents', label: 'Residents', icon: PiUsersThree },
       { to: '/households', label: 'Households', icon: FiHome },
-      { to: '/eid', label: 'eID', icon: FaRegAddressCard },
+      { to: '/eid-records', label: 'eID Records', icon: FaRegAddressCard },
+      { to: '/eid-applications', label: 'eID Applications', icon: FaRegAddressCard },
       { to: '/certificate-request', label: 'Certificate Request', icon: FiFileText },
       { to: '/qr-verification', label: 'QR Verification', icon: BsQrCode },
       { to: '/user-account', label: 'User', icon: PiUsers }
