@@ -17,7 +17,7 @@ export const RESIDENT_STATUS = {
   ARCHIVED: 'archived',
 };
 
-// Used in the IdentificationDetailForm status dropdown (no 'all', no 'archived', no 'pending', no 'deactivated')
+// Used in the StatusForm status dropdown (no 'all', no 'archived', no 'pending', no 'deactivated')
 export const RESIDENT_STATUS_FORM_OPTIONS = [
   { value: 'active',   label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
