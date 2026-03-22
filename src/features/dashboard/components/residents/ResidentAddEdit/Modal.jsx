@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { PiUserPlus } from 'react-icons/pi';
 import PersonalInformationForm from './PersonalInformationForm';
 import AddressInformationForm from './AddressInformationForm';
-import IdentificationDetailForm from './IdentificationDetailForm';
 import ValidIdForm from './ValidIdForm';
 import { BARANGAY } from '../../../../../core/constants';
 
@@ -176,13 +175,16 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
               value={formData.address}
               onChange={(v) => setFormData((d) => ({ ...d, address: v }))}
             />
-            <IdentificationDetailForm
-              value={formData.identification}
-              onChange={(v) => setFormData((d) => ({ ...d, identification: v }))}
-            />
             <ValidIdForm
               value={formData.validId}
+              status={formData.identification.status}
               onChange={(v) => setFormData((d) => ({ ...d, validId: v }))}
+              onStatusChange={(val) =>
+                setFormData((d) => ({
+                  ...d,
+                  identification: { ...d.identification, status: val },
+                }))
+              }
             />
           </div>
 

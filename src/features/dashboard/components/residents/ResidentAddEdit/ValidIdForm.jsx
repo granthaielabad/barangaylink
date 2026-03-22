@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { PiIdentificationCardLight } from 'react-icons/pi';
 import { HiOutlineArrowUpTray } from 'react-icons/hi2';
 import { FormSelect } from '../../../../../shared';
+import { RESIDENT_STATUS_FORM_OPTIONS } from '../../../../../core/constants';
 
 const ID_TYPE_OPTIONS = [
   { value: 'national_id',    label: "National ID" },
@@ -27,7 +28,7 @@ const ACCEPT_TYPES = 'image/jpeg,image/png,image/webp,application/pdf';
 const inputClass =
   'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
 
-export default function ValidIdForm({ value = {}, onChange }) {
+export default function ValidIdForm({ value = {}, onChange, status = 'active', onStatusChange }) {
   const fileInputRef = useRef(null);
 
   const update = (field, val) => onChange?.({ ...value, [field]: val });
@@ -60,20 +61,21 @@ export default function ValidIdForm({ value = {}, onChange }) {
         </h3>
       </div>
 
-      {/* ID Type + ID Number row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Valid ID Type
-          </label>
-          <FormSelect
-            placeholder="Select ID Type"
-            value={value.validIdType ?? ''}
-            onChange={(val) => update('validIdType', val)}
-            options={ID_TYPE_OPTIONS}
-          />
-        </div>
+      {/* Valid ID Type (Full Width) */}
+      <div className="w-full">
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          Valid ID Type
+        </label>
+        <FormSelect
+          placeholder="Select ID Type"
+          value={value.validIdType ?? ''}
+          onChange={(val) => update('validIdType', val)}
+          options={ID_TYPE_OPTIONS}
+        />
+      </div>
 
+      {/* ID Number + Status row (Side-by-side) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             ID Number
@@ -84,6 +86,18 @@ export default function ValidIdForm({ value = {}, onChange }) {
             onChange={(e) => update('validIdNumber', e.target.value)}
             placeholder="Enter ID number"
             className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Status <span className="text-red-500">*</span>
+          </label>
+          <FormSelect
+            placeholder="Status"
+            value={status ?? 'active'}
+            onChange={onStatusChange}
+            options={RESIDENT_STATUS_FORM_OPTIONS}
           />
         </div>
       </div>
