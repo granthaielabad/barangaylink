@@ -1,44 +1,43 @@
 import React from 'react';
-import { FaAddressCard, FaUserAltSlash, FaUserCheck } from 'react-icons/fa';
-import { FaClock } from 'react-icons/fa6';
+import { FaPlus, FaClock, FaPrint, FaTimesCircle } from 'react-icons/fa';
 
-export default function EidOverview({ stats }) {
+export default function EidApplicationOverview({ stats }) {
   const {
-    total = 0,
-    active = 0,
-    pending = 0,
-    deactivated = 0,
+    new_apps = 0,
+    pending_review = 0,
+    ready_printing = 0,
+    rejected = 0,
   } = stats || {};
 
   const items = [
     {
-      label: 'Total eIDs',
-      value: total,
-      icon: FaAddressCard,
+      label: 'New Application',
+      value: new_apps,
+      icon: FaPlus,
       containerClass: 'bg-[#E6F4E6] border-[#B7DDB8]',
       iconBgClass: 'text-[#2F7A37]',
       textClass: 'text-[#005F02]',
     },
     {
-      label: 'Active',
-      value: active,
-      icon: FaUserCheck,
-      containerClass: 'bg-[#DDF3DD] border-[#7BC67D]',
-      iconBgClass: 'text-[#2F7A37]',
-      textClass: 'text-[#0A7A0C]',
-    },
-    {
-      label: 'Inactive',
-      value: pending,
+      label: 'Pending Review',
+      value: pending_review,
       icon: FaClock,
       containerClass: 'bg-[#FFF4D6] border-[#E6C36A]',
       iconBgClass: 'text-[#D9A441]',
       textClass: 'text-[#C58F00]',
     },
     {
-      label: 'Deactivated',
-      value: deactivated,
-      icon: FaUserAltSlash,
+      label: 'Ready For Printing',
+      value: ready_printing,
+      icon: FaPrint,
+      containerClass: 'bg-[#E1F5FE] border-[#B3E5FC]',
+      iconBgClass: 'text-[#0288D1]',
+      textClass: 'text-[#01579B]',
+    },
+    {
+      label: 'Rejected',
+      value: rejected,
+      icon: FaTimesCircle,
       containerClass: 'bg-[#FDE8E7] border-[#E39A95]',
       iconBgClass: 'text-[#C43C3C]',
       textClass: 'text-[#B3261E]',
@@ -48,7 +47,7 @@ export default function EidOverview({ stats }) {
   return (
     <section className="mb-6">
       <div className="bg-white rounded-2xl border border-[#CFE8CF] px-4 py-3">
-        <h2 className="text-2xl font-semibold text-[#0B3D10] mb-4 mx-5">eID Records Overview</h2>
+        <h2 className="text-2xl font-semibold text-[#0B3D10] mb-4 mx-5">eID Applications Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mx-5">
           {items.map((item) => {
             const Icon = item.icon;

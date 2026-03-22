@@ -78,7 +78,7 @@ export default function HouseholdAddEditModal({
       <div className="absolute inset-0 bg-black/40" />
       <div
         ref={panelRef}
-        className="relative bg-white w-full max-w-2xl rounded-xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
+        className="relative bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-3 bg-[#F1F7F2]">

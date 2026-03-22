@@ -1,14 +1,14 @@
 import { FiFileText, FiClock, FiCheckCircle } from 'react-icons/fi';
-import { LuClipboardCheck } from "react-icons/lu";
+import { TbFileCertificate } from "react-icons/tb";
 
 export default function RequestStats({ stats = {} }) {
   const items = [
     {
       label: 'Total Request',
       value: stats.total ?? 0,
-      icon: LuClipboardCheck,
+      icon: TbFileCertificate,
       color: 'bg-white text-gray-900 border-gray-200',
-      iconColor: 'bg-gray-100 text-gray-400',
+      iconColor: 'bg-white text-gray-400',
     },
     {
       label: 'Pending',
@@ -34,14 +34,14 @@ export default function RequestStats({ stats = {} }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-14 mb-8">
       {items.map((item, i) => (
         <div
           key={i}
-          className={`flex items-center justify-between p-10 rounded-xl border shadow-sm ${item.color}`}
+          className={`flex items-center justify-between p-8 rounded-xl border shadow-sm ${item.color}`}
         >
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wider opacity-60">
+          <div className="space-y-2">
+            <p className="text-[16px] font-semibold uppercase tracking-wider opacity-60">
               {item.label}
             </p>
             <p className="text-3xl font-bold tracking-tight">{item.value}</p>

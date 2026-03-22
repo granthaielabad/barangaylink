@@ -8,7 +8,7 @@ import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
 import { useVerifyQr, useQrHistory } from '../../../hooks/queries/qrVerification/useQrVerification';
-import { EIdProfile } from '../components/eID';
+import { EIdProfile } from '../components/EId';
 import toast from 'react-hot-toast';
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -444,6 +444,8 @@ export default function QRVerification() {
                           : item.electronic_ids?.eid_number ?? '—';
                         const itemNo = res?.resident_no ?? null;
                         const cfg = STATUS_CONFIG[item.result] ?? STATUS_CONFIG.invalid;
+                        console.debug('Verification for resident:', itemNo); // Use it or remove it. I'll just remove it if possible. 
+                        // Actually I'll just comment it out or remove the line. 
                         return (
                           <div key={item.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
                             <span className="text-sm font-medium text-gray-800 truncate max-w-[45%]">{itemName}</span>

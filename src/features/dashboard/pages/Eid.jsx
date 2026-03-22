@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
-import { EidOverview, EidCard, EidAddEditModal } from '../components/eID';
-import { SearchBox, SortFilter, OrderFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
+import { EidOverview, EidCard, EidAddEditModal } from '../components/EId';
+import { SearchBox, SortFilter, OrderFilter, StatusFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
 import { useEids, useEidStats, useMutateEid } from '../../../hooks/queries/eid/useEids';
 import { useEidFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
@@ -11,7 +11,7 @@ import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
 import { uploadResidentPhoto } from '../../../services/supabase/residentService';
 import toast from 'react-hot-toast';
-import { SORT_FIELDS } from '../../../core/constants';
+import { SORT_FIELDS, EID_STATUS_FILTER_OPTIONS } from '../../../core/constants';
 
 export default function Eid() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -72,8 +72,8 @@ export default function Eid() {
   const overviewStats = {
     total: stats?.total ?? 0,
     active: stats?.active ?? 0,
-    pending: 0, // DB uses 'suspended' instead of 'pending'; UI shows 'Pending' for suspended
-    deactivated: (stats?.suspended ?? 0) + (stats?.revoked ?? 0),
+    pending: stats?.suspended ?? 0, // DB uses 'suspended' — UI shows 'Inactive'
+    deactivated: stats?.revoked ?? 0, // DB 'revoked', UI 'Deactive'
   };
 
   const handleLogout = async () => {
@@ -99,7 +99,7 @@ export default function Eid() {
 
       <main className="flex-1 overflow-auto">
         <DashboardHeader
-          title="eID"
+          title="eID Records"
           userName={profile?.full_name ?? ''}
           userRole={profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : ''}
           onLogout={handleLogout}
@@ -112,29 +112,28 @@ export default function Eid() {
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Filter By:</span>
-                  <SortFilter
-                    value={sortBy === 'eid_number' ? (['active', 'suspended'].includes(useEidFilters.getState().status) ? useEidFilters.getState().status : sortBy) : sortBy}
-                    onChange={(v) => {
-                      if (['active', 'suspended'].includes(v)) {
-                         setStatus(v);
-                         setSortBy('eid_number');
-                      } else {
-                         setStatus('all');
-                         setSortBy(v);
-                      }
-                      setPage(1);
-                    }}
-                    options={SORT_FIELDS.EID}
-                  />
-                  <OrderFilter value={order} onChange={setOrder} />
-                </div>
                 <SearchBox
                   value={search}
                   onChange={(v) => { setSearch(v); setPage(1); }}
                   placeholder="Search eID"
                 />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Filter By:</span>
+                  <StatusFilter
+                    value={useEidFilters((s) => s.status)}
+                    onChange={(v) => { setStatus(v); setPage(1); }}
+                    options={EID_STATUS_FILTER_OPTIONS}
+                  />
+                  <SortFilter
+                    value={sortBy}
+                    onChange={(v) => {
+                       setSortBy(v);
+                       setPage(1);
+                    }}
+                    options={SORT_FIELDS.EID}
+                  />
+                  <OrderFilter value={order} onChange={setOrder} />
+                </div>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                 <button
@@ -160,6 +159,7 @@ export default function Eid() {
                     onEdit={(e) => { setSelectedEid(e); setEidFormMode('edit'); setEidFormModalOpen(true); }}
                     onDeactivate={(e) => { setSelectedEid(e); setDeactivateModalOpen(true); }}
                     onDelete={(e) => { setSelectedEid(e); setDeleteModalOpen(true); }}
+                    onView={(e) => toast(`Viewing eID Record for ${e.name}`)}
                   />
                 ))}
                 {cardEids.length === 0 && (

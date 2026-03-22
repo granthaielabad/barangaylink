@@ -92,20 +92,23 @@ export default function RequestPage() {
                   onChange={(v) => { setSearch(v); setPage(1); }}
                   placeholder="Search"
                 />
-                <StatusFilter 
-                  value={status} 
-                  onChange={(v) => { setStatus(v); setPage(1); }} 
-                  options={REQUEST_STATUS_FILTER_OPTIONS} 
-                />
-                <SortFilter 
-                  value={sortBy} 
-                  onChange={setSortBy} 
-                  options={SORT_FIELDS.REQUESTS} 
-                />
-                <OrderFilter 
-                  value={order} 
-                  onChange={setOrder} 
-                />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Filter By:</span>
+                  <StatusFilter 
+                    value={status} 
+                    onChange={(v) => { setStatus(v); setPage(1); }} 
+                    options={REQUEST_STATUS_FILTER_OPTIONS} 
+                  />
+                  <SortFilter 
+                    value={sortBy} 
+                    onChange={setSortBy} 
+                    options={SORT_FIELDS.REQUESTS} 
+                  />
+                  <OrderFilter 
+                    value={order} 
+                    onChange={setOrder} 
+                  />
+                </div>
               </div>
             </div>
 

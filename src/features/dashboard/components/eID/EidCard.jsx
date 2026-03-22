@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import { HiOutlineDotsHorizontal } from 'react-icons/hi';
-import { FiEdit2, FiTrash2, FiZoomIn, FiX, FiDownload } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiZoomIn, FiX, FiDownload, FiPrinter, FiEye, FiCheck } from 'react-icons/fi';
 import { TbUserOff } from 'react-icons/tb';
 import { EIdProfile } from '.';
 
@@ -154,7 +154,7 @@ function QrLightbox({ token, idNumber, name, onClose }) {
 }
 
 // ── EidCard ───────────────────────────────────────────────────
-export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
+export default function EidCard({ eid, onEdit, onDeactivate, onDelete, onPrint, onApprove, onReject, onView }) {
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const menuRef = useRef(null);
@@ -179,43 +179,108 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
     <>
       <article className="relative bg-white rounded-lg border border-gray-200 border-b-6 border-b-[#0F8A1C] shadow-sm py-4 flex flex-col justify-center w-full min-h-[160px] sm:min-h-[180px] sm:min-w-[370px] lg:min-h-[200px] lg:min-w-[370px] xl:min-h-[250px] xl:min-w-[370px]">
 
+        {/* Status Badge */}
+        <div className="absolute top-3 left-3 z-10">
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider ${
+            ['active', 'ready'].includes(eid.status?.toLowerCase())
+              ? 'bg-green-100 text-green-700 border border-green-200' 
+              : ['inactive', 'in review', 'pending', 'pending_review'].includes(eid.status?.toLowerCase())
+                ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                : ['deactive', 'rejected', 'revoked'].includes(eid.status?.toLowerCase())
+                  ? 'bg-red-100 text-red-700 border border-red-200'
+                  : eid.status?.toLowerCase() === 'new'
+                    ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                    : 'bg-gray-100 text-gray-700 border border-gray-200'
+          }`}>
+            {eid.status || 'Unknown'}
+          </span>
+        </div>
+
         {/* Actions menu */}
-        <div ref={menuRef} className="absolute top-3 right-3 z-20">
+        <div ref={menuRef} className="absolute top-3 right-3 z-20 flex items-center gap-2">
           <button
             type="button"
-            className="text-gray-400 hover:text-gray-600"
-            aria-label="More actions"
-            onClick={() => setMenuOpen((o) => !o)}
+            className="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:text-gray-600 transition-colors"
+            aria-label="Print eID"
+            onClick={() => onPrint?.(eid)}
           >
-            <HiOutlineDotsHorizontal className="w-5 h-5" />
+            <FiPrinter className="w-5 h-5" />
           </button>
+
+          {onView && (
+            <button
+              type="button"
+              className="text-gray-400 hover:text-[#005F02] p-1 rounded-md hover:text-gray-600 transition-colors"
+              aria-label="View eID"
+              onClick={() => onView?.(eid)}
+            >
+              <FiEye className="w-5 h-5" />
+            </button>
+          )}
+          
+          {(onEdit || onDeactivate || onDelete || onApprove || onReject) && (
+            <button
+              type="button"
+              className="text-gray-400 hover:text-gray-600"
+              aria-label="More actions"
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              <HiOutlineDotsHorizontal className="w-5 h-5" />
+            </button>
+          )}
 
           {menuOpen && (
             <div className="absolute top-7 right-0 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-2">
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                onClick={() => { onEdit?.(eid); setMenuOpen(false); }}
-              >
-                <FiEdit2 className="w-4 h-4" />
-                <span>Edit Details</span>
-              </button>
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
-                onClick={() => { onDeactivate?.(eid); setMenuOpen(false); }}
-              >
-                <TbUserOff className="w-4 h-4" />
-                <span>Deactivate eID</span>
-              </button>
-              <button
-                type="button"
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                onClick={() => { onDelete?.(eid); setMenuOpen(false); }}
-              >
-                <FiTrash2 className="w-4 h-4" />
-                <span>Delete eID</span>
-              </button>
+              {onApprove && (
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-green-600 hover:bg-green-50"
+                  onClick={() => { onApprove?.(eid); setMenuOpen(false); }}
+                >
+                  <FiCheck className="w-4 h-4" />
+                  <span>Approve Application</span>
+                </button>
+              )}
+              {onReject && (
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  onClick={() => { onReject?.(eid); setMenuOpen(false); }}
+                >
+                  <FiX className="w-4 h-4" />
+                  <span>Reject Application</span>
+                </button>
+              )}
+              {onEdit && (
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                  onClick={() => { onEdit?.(eid); setMenuOpen(false); }}
+                >
+                  <FiEdit2 className="w-4 h-4" />
+                  <span>Edit Details</span>
+                </button>
+              )}
+              {onDeactivate && (
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                  onClick={() => { onDeactivate?.(eid); setMenuOpen(false); }}
+                >
+                  <TbUserOff className="w-4 h-4" />
+                  <span>Deactivate eID</span>
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  onClick={() => { onDelete?.(eid); setMenuOpen(false); }}
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                  <span>Delete eID</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -239,7 +304,7 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
             <p className="text-xs sm:text-sm md:text-[14px] lg:text-[14px] xl:text-[16px] leading-snug">
               <span className="font-semibold">Name:</span> <span>{name}</span>
             </p>
-            <p className="text-xs sm:text-sm md:text-[14px] lg:text-[14px] xl:text-[16px] leading-snug pr-6">
+            <p className="text-xs sm:text-sm md:text-[14px] lg:text-[14px] xl:text-[16px] truncate">
               <span className="font-semibold">Address:</span> <span>{address}</span>
             </p>
           </div>
