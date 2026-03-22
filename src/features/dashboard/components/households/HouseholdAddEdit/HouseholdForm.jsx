@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { LuHouse } from 'react-icons/lu';
 import { FaRegTrashCan } from 'react-icons/fa6';
 import { MdCheck } from 'react-icons/md';
@@ -28,7 +29,23 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
     () => residentOptions.find((r) => r.value === value.headResidentId)?.label ?? ''
   );
   const [showHeadDropdown, setShowHeadDropdown] = useState(false);
+  const [headMenuStyles, setHeadMenuStyles] = useState(null);
   const headRef = useRef(null);
+  const headInputContainerRef = useRef(null);
+
+  const updateHeadPosition = useCallback(() => {
+    if (!headInputContainerRef.current) return;
+    const rect = headInputContainerRef.current.getBoundingClientRect();
+    if (rect.width === 0) return;
+
+    setHeadMenuStyles({
+      position: 'fixed',
+      top: `${rect.bottom + 4}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}px`,
+      zIndex: 9999,
+    });
+  }, []);
 
   // Keep headSearch label in sync when residentOptions load after mount
   useEffect(() => {
@@ -51,10 +68,21 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
         }
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    if (showHeadDropdown) {
+      updateHeadPosition();
+      window.addEventListener('scroll', updateHeadPosition, true);
+      window.addEventListener('resize', updateHeadPosition);
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', updateHeadPosition, true);
+      window.removeEventListener('resize', updateHeadPosition);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [headSearch, residentOptions]);
+  }, [headSearch, residentOptions, showHeadDropdown, updateHeadPosition]);
 
   const headCandidates = residentOptions.filter((r) =>
     r.label.toLowerCase().includes(headSearch.toLowerCase())
@@ -63,7 +91,23 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
   // ── Members — searchable input, head excluded ────────────────
   const [memberSearch, setMemberSearch] = useState('');
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
+  const [memberMenuStyles, setMemberMenuStyles] = useState(null);
   const memberRef = useRef(null);
+  const memberInputContainerRef = useRef(null);
+
+  const updateMemberPosition = useCallback(() => {
+    if (!memberInputContainerRef.current) return;
+    const rect = memberInputContainerRef.current.getBoundingClientRect();
+    if (rect.width === 0) return;
+
+    setMemberMenuStyles({
+      position: 'fixed',
+      top: `${rect.bottom + 4}px`,
+      left: `${rect.left}px`,
+      width: `${rect.width}px`,
+      zIndex: 9999,
+    });
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -71,9 +115,20 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
         setShowMemberDropdown(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
+    if (showMemberDropdown) {
+      updateMemberPosition();
+      window.addEventListener('scroll', updateMemberPosition, true);
+      window.addEventListener('resize', updateMemberPosition);
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      window.removeEventListener('scroll', updateMemberPosition, true);
+      window.removeEventListener('resize', updateMemberPosition);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMemberDropdown, updateMemberPosition]);
 
   const members = value.members ?? [];
 
@@ -119,7 +174,7 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Head of Household <span className="text-red-500">*</span>
           </label>
-          <div className="relative">
+          <div className="relative" ref={headInputContainerRef}>
             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
               <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300">
                 <CiUser className="w-6 h-6" />
@@ -142,8 +197,12 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
               )}
             </div>
 
-            {showHeadDropdown && headSearch && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-52 overflow-y-auto">
+            {showHeadDropdown && headSearch && headMenuStyles && createPortal(
+              <div
+                style={headMenuStyles}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="bg-white border border-gray-300 rounded-lg shadow-lg max-h-52 overflow-y-auto animate-in fade-in zoom-in-95 duration-75"
+              >
                 {headCandidates.length === 0 ? (
                   <div className="px-4 py-3 text-sm text-gray-500">No matching residents</div>
                 ) : (
@@ -166,7 +225,8 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
                     </button>
                   ))
                 )}
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         </div>
@@ -274,19 +334,25 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
 
         {/* Add member search */}
         <div className="relative" ref={memberRef}>
-          <input
-            type="text"
-            value={memberSearch}
-            onChange={(e) => {
-              setMemberSearch(e.target.value);
-              setShowMemberDropdown(true);
-            }}
-            onFocus={() => setShowMemberDropdown(true)}
-            placeholder="Search registered resident to add…"
-            className={inputClass}
-          />
-          {showMemberDropdown && memberSearch && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto">
+          <div className="relative" ref={memberInputContainerRef}>
+            <input
+              type="text"
+              value={memberSearch}
+              onChange={(e) => {
+                setMemberSearch(e.target.value);
+                setShowMemberDropdown(true);
+              }}
+              onFocus={() => setShowMemberDropdown(true)}
+              placeholder="Search registered resident to add…"
+              className={inputClass}
+            />
+          </div>
+          {showMemberDropdown && memberSearch && memberMenuStyles && createPortal(
+            <div
+              style={memberMenuStyles}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-75"
+            >
               {memberCandidates.length === 0 ? (
                 <div className="px-4 py-3 text-sm text-gray-500">No matching residents found</div>
               ) : (
@@ -302,10 +368,11 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
                   </button>
                 ))
               )}
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       </div>
     </div>
   );
-}
+}

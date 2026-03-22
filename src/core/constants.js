@@ -89,8 +89,7 @@ export const SORT_FIELDS = {
   EID: [
     { value: 'eid_number', label: 'eID No.' },
     { value: 'issued_at', label: 'Issued Date' },
-    { value: 'active', label: 'Active' },
-    { value: 'suspended', label: 'Inactive' },
+    { value: 'last_name', label: 'Name: A-Z / Z-A' },
   ],
   USER_ACCOUNTS: [
     { value: 'created_at:desc', label: 'Date Added ↓ (Newest)' },

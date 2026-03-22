@@ -28,7 +28,7 @@ export default function EidOverview({ stats }) {
       textClass: 'text-[#0A7A0C]',
     },
     {
-      label: 'Pending',
+      label: 'Inactive',
       value: pending,
       icon: FaClock,
       containerClass: 'bg-[#FFF4D6] border-[#E6C36A]',

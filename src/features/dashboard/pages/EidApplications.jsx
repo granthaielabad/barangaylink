@@ -140,6 +140,11 @@ export default function EidApplications() {
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                <SearchBox
+                  value={search}
+                  onChange={setSearch}
+                  placeholder="Search application"
+                />
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Filter By:</span>
@@ -156,11 +161,6 @@ export default function EidApplications() {
                     <OrderFilter value={order} onChange={setOrder} />
                   </div>
                 </div>
-                <SearchBox
-                  value={search}
-                  onChange={setSearch}
-                  placeholder="Search application"
-                />
               </div>
             </div>
 
