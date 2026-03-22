@@ -1,4 +1,3 @@
-// src/features/dashboard/components/analytics/charts/PopulationByAgeGroup.jsx
 import { useRef, useEffect } from 'react';
 import { Chart } from 'chart.js/auto';
 

@@ -1,4 +1,3 @@
-// src/features/dashboard/components/residents/ResidentAddEdit/AddressInformationForm.jsx
 import { IoLocationOutline } from 'react-icons/io5';
 import { BARANGAY } from '../../../../../core/constants';
 

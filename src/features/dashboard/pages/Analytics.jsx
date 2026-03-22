@@ -1,4 +1,3 @@
-// src/features/dashboard/pages/Analytics.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';

@@ -1,4 +1,3 @@
-// src/features/dashboard/pages/ResidentProfilePage.jsx
 import { useState } from 'react';
 import { FiUser, FiMapPin, FiHome, FiAlertCircle, FiLink, FiCreditCard, FiCalendar } from 'react-icons/fi';
 import { useMyResidentProfile, useMyHousehold, useLinkResidentAccount } from '../../../hooks/queries/resident/useResidentPortal';

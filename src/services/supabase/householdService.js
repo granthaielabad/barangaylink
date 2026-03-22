@@ -1,4 +1,3 @@
-// src/services/supabase/householdService.js
 import { supabase } from './client';
 
 const TABLE = 'households';

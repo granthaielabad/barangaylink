@@ -1,4 +1,3 @@
-// src/features/dashboard/components/residents/ResidentAddEdit/Modal.jsx
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { PiUserPlus } from 'react-icons/pi';
 import PersonalInformationForm from './PersonalInformationForm';
