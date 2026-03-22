@@ -44,7 +44,7 @@ export default function RequestStats({ stats = {} }) {
             <p className="text-[16px] font-semibold uppercase tracking-wider opacity-60">
               {item.label}
             </p>
-            <p className="text-3xl font-bold tracking-tight">{item.value}</p>
+            <p className="text-3gxl font-bold tracking-tight">{item.value}</p>
           </div>
           <div className="shrink-0">
             <item.icon className={`w-10 h-10 ${item.iconColor}`} />
