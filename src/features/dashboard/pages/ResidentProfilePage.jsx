@@ -208,7 +208,7 @@ export default function ResidentProfilePage() {
   const parsed  = parseAddr(resident.address_line);
   const houseNo = household?.house_no ?? resident.households?.house_no ?? parsed.houseNo;
   const street  = household?.street   ?? resident.households?.street   ?? parsed.street;
-  const purok   = resident.puroks?.name ?? household?.puroks?.name ?? parsed.purok;
+  const purok   = resident.puroks?.name ?? parsed.purok;
 
   return (
     <div className="space-y-5 mx-auto max-w-7xl">
