@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
@@ -10,7 +9,7 @@ import { useHouseholdFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
-import { HOUSEHOLD_STATUS_OPTIONS, SORT_FIELDS } from '../../../core/constants';
+import { HOUSEHOLD_STATUS_OPTIONS } from '../../../core/constants';
 
 export default function Household() {
   const [sidebarOpen, setSidebarOpen]           = useState(false);
@@ -53,7 +52,10 @@ export default function Household() {
       id: h.id,
       householdNo,
       headMemberName: h.head
-        ? `${h.head.first_name} ${h.head.last_name}`.trim()
+        ? (() => {
+            const rest = [h.head.first_name, h.head.middle_name, h.head.suffix].filter(Boolean).join(' ');
+            return h.head.last_name ? `${h.head.last_name}, ${rest}`.trim() : rest || '—';
+          })()
         : '—',
       address: [h.house_no, h.street].filter(Boolean).join(' ') || '—',
       members: h._memberCount ?? 0,
@@ -83,14 +85,17 @@ export default function Household() {
     ownership_type:   data.ownershipType  || null,
     dwelling_type:    data.dwellingType   || null,
     status:           data.status         || 'active',
-    purok_id:         1,
   });
 
   // ── CRUD handlers ─────────────────────────────────────────────
   const handleAddHousehold = async (data) => {
     try {
       const household = await create.mutateAsync(buildPayload(data));
-      if (data.members?.length) await syncMembers(household.id, data.members);
+      // Always assign head as a member so residents.household_id is set
+      const memberIds = new Set((data.members ?? []).map((m) => m.id));
+      if (data.headResidentId) memberIds.add(data.headResidentId);
+      const allMembers = [...memberIds].map((id) => ({ id }));
+      if (allMembers.length) await syncMembers(household.id, allMembers);
       setAddModalOpen(false);
     } catch { /* already toasted */ }
   };
@@ -101,10 +106,16 @@ export default function Household() {
     try {
       await update.mutateAsync({ id: householdId, payload: buildPayload(data) });
 
-      const prevMemberIds  = (selectedHousehold._raw?._members ?? []).map((m) => m.id);
-      const nextMemberIds  = (data.members ?? []).map((m) => m.id);
-      const toRemove       = prevMemberIds.filter((id) => !nextMemberIds.includes(id));
-      const toAdd          = (data.members ?? []).filter((m) => !prevMemberIds.includes(m.id));
+      const prevMemberIds = (selectedHousehold._raw?._members ?? []).map((m) => m.id);
+      // Always include head in the next member set
+      const nextMemberSet = new Set((data.members ?? []).map((m) => m.id));
+      if (data.headResidentId) nextMemberSet.add(data.headResidentId);
+      const nextMemberIds = [...nextMemberSet];
+
+      const toRemove = prevMemberIds.filter((id) => !nextMemberIds.includes(id));
+      const toAdd    = nextMemberIds
+        .filter((id) => !prevMemberIds.includes(id))
+        .map((id) => ({ id }));
 
       await Promise.all(toRemove.map((id) => removeMember.mutateAsync(id)));
       await syncMembers(householdId, toAdd);
@@ -147,9 +158,8 @@ export default function Household() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                 <SearchBox value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search" />
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Filter By:</span>
+                  <SortFilter value={sortBy} onChange={setSortBy} />
                   <StatusFilter value={status} onChange={(v) => { setStatus(v); setPage(1); }} options={HOUSEHOLD_STATUS_OPTIONS} />
-                  <SortFilter value={sortBy} onChange={setSortBy} options={SORT_FIELDS.HOUSEHOLDS} />
                   <OrderFilter value={order} onChange={setOrder} />
                 </div>
               </div>

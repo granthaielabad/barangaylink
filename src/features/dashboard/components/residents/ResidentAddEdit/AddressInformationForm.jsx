@@ -1,3 +1,4 @@
+// src/features/dashboard/components/residents/ResidentAddEdit/AddressInformationForm.jsx
 import { IoLocationOutline } from 'react-icons/io5';
 import { BARANGAY } from '../../../../../core/constants';
 
@@ -49,7 +50,11 @@ export default function AddressInformationForm({ value = {}, onChange }) {
           <input
             type="text"
             value={value.purok ?? ''}
-            onChange={(e) => update('purok', e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              // If user clears the text, also clear the associated purokId
+              onChange?.({ ...value, purok: v, purokId: v ? (value.purokId ?? '') : '' });
+            }}
             placeholder="e.g. Purok 1, Zone 3"
             className={inputClass}
           />

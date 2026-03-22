@@ -1,3 +1,4 @@
+// src/features/dashboard/components/households/HouseholdAddEdit/Modal.jsx
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { IoMdAdd } from 'react-icons/io';
 import HouseholdForm from './HouseholdForm';
@@ -21,10 +22,13 @@ function buildEditForm(raw) {
     ownershipType:  raw.ownership_type   ?? '',
     dwellingType:   raw.dwelling_type    ?? '',
     status:         raw.status           ?? 'active',
-    members: (raw._members ?? []).map((m) => ({
-      id:   m.id,
-      name: `${m.last_name ?? ''} ${m.first_name ?? ''}`.trim(),
-    })),
+    members: (raw._members ?? []).map((m) => {
+      const rest = [m.first_name, m.middle_name, m.suffix].filter(Boolean).join(' ');
+      return {
+        id:   m.id,
+        name: m.last_name ? `${m.last_name}, ${rest}`.trim() : rest,
+      };
+    }),
   };
 }
 
@@ -78,7 +82,7 @@ export default function HouseholdAddEditModal({
       <div className="absolute inset-0 bg-black/40" />
       <div
         ref={panelRef}
-        className="relative bg-white w-full max-w-2xl rounded-xl shadow-xl max-h-[90vh] flex flex-col"
+        className="relative bg-white w-full max-w-2xl rounded-xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-3 bg-[#F1F7F2]">

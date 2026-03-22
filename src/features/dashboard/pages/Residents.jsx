@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
@@ -10,7 +9,7 @@ import { useResidentFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
-import { RESIDENT_STATUS_FILTER_OPTIONS, BARANGAY, SORT_FIELDS } from '../../../core/constants';
+import { RESIDENT_STATUS_FILTER_OPTIONS, BARANGAY } from '../../../core/constants';
 
 export default function Residents() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,7 +39,7 @@ export default function Residents() {
   const setPage   = useResidentFilters((s) => s.setPage);
 
   // ── Server data ───────────────────────────────────────────────
-  const { data, isLoading } = useResidents();
+  const { data, isLoading, isFetching } = useResidents();
   const { create, update, archive, remove } = useMutateResident();
 
   const residents = data?.data ?? [];
@@ -96,6 +95,8 @@ export default function Residents() {
     voter_status:   data.voterStatus   ?? false,
     // Address — barangay is always San Bartolome, locked in form
     address_line: [data.houseNo, data.street, data.purok, BARANGAY].filter(Boolean).join(', ') || null,
+    // Only preserve purok_id if the purok text field still has a value
+    purok_id:     (data.purok && data.purokId) ? Number(data.purokId) : null,
     // Identification
     philhealth_no:  data.philhealthNo  || null,
     sss_no:         data.sssNo         || null,
@@ -153,9 +154,8 @@ export default function Residents() {
                   placeholder="Search"
                 />
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-600 whitespace-nowrap">Filter By:</span>
+                  <SortFilter value={sortBy} onChange={setSortBy} />
                   <StatusFilter value={status} onChange={(v) => { setStatus(v); setPage(1); }} options={RESIDENT_STATUS_FILTER_OPTIONS} />
-                  <SortFilter value={sortBy} onChange={setSortBy} options={SORT_FIELDS.RESIDENTS} />
                   <OrderFilter value={order} onChange={setOrder} />
                 </div>
               </div>

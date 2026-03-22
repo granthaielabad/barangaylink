@@ -1,3 +1,4 @@
+// src/features/dashboard/pages/Analytics.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
@@ -59,10 +60,7 @@ export default function Analytics() {
         />
 
         <section className="px-5 py-7">
-          <Filters
-            onFilterChange={setFilters}
-            onExport={(format) => toast.success(`Exporting as ${format.toUpperCase()}…`)}
-          />
+          <Filters onFilterChange={setFilters} />
           <AnalyticsCards filters={filters} analyticsData={analyticsData} />
 
           {/* Demographic Section */}
@@ -75,11 +73,23 @@ export default function Analytics() {
           </div>
 
 
-          {/* Household Section */}
+          {/* Household Section — paused pending Purok/Zone data decision */}
           <div className="mb-6">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-              <h2 className="text-[21px] font-semibold text-gray-900 mb-4">Household</h2>
-              <HouseholdsPerPurok filters={filters} analyticsData={analyticsData} />
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-[21px] font-semibold text-gray-900">Household</h2>
+                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+                  Coming Soon
+                </span>
+              </div>
+              <div className="flex flex-col items-center justify-center py-12 text-center text-gray-400">
+                <svg className="w-12 h-12 mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <p className="text-sm font-medium text-gray-500">Household analytics coming soon</p>
+                <p className="text-xs text-gray-400 mt-1">Purok/Zone breakdown will be available once configured</p>
+              </div>
             </div>
           </div>
 

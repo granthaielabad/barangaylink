@@ -1,3 +1,4 @@
+// src/services/supabase/householdService.js
 import { supabase } from './client';
 
 const TABLE = 'households';
@@ -7,7 +8,7 @@ const DEFAULT_SELECT = `
   monthly_income, status, created_at, updated_at,
   purok_id, puroks ( id, name ),
   head_resident_id,
-  head:residents!fk_head_resident ( id, first_name, last_name ),
+  head:residents!fk_head_resident ( id, first_name, middle_name, last_name, suffix ),
   memberCount:household_member_counts ( member_count )
 `;
 
@@ -56,7 +57,7 @@ export async function getHouseholds({
 export async function getHouseholdById(id) {
   const { data, error } = await supabase
     .from(TABLE)
-    .select(`*, puroks(*), residents!residents_household_id_fkey(id, first_name, last_name, status, photo_url)`)
+    .select(`*, puroks(*), residents!residents_household_id_fkey(id, first_name, middle_name, last_name, suffix, status, photo_url)`)
     .eq('id', id)
     .single();
   if (error) throw error;

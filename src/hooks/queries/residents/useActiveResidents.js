@@ -13,15 +13,13 @@ async function fetchActiveResidents() {
     .order('last_name')
     .order('first_name');
   if (error) throw error;
-  return (data ?? []).map((r) => ({
-    value: r.id,
-    label: [
-      r.last_name,
-      r.first_name,
-      r.middle_name,
-      r.suffix,
-    ].filter(Boolean).join(' '),
-  }));
+  return (data ?? []).map((r) => {
+    const rest = [r.first_name, r.middle_name, r.suffix].filter(Boolean).join(' ');
+    return {
+      value: r.id,
+      label: r.last_name ? `${r.last_name}, ${rest}`.trim() : rest,
+    };
+  });
 }
 
 export function useActiveResidents() {

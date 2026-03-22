@@ -1,3 +1,4 @@
+// src/features/dashboard/pages/ResidentProfilePage.jsx
 import { useState } from 'react';
 import { FiUser, FiMapPin, FiHome, FiAlertCircle, FiLink, FiCreditCard, FiCalendar } from 'react-icons/fi';
 import { useMyResidentProfile, useMyHousehold, useLinkResidentAccount } from '../../../hooks/queries/resident/useResidentPortal';
@@ -197,11 +198,18 @@ export default function ResidentProfilePage() {
     ? resident.status.charAt(0).toUpperCase() + resident.status.slice(1)
     : 'Active';
 
-  // Address fields: resident stores address_line; detailed breakdown
-  // lives on the household row (house_no, street) and puroks (name).
-  const houseNo = household?.house_no ?? resident.households?.house_no;
-  const street  = household?.street  ?? resident.households?.street;
-  const purok   = resident.puroks?.name ?? household?.puroks?.name;
+  // Address fields: prefer household columns if linked,
+  // otherwise parse back from the concatenated address_line string.
+  const parseAddr = (line) => {
+    if (!line) return { houseNo: '', street: '', purok: '' };
+    const withoutBarangay = line.replace(/,?\s*San Bartolome\s*$/i, '').trim();
+    const parts = withoutBarangay.split(',').map((s) => s.trim()).filter(Boolean);
+    return { houseNo: parts[0] ?? '', street: parts[1] ?? '', purok: parts[2] ?? '' };
+  };
+  const parsed  = parseAddr(resident.address_line);
+  const houseNo = household?.house_no ?? resident.households?.house_no ?? parsed.houseNo;
+  const street  = household?.street   ?? resident.households?.street   ?? parsed.street;
+  const purok   = resident.puroks?.name ?? household?.puroks?.name ?? parsed.purok;
 
   return (
     <div className="space-y-5 mx-auto max-w-7xl">
@@ -239,9 +247,9 @@ export default function ResidentProfilePage() {
             { label: 'Middle Name',    value: val(resident.middle_name) || 'N/A' },
             { label: 'Suffix',         value: val(resident.suffix) },
             { label: 'Birthdate',      value: fmt(resident.date_of_birth) },
-            { label: 'Sex',            value: val(resident.sex) },
+            { label: 'Sex',            value: resident.sex === 'M' ? 'Male' : resident.sex === 'F' ? 'Female' : val(resident.sex) },
             { label: 'Age',            value: age(resident.date_of_birth) ? `${age(resident.date_of_birth)}` : '—' },
-            { label: 'Civil Status',   value: val(resident.civil_status) },
+            { label: 'Civil Status',   value: resident.civil_status ? resident.civil_status.charAt(0).toUpperCase() + resident.civil_status.slice(1) : '—' },
             { label: 'Blood Type',     value: val(resident.blood_type) },
             { label: 'Contact Number', value: val(resident.contact_number) },
           ]}
