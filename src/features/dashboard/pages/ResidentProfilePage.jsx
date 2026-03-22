@@ -187,12 +187,11 @@ export default function ResidentProfilePage() {
     return <LinkAccountForm />;
   }
 
-  const fullNameLastFirst = [
-    resident.last_name,
-    resident.first_name,
-    resident.middle_name,
-    resident.suffix,
-  ].filter(Boolean).join(' ') || '—';
+  const restOfName = [resident.first_name, resident.middle_name, resident.suffix]
+    .filter(Boolean).join(' ');
+  const fullNameLastFirst = resident.last_name
+    ? `${resident.last_name}, ${restOfName}`.trim().replace(/,\s*$/, '')
+    : restOfName || '—';
 
   const statusLabel = resident.status
     ? resident.status.charAt(0).toUpperCase() + resident.status.slice(1)
