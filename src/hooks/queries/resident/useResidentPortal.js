@@ -1,4 +1,3 @@
-// src/hooks/queries/resident/useResidentPortal.js
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '../../../services/supabase/client';
@@ -9,6 +8,7 @@ import {
   getMyEidApplication,
   submitEidApplication,
   submitEidRenewal,
+  linkResidentAccount,
 } from '../../../services/supabase/residentPortalService';
 import toast from 'react-hot-toast';
 
@@ -92,5 +92,20 @@ export function useSubmitEidRenewal() {
       toast.success('eID renewal submitted successfully!');
     },
     onError: (err) => toast.error(err.message ?? 'Failed to submit renewal.'),
+  });
+}
+
+export function useLinkResidentAccount() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: linkResidentAccount,
+    onSuccess: () => {
+      // Refetch profile — it will now return a resident row
+      qc.invalidateQueries({ queryKey: keys.profile });
+      qc.invalidateQueries({ queryKey: keys.eid });
+      qc.invalidateQueries({ queryKey: keys.household });
+      toast.success('Account linked successfully! Welcome to BarangayLink.');
+    },
+    onError: (err) => toast.error(err.message),
   });
 }

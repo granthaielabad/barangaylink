@@ -9,7 +9,7 @@ const DEFAULT_SELECT = `
   resident_id,
   residents (
     id, first_name, middle_name, last_name, suffix,
-    photo_url, contact_number, date_of_birth, sex,
+    photo_url, contact_number, date_of_birth, sex, blood_type, civil_status,
     address_line,
     puroks ( id, name )
   )
@@ -128,4 +128,70 @@ export async function verifyQrToken({ token, method = 'qr_scan' }) {
   });
 
   return { result, eid, resident: eid.residents };
+}
+
+// ── eID Applications (admin side) ────────────────────────────────────────────
+
+export async function getEidApplications({ page = 1, pageSize = 10, status = 'all' } = {}) {
+  const from = (page - 1) * pageSize;
+  const to   = from + pageSize - 1;
+
+  let query = supabase
+    .from('eid_applications')
+    .select(`
+      id, type, status, submitted_at, reviewed_at, remarks,
+      first_name, last_name, middle_name, suffix,
+      date_of_birth, sex, address_line, contact_number, email,
+      photo_url, id_number,
+      residents ( id, resident_no, photo_url, puroks(name) ),
+      reviewed_by_profile:profiles!eid_applications_reviewed_by_fkey ( full_name )
+    `, { count: 'exact' })
+    .range(from, to)
+    .order('submitted_at', { ascending: false });
+
+  if (status !== 'all') query = query.eq('status', status);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data: data ?? [], total: count ?? 0, totalPages: Math.ceil((count ?? 0) / pageSize) };
+}
+
+export async function getEidApplicationStats() {
+  const { data, error } = await supabase
+    .from('eid_applications')
+    .select('status');
+  if (error) throw error;
+  const counts = { all: 0, pending: 0, under_review: 0, approved: 0, rejected: 0 };
+  (data ?? []).forEach((r) => {
+    counts.all++;
+    if (r.status in counts) counts[r.status]++;
+  });
+  return counts;
+}
+
+export async function updateEidApplicationStatus(id, status, remarks = null) {
+  const { data, error } = await supabase
+    .from('eid_applications')
+    .update({
+      status,
+      remarks,
+      reviewed_at: new Date().toISOString(),
+      reviewed_by: (await supabase.auth.getUser()).data.user?.id,
+    })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Approve an application: update status to 'approved' then issue the eID.
+ * Reuses the existing issueEid Edge Function.
+ */
+export async function approveEidApplication(applicationId, residentId, photoUrl) {
+  // 1. Mark application approved
+  await updateEidApplicationStatus(applicationId, 'approved');
+  // 2. Issue the eID (uploads photo if provided, calls Edge Function)
+  return issueEid(residentId, photoUrl);
 }

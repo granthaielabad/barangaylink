@@ -46,8 +46,10 @@ export const EID_STATUS = {
 export const EID_STATUS_FILTER_OPTIONS = [
   { value: 'all',       label: 'All Status' },
   { value: 'active',    label: 'Active' },
-  { value: 'suspended', label: 'Inactive' },
-  { value: 'revoked',   label: 'Deactive' },
+  { value: 'inactive',  label: 'Inactive' },
+  { value: 'suspended', label: 'Suspended' },
+  { value: 'revoked',   label: 'Revoked' },
+  { value: 'expired',   label: 'Expired' },
 ];
 
 export const DOCUMENT_TYPES = [
@@ -66,49 +68,44 @@ export const DOCUMENT_REQUEST_STATUS = {
   REJECTED:   'rejected',
 };
 
-export const REQUEST_STATUS_FILTER_OPTIONS = [
-  { value: 'all',        label: 'All Status' },
-  { value: 'pending',    label: 'Pending' },
-  { value: 'processing', label: 'Processing' },
-  { value: 'approved',   label: 'Approved' },
-  { value: 'rejected',   label: 'Rejected' },
-];
-
 export const PAGE_SIZE = 8;
 
 export const SORT_FIELDS = {
   RESIDENTS: [
-    { value: 'resident_no', label: 'Resident No.' },
-    { value: 'last_name', label: 'Name (A–Z / Z–A)' },
-    { value: 'created_at', label: 'Date Added' },
+    { value: 'last_name',   label: 'Last Name' },
+    { value: 'created_at',  label: 'Date Added' },
+    { value: 'status',      label: 'Status' },
   ],
   HOUSEHOLDS: [
-    { value: 'household_no', label: 'Household No.' },
-    { value: 'created_at', label: 'Date Added' },
-  ],
-  EID: [
-    { value: 'eid_number', label: 'eID No.' },
-    { value: 'issued_at', label: 'Issued Date' },
-    { value: 'last_name', label: 'Name: A-Z / Z-A' },
-  ],
-  USER_ACCOUNTS: [
-    { value: 'created_at:desc', label: 'Date Added ↓ (Newest)' },
-    { value: 'created_at:asc',  label: 'Date Added ↑ (Oldest)' },
-    { value: 'full_name:asc',   label: 'Name (A-Z)' },
-    { value: 'full_name:desc',  label: 'Name (Z-A)' },
+    { value: 'created_at',  label: 'Date Added' },
+    { value: 'house_no',    label: 'House No.' },
+    { value: 'status',      label: 'Status' },
   ],
   REQUESTS: [
-    { value: 'created_at', label: 'Date Requested' },
-    { value: 'request_no', label: 'Request No.'},
-    { value: 'last_name', label: 'Resident Name:'},
-    { value: 'document_type', label: 'Document Type:'},
+    { value: 'requested_at',   label: 'Date Requested' },
+    { value: 'document_type',  label: 'Document Type' },
+    { value: 'status',         label: 'Status' },
+  ],
+  USER_ACCOUNTS: [
+    { value: 'created_at', label: 'Date Joined' },
+    { value: 'full_name',  label: 'Name' },
+    { value: 'role',       label: 'Role' },
   ],
 };
 
+export const REQUEST_STATUS_FILTER_OPTIONS = [
+  { value: 'all',        label: 'All Status' },
+  { value: 'pending',    label: 'Pending' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'ready',      label: 'Ready' },
+  { value: 'released',   label: 'Released' },
+  { value: 'rejected',   label: 'Rejected' },
+];
+
 export const USER_ACCOUNT_STATUS_OPTIONS = [
-  { value: 'all',      label: 'All Status' },
-  { value: 'active',   label: 'Enabled' },
-  { value: 'inactive', label: 'Disabled' },
+  { value: 'all',      label: 'All' },
+  { value: 'active',   label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
 ];
 
 export const CIVIL_STATUS_OPTIONS = [

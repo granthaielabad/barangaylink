@@ -1,9 +1,17 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// All queries for the Resident self-service portal.
-// RLS automatically scopes every query to auth.uid() — no manual filtering
-// needed. Residents can only ever read their own rows.
-// ─────────────────────────────────────────────────────────────────────────────
 import { supabase } from './client';
+
+// ── Account linking ───────────────────────────────────────────────────────────
+export async function linkResidentAccount({ residentNo, lastName, dateOfBirth }) {
+  const { data, error } = await supabase
+    .rpc('link_resident_account', {
+      p_resident_no:    residentNo.trim().toUpperCase(),
+      p_last_name:      lastName.trim(),
+      p_date_of_birth:  dateOfBirth, // YYYY-MM-DD
+    });
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error('Linking failed. Please try again.');
+  return data[0];
+}
 
 // ── My Profile ───────────────────────────────────────────────────────────────
 export async function getMyResidentProfile() {

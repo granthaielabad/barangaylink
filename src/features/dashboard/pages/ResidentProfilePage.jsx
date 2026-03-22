@@ -1,5 +1,6 @@
-import { FiUser, FiMapPin, FiHome, FiAlertCircle } from 'react-icons/fi';
-import { useMyResidentProfile, useMyHousehold } from '../../../hooks/queries/resident/useResidentPortal';
+import { useState } from 'react';
+import { FiUser, FiMapPin, FiHome, FiAlertCircle, FiLink, FiCreditCard, FiCalendar } from 'react-icons/fi';
+import { useMyResidentProfile, useMyHousehold, useLinkResidentAccount } from '../../../hooks/queries/resident/useResidentPortal';
 import SectionCard from '../components/ResidentPortal/SectionCard';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -53,13 +54,123 @@ function Skeleton() {
 }
 
 // ─── Not Linked Notice ───────────────────────────────────────────────────────
-function NotLinked({ message }) {
+// ─── Link Account Form ────────────────────────────────────────────────────────
+function LinkAccountForm() {
+  const [residentNo,   setResidentNo]   = useState('');
+  const [lastName,     setLastName]     = useState('');
+  const [dateOfBirth,  setDateOfBirth]  = useState('');
+
+  const { mutate: linkAccount, isPending } = useLinkResidentAccount();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!residentNo || !lastName || !dateOfBirth) return;
+    linkAccount({ residentNo, lastName, dateOfBirth });
+  };
+
+  const inputCls = 'w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02] bg-white';
+
   return (
-    <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
-      <FiAlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-      <div>
-        <p className="text-sm font-semibold text-amber-800">Not yet available</p>
-        <p className="text-xs text-amber-700 mt-0.5">{message}</p>
+    <div className="max-w-7xl mx-auto space-y-5">
+
+      {/* Info banner */}
+      <div className="flex items-start gap-3 p-5 rounded-xl bg-amber-50 border border-amber-200">
+        <FiAlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-semibold text-amber-800">Not yet available</p>
+          <p className="text-xs text-amber-700 mt-0.5">
+            Your account has not been linked to a resident record yet. If you are a registered
+            resident of the barangay, enter your details below to link your account.
+          </p>
+        </div>
+      </div>
+
+      {/* Linking form card */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-9 h-9 rounded-lg bg-[#005F02]/10 flex items-center justify-center">
+            <FiLink className="w-5 h-5 text-[#005F02]" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-gray-900 text-lg">Link Your Resident Record</h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Enter your barangay-issued Resident Number and verification details.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+          {/* Resident Number */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Resident Number <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#005F02]/30 focus-within:border-[#005F02]">
+              <div className="bg-gray-50 px-3 py-2.5 border-r border-gray-300 text-gray-400">
+                <FiCreditCard className="w-5 h-5" />
+              </div>
+              <input
+                type="text"
+                value={residentNo}
+                onChange={(e) => setResidentNo(e.target.value.toUpperCase())}
+                placeholder="RES-2026-0000001"
+                className="flex-1 px-4 py-2.5 text-sm bg-white focus:outline-none font-mono"
+                required
+              />
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              Found on your barangay documents or physical ID.
+            </p>
+          </div>
+
+          {/* Last Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Last Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter your last name"
+              className={inputCls}
+              required
+            />
+          </div>
+
+          {/* Date of Birth */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Date of Birth <span className="text-red-500">*</span>
+            </label>
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#005F02]/30 focus-within:border-[#005F02]">
+              <div className="bg-gray-50 px-3 py-2.5 border-r border-gray-300 text-gray-400">
+                <FiCalendar className="w-5 h-5" />
+              </div>
+              <input
+                type="date"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                className="flex-1 px-4 py-2.5 text-sm bg-white focus:outline-none"
+                required
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isPending || !residentNo || !lastName || !dateOfBirth}
+            className="w-full py-2.5 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2"
+          >
+            {isPending ? 'Verifying…' : 'Link My Account'}
+          </button>
+        </form>
+
+        {/* Help note */}
+        <p className="text-xs text-gray-400 mt-6 pt-5 border-t border-gray-100">
+          Can't find your Resident Number? Visit the Barangay Office and present a valid ID.
+          Staff can look up your record and provide your number.
+        </p>
       </div>
     </div>
   );
@@ -73,9 +184,7 @@ export default function ResidentProfilePage() {
   if (loadingProfile) return <Skeleton />;
 
   if (!resident) {
-    return (
-      <NotLinked message="Your account has not been linked to a resident record yet. Please contact the Barangay Office." />
-    );
+    return <LinkAccountForm />;
   }
 
   const fullNameLastFirst = [
@@ -99,8 +208,8 @@ export default function ResidentProfilePage() {
     <div className="space-y-5 mx-auto max-w-7xl">
 
       {/* ── Profile Header Card ─────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-center gap-5 border-t-4 border-t-[#005F02] pb-10">
-        <div className="w-32 h-32 rounded-sm bg-gray-200 border border-gray-300 flex items-center justify-center overflow-hidden shrink-0">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-center gap-5 border-t-4 border-t-[#005F02]">
+        <div className="w-24 h-24 rounded-sm bg-gray-200 border border-gray-300 flex items-center justify-center overflow-hidden shrink-0">
           {resident.photo_url ? (
             <img src={resident.photo_url} alt="Profile" className="w-full h-full object-cover" />
           ) : (
@@ -123,7 +232,7 @@ export default function ResidentProfilePage() {
       </div>
 
       {/* ── Personal Information ────────────────────────────── */}
-      <SectionCard icon={FiUser} title="Personal Information" className="pb-10">
+      <SectionCard icon={FiUser} title="Personal Information">
         <FieldRow
           fields={[
             { label: 'Last Name',      value: val(resident.last_name) },
@@ -141,7 +250,7 @@ export default function ResidentProfilePage() {
       </SectionCard>
 
       {/* ── Address Information ─────────────────────────────── */}
-      <SectionCard icon={FiMapPin} title="Address Information" className="pb-10">
+      <SectionCard icon={FiMapPin} title="Address Information">
         <FieldRow
           fields={[
             { label: 'House No.',    value: val(houseNo) },
@@ -150,17 +259,23 @@ export default function ResidentProfilePage() {
             { label: 'Barangay',     value: 'San Bartolome' },
           ]}
         />
-      </SectionCard >
+      </SectionCard>
 
       {/* ── Household Information ───────────────────────────── */}
-      <SectionCard icon={FiHome} title="Household Information" className="border-b-4 border-b-[#005F02] pb-10">
+      <SectionCard icon={FiHome} title="Household Information" className="border-b-4 border-b-[#005F02]">
         {loadingHousehold ? (
           <div className="animate-pulse space-y-3">
             <div className="h-3 w-28 bg-gray-200 rounded" />
             <div className="h-3 w-36 bg-gray-100 rounded" />
           </div>
         ) : !household ? (
-          <NotLinked message="Your resident record is not currently linked to a household." />
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
+            <FiAlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-amber-800">Not yet available</p>
+              <p className="text-xs text-amber-700 mt-0.5">Your resident record is not currently linked to a household.</p>
+            </div>
+          </div>
         ) : (
           <FieldRow
             fields={[

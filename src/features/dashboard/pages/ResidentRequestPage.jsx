@@ -1,96 +1,120 @@
 import { useState } from 'react';
-import { FiFileText, FiHome, FiHeart, FiSearch, FiChevronRight, FiEye, FiClock } from 'react-icons/fi';
-import { FaHandsHoldingChild } from "react-icons/fa6"
+import { FiFileText, FiHome, FiEye, FiClock } from 'react-icons/fi';
+import { FaHandsHoldingChild } from 'react-icons/fa6';
 import RequestDocumentModal from '../components/ResidentPortal/RequestDocumentModal';
 import DocumentPreviewModal from '../components/ResidentPortal/DocumentPreviewModal';
 import PaymentModal from '../components/ResidentPortal/PaymentModal';
 import { useMyResidentProfile } from '../../../hooks/queries/resident/useResidentPortal';
+import {
+  useMyDocumentRequests,
+  useSubmitDocumentRequest,
+  useUpdatePaymentMethod,
+} from '../../../hooks/queries/documentRequests/useDocumentRequests';
 
+// ── Document catalogue ─────────────────────────────────────────────────────────
 const AVAILABLE_DOCUMENTS = [
   {
-    id: 'clearance',
-    title: 'Barangay Clearance',
-    description: 'Required for employment, business permits, and other legal purposes',
-    fee: 50,
+    id:             'clearance',
+    title:          'Barangay Clearance',
+    description:    'Required for employment, business permits, and other legal purposes',
+    fee:            50,
     processingTime: '3-5 business days',
-    icon: <FiFileText className="w-8 h-8" />,
-    iconBg: 'bg-[#E8F5E9]',
-    iconColor: 'text-[#2E7D32]',
+    icon:           <FiFileText className="w-8 h-8" />,
+    iconBg:         'bg-[#E8F5E9]',
+    iconColor:      'text-[#2E7D32]',
   },
   {
-    id: 'residency',
-    title: 'Certificate of Residency',
-    description: 'Proves your residency in the barangay',
-    fee: 50,
+    id:             'residency',
+    title:          'Certificate of Residency',
+    description:    'Proves your residency in the barangay',
+    fee:            50,
     processingTime: '3-5 business days',
-    icon: <FiHome className="w-8 h-8" />,
-    iconBg: 'bg-[#E8F5E9]',
-    iconColor: 'text-[#2E7D32]',
+    icon:           <FiHome className="w-8 h-8" />,
+    iconBg:         'bg-[#E8F5E9]',
+    iconColor:      'text-[#2E7D32]',
   },
   {
-    id: 'indigency',
-    title: 'Certificate of Indigency',
-    description: 'For medical, educational, or financial assistance purposes',
-    fee: 'Free',
+    id:             'indigency',
+    title:          'Certificate of Indigency',
+    description:    'For medical, educational, or financial assistance purposes',
+    fee:            'Free',
     processingTime: '3-5 business days',
-    icon: <FaHandsHoldingChild className="w-8 h-8" />,
-    iconBg: 'bg-[#E8F5E9]',
-    iconColor: 'text-[#2E7D32]',
+    icon:           <FaHandsHoldingChild className="w-8 h-8" />,
+    iconBg:         'bg-[#E8F5E9]',
+    iconColor:      'text-[#2E7D32]',
   },
 ];
 
-const MOCK_REQUESTS = [
-  {
-    id: 'REQ-2024-001',
-    title: 'Barangay Clearance',
-    purpose: 'Employment Requirements',
-    date: '3/15/2024',
-    status: 'Approved',
-    payment: 'Paid',
-    txnRef: 'TXN-20240315-001',
-    icon: <FiFileText className="w-5 h-5" />,
-  },
-  {
-    id: 'REQ-2024-002',
-    title: 'Certificate of Residency',
-    purpose: 'School Enrollment',
-    date: '3/15/2024',
-    status: 'Pending',
-    payment: 'Pending',
-    txnRef: 'TXN-20240315-002',
-    icon: <FiHome className="w-5 h-5" />,
-  },
-];
+// ── Status helpers ─────────────────────────────────────────────────────────────
+function getStatusLabel(status) {
+  const map = {
+    pending:    'Pending',
+    processing: 'Processing',
+    ready:      'Ready for Pickup',
+    released:   'Approved',
+    rejected:   'Rejected',
+  };
+  return map[status] ?? status;
+}
 
+function getStatusStyle(status) {
+  const map = {
+    pending:    'bg-orange-50 text-orange-700',
+    processing: 'bg-blue-50 text-blue-700',
+    ready:      'bg-purple-50 text-purple-700',
+    released:   'bg-[#E8F5E9] text-[#2E7D32]',
+    rejected:   'bg-red-50 text-red-600',
+  };
+  return map[status] ?? 'bg-gray-100 text-gray-600';
+}
+
+function getDocIcon(documentType) {
+  if (documentType?.includes('Residency')) return <FiHome className="w-5 h-5" />;
+  if (documentType?.includes('Indigency')) return <FaHandsHoldingChild className="w-5 h-5" />;
+  return <FiFileText className="w-5 h-5" />;
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function ResidentRequestPage() {
   const [selectedDoc, setSelectedDoc] = useState(null);
-  const [previewReq, setPreviewReq] = useState(null);
-  const [paymentReq, setPaymentReq] = useState(null);
-  const { data: resident } = useMyResidentProfile();
+  const [previewReq,  setPreviewReq]  = useState(null);
+  const [paymentReq,  setPaymentReq]  = useState(null);
 
-  const handleRequest = (doc) => {
-    setSelectedDoc(doc);
+  const { data: resident }                    = useMyResidentProfile();
+  const { data: myRequests = [], isLoading }  = useMyDocumentRequests();
+  const { mutate: submitRequest, isPending }  = useSubmitDocumentRequest();
+  const { mutate: confirmPayment }            = useUpdatePaymentMethod();
+
+  // ── Submit handler ──────────────────────────────────────────────────────────
+  const handleSubmitRequest = (formData) => {
+    submitRequest(formData, {
+      onSuccess: () => setSelectedDoc(null),
+    });
   };
 
-  const handleSubmitRequest = (data) => {
-    console.log('Submitting request:', data);
-    setSelectedDoc(null);
+  // ── Payment confirm handler ─────────────────────────────────────────────────
+  const handleConfirmPayment = (method) => {
+    if (!paymentReq) return;
+    confirmPayment(
+      { id: paymentReq._rawId, paymentMethod: method.id },
+      { onSuccess: () => setPaymentReq(null) }
+    );
   };
 
   return (
     <div className="max-w mx-8 space-y-10">
-      
-      {/* Available Documents Section */}
+
+      {/* ── Available Documents ─────────────────────────────────────────────── */}
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-900">Available Document</h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {AVAILABLE_DOCUMENTS.map((doc) => (
-            <div 
+            <div
               key={doc.id}
-              onClick={() => handleRequest(doc)}
+              onClick={() => setSelectedDoc(doc)}
               className="bg-white p-6 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer flex flex-col h-full"
             >
               <div className={`w-14 h-14 ${doc.iconBg} ${doc.iconColor} rounded-sm flex items-center justify-center mb-6`}>
@@ -100,11 +124,12 @@ export default function ResidentRequestPage() {
               <p className="text-base text-gray-500 mb-8 flex-1 leading-relaxed pr-14">
                 {doc.description}
               </p>
-              
               <div className="space-y-2 pt-4 border-t border-gray-50">
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-500">Fee:</span>
-                  <span className="font-semibold text-gray-900">{typeof doc.fee === 'number' ? `₱${doc.fee}` : doc.fee}</span>
+                  <span className="font-semibold text-gray-900">
+                    {typeof doc.fee === 'number' ? `₱${doc.fee}` : doc.fee}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-500">Processing:</span>
@@ -116,83 +141,116 @@ export default function ResidentRequestPage() {
         </div>
       </section>
 
-      {/* My Requests Section */}
+      {/* ── My Requests ─────────────────────────────────────────────────────── */}
       <section>
         <h2 className="text-2xl font-semibold text-gray-900 mb-6">My Requests</h2>
-        
-        <div className="space-y-4">
-          {MOCK_REQUESTS.map((req) => (
-            <div key={req.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-5 flex flex-col md:flex-row md:items-center gap-4">
-                {/* Icon & Title Info */}
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="w-12 h-12 mb-2 bg-gray-100 text-[#005F02] rounded-sm flex items-center justify-center">
-                    {req.icon}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{req.title}</h3>
-                    <p className="text-base text-gray-500">{req.purpose}</p>
-                    <p className="text-[12px] text-gray-500 mt-1">
-                      Request ID: <span className="font-medium">{req.id}</span> • Requested: {req.date}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Status & Actions */}
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="flex flex-col items-start gap-1">
-                    <span className={`px-3 mx-auto py-1 rounded-md text-[12px] font-semibold ${
-                      req.status === 'Approved' ? 'bg-[#E8F5E9] text-[#2E7D32]' : 'ml-6 bg-orange-50  text-orange-700'
-                    }`}>
-                      {req.status}
-                    </span>
-                    <p className="text-[12px] text-gray-600 font-medium">
-                      Payment: <span className={req.payment === 'Paid' ? 'text-[#2E7D32]' : 'text-orange-600'}>{req.payment}</span>
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+          </div>
+        ) : myRequests.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center text-gray-400 text-sm">
+            You haven't submitted any document requests yet.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {myRequests.map((req) => {
+              const statusLabel = getStatusLabel(req.status);
+              const isApproved  = req.status === 'released' || req.status === 'ready';
+              const isPaid      = req.payment_status === 'paid' || req.payment_status === 'free';
+              const paymentLabel = req.payment_status === 'free' ? 'Free' : isPaid ? 'Paid' : 'Pending';
+
+              return (
+                <div key={req.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="p-5 flex flex-col md:flex-row md:items-center gap-4">
+
+                    {/* Icon & Title Info */}
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-12 h-12 bg-gray-100 text-[#005F02] rounded-sm flex items-center justify-center shrink-0">
+                        {getDocIcon(req.document_type)}
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{req.document_type}</h3>
+                        <p className="text-base text-gray-500">{req.purpose}</p>
+                        <p className="text-[12px] text-gray-500 mt-1">
+                          Request ID: <span className="font-medium">{req.control_number ?? req.id.slice(0, 8).toUpperCase()}</span>
+                          {' • '}
+                          Requested: {req.requested_at
+                            ? new Date(req.requested_at).toLocaleDateString('en-US')
+                            : '—'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Status & Actions */}
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="flex flex-col items-start gap-1">
+                        <span className={`px-3 py-1 rounded-md text-[12px] font-semibold ${getStatusStyle(req.status)}`}>
+                          {statusLabel}
+                        </span>
+                        <p className="text-[12px] text-gray-600 font-medium ml-1">
+                          Payment:{' '}
+                          <span className={isPaid ? 'text-[#2E7D32]' : 'text-orange-600'}>
+                            {paymentLabel}
+                          </span>
+                        </p>
+                      </div>
+
+                      {isApproved ? (
+                        <button
+                          onClick={() => setPreviewReq(req)}
+                          className="flex items-center gap-2 px-6 py-2.5 bg-[#005F02] text-white rounded-lg text-base font-semibold hover:bg-[#004A01] transition-colors"
+                        >
+                          <FiEye className="w-5 h-5" /> View
+                        </button>
+                      ) : req.payment_status === 'unpaid' ? (
+                        <button
+                          onClick={() => setPaymentReq({ ...req, _rawId: req.id, title: req.document_type, fee: req.fee_amount, txnRef: req.control_number ?? '—' })}
+                          className="px-6 py-2.5 border border-gray-200 rounded-lg text-base font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          Pay Now
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-1.5 text-sm text-gray-400 px-4">
+                          <FiClock className="w-4 h-4" />
+                          <span>In progress</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Transaction Ref Footer */}
+                  <div className="px-6 py-3 border-t border-gray-100">
+                    <p className="text-[10px] text-gray-500 font-medium">
+                      Control No.: {req.control_number ?? '—'}
+                      {req.payment_status !== 'free' && req.or_number && (
+                        <> &nbsp;•&nbsp; OR No.: {req.or_number}</>
+                      )}
                     </p>
                   </div>
-                  
-                  {req.status === 'Approved' ? (
-                    <button 
-                      onClick={() => setPreviewReq(req)}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-[#005F02] text-white rounded-lg text-base font-semibold hover:bg-[#004A01] transition-colors"
-                    >
-                      <FiEye className="w-6 h-6" /> View
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => setPaymentReq(req)}
-                      className="px-6 py-2.5 border border-gray-200 rounded-lg text-base font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Pay Now
-                    </button>
-                  )}
                 </div>
-              </div>
-              
-              {/* Transaction Ref Footer */}
-              <div className="px-6 py-4 border-t border-gray-200">
-                <p className="text-[10px] text-gray-500 font-medium">
-                  Transaction Ref: {req.txnRef}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
+      {/* ── Modals ─────────────────────────────────────────────────────────── */}
       {selectedDoc && (
         <RequestDocumentModal
           cert={selectedDoc}
           resident={resident}
           onClose={() => setSelectedDoc(null)}
           onSubmit={handleSubmitRequest}
+          isPending={isPending}
         />
       )}
 
       {previewReq && (
         <DocumentPreviewModal
-          req={previewReq}
-          resident={resident}
+          req={{ ...previewReq, title: previewReq.document_type, icon: getDocIcon(previewReq.document_type) }}
+          resident={previewReq.residents ?? resident}
           onClose={() => setPreviewReq(null)}
         />
       )}
@@ -201,10 +259,7 @@ export default function ResidentRequestPage() {
         <PaymentModal
           req={paymentReq}
           onClose={() => setPaymentReq(null)}
-          onConfirm={(method) => {
-            console.log('Payment confirmed with method:', method);
-            setPaymentReq(null);
-          }}
+          onConfirm={handleConfirmPayment}
         />
       )}
     </div>
