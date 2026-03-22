@@ -61,22 +61,63 @@ export async function getMyEidApplication() {
 }
 
 export async function submitEidApplication(payload) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated.');
+
   const { data: resident, error: resErr } = await supabase
     .from('residents')
     .select('id')
-    .eq('profile_id', (await supabase.auth.getUser()).data.user?.id)
+    .eq('profile_id', user.id)
     .maybeSingle();
 
   if (resErr) throw resErr;
   if (!resident) throw new Error('Resident record not found.');
 
+  // Extract non-DB fields before insert
+  const { _validIdType, _validIdFile, ...rest } = payload;
+
+  // Explicitly whitelist only columns that exist in eid_applications
+  const safePayload = {
+    type:           rest.type           ?? 'new',
+    first_name:     rest.first_name     ?? null,
+    middle_name:    rest.middle_name    ?? null,
+    last_name:      rest.last_name      ?? null,
+    suffix:         rest.suffix         ?? null,
+    date_of_birth:  rest.date_of_birth  ?? null,
+    sex:            rest.sex            ?? null,
+    address_line:   rest.address_line   ?? null,
+    contact_number: rest.contact_number ?? null,
+    email:          rest.email          ?? null,
+    id_number:      rest.id_number      ?? null,
+    photo_url:      rest.photo_url      ?? null,
+    resident_id:    resident.id,
+  };
+
   const { data, error } = await supabase
     .from('eid_applications')
-    .insert({ ...payload, resident_id: resident.id })
+    .insert(safePayload)
     .select()
     .single();
 
   if (error) throw error;
+
+  // Upload valid ID photo and save type to residents table
+  const updates = {};
+  if (_validIdType) updates.valid_id_type = _validIdType;
+
+  if (_validIdFile) {
+    const ext  = _validIdFile.name.split('.').pop().toLowerCase();
+    const path = `${resident.id}/valid-id.${ext}`;
+    const { error: uploadErr } = await supabase.storage
+      .from('valid-id-photos')
+      .upload(path, _validIdFile, { upsert: true, contentType: _validIdFile.type });
+    if (!uploadErr) updates.valid_id_url = path;
+  }
+
+  if (Object.keys(updates).length > 0) {
+    await supabase.from('residents').update(updates).eq('id', resident.id);
+  }
+
   return data;
 }
 

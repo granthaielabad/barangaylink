@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   FiUser, FiCreditCard, FiDownload, FiZoomIn, FiX, FiXCircle,
   FiAlertCircle, FiCheckCircle, FiClock, FiRefreshCw, FiPlus,
-  FiMapPin, FiPhone, FiMail, FiCalendar, FiCamera,
+  FiMapPin, FiPhone, FiMail, FiCalendar, FiCamera, FiUpload,
 } from 'react-icons/fi';
 import { LuClipboardList } from 'react-icons/lu';
 import {
@@ -13,7 +13,6 @@ import {
   useSubmitEidApplication,
   useSubmitEidRenewal,
 } from '../../../hooks/queries/resident/useResidentPortal';
-import ValidIdForm from '../components/Residents/ResidentAddEdit/ValidIdForm';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(dateStr) {
@@ -54,32 +53,18 @@ const QrCanvas = forwardRef(function QrCanvas({ token, size, onError }, ref) {
   return <canvas ref={canvasRef} width={size} height={size} className="block" />;
 });
 
-// ── Locked field styles (identical to admin EidForms) ──
-const lockedWrap  = 'flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50';
-const lockedIcon  = 'bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-200 text-gray-400';
-const lockedText  = 'flex-1 px-4 py-2.5 bg-gray-50 text-gray-500 text-base cursor-not-allowed select-none';
-
-const LockedField = ({ label, icon: Icon, value: v }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
-    <div className={lockedWrap}>
-      {Icon && <div className={lockedIcon}><Icon className="w-5 h-5" /></div>}
-      <span className={lockedText}>{v || '—'}</span>
-    </div>
-  </div>
-);
-
 // ─── Apply for eID Modal ─────────────────────────────────────────────────────
 // Matches the admin "Create New eID" modal design exactly.
 // All fields are read-only from resident profile. Only photo is interactable.
 function ApplyModal({ resident, onClose, onSubmit, isPending }) {
-  const [photoPreview, setPhotoPreview] = useState(resident?.photo_url ?? null);
-  const [validIdData, setValidIdData] = useState({
-    validIdType:   resident?.valid_id_type   ?? '',
-    validIdNumber: resident?.valid_id_number ?? '',
-    validIdFile:   null,
-  });
-  const fileRef = useRef(null);
+  // Photo always starts blank — resident uploads a fresh photo for this application
+  const [photoPreview,    setPhotoPreview]    = useState(null);
+  const [validIdType,     setValidIdType]     = useState('');
+  const [validIdNumber,   setValidIdNumber]   = useState('');
+  const [validIdFile,     setValidIdFile]     = useState(null);
+  const [validIdPreview,  setValidIdPreview]  = useState(null);
+  const photoRef   = useRef(null);
+  const validIdRef = useRef(null);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -91,32 +76,58 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) { alert('File size must be under 2MB.'); return; }
-    if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPG files are supported.'); return; }
+    if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPG are supported.'); return; }
     const reader = new FileReader();
     reader.onload = (ev) => setPhotoPreview(ev.target.result);
     reader.readAsDataURL(file);
     e.target.value = '';
   };
 
+  const handleValidIdFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert('File size must be under 2MB.'); return; }
+    if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPG are supported.'); return; }
+    setValidIdFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setValidIdPreview(ev.target.result);
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const lockedWrap = 'flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50';
+  const lockedIcon = 'bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-200 text-gray-400';
+  const lockedText = 'flex-1 px-4 py-2.5 bg-gray-50 text-gray-500 text-base cursor-not-allowed select-none';
+  const inputCls   = 'w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
+
+  const LockedField = ({ label, icon: Icon, value: v }) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">{label}</label>
+      <div className={lockedWrap}>
+        {Icon && <div className={lockedIcon}><Icon className="w-5 h-5" /></div>}
+        <span className={lockedText}>{v || '—'}</span>
+      </div>
+    </div>
+  );
+
   const sex = resident?.sex === 'M' ? 'Male' : resident?.sex === 'F' ? 'Female' : resident?.sex ?? '';
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({
-      first_name:      resident?.first_name,
-      middle_name:     resident?.middle_name,
-      last_name:       resident?.last_name,
-      suffix:          resident?.suffix,
-      date_of_birth:   resident?.date_of_birth,
-      sex:             resident?.sex,
-      address_line:    resident?.address_line,
-      contact_number:  resident?.contact_number,
-      email:           resident?.email,
-      id_number:       resident?.id_number,
-      photo_url:       photoPreview,
-      valid_id_type:   validIdData.validIdType   || null,
-      valid_id_number: validIdData.validIdNumber || null,
-      valid_id_file:   validIdData.validIdFile   ?? null,
+      first_name:     resident?.first_name,
+      middle_name:    resident?.middle_name,
+      last_name:      resident?.last_name,
+      suffix:         resident?.suffix,
+      date_of_birth:  resident?.date_of_birth,
+      sex:            resident?.sex,
+      address_line:   resident?.address_line,
+      contact_number: resident?.contact_number,
+      email:          resident?.email,
+      id_number:      validIdNumber || null,
+      photo_url:      photoPreview  || null,
+      _validIdType:   validIdType   || null,
+      _validIdFile:   validIdFile   || null,
     });
   };
 
@@ -127,7 +138,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
       <div className="absolute inset-0 bg-black/40" />
       <div className="relative bg-white w-full max-w-2xl rounded-xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
 
-        {/* Header — matches admin modal exactly */}
+        {/* Header */}
         <div className="flex items-center justify-between gap-3 px-6 py-3 bg-[#F1F7F2] border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-lg text-[#005F02]">
@@ -142,43 +153,32 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
           </button>
         </div>
 
-        {/* Body */}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="flex-1 overflow-y-auto px-6 py-6">
-            <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
 
-              {/* Left: Photo upload — the ONLY interactive element */}
+            {/* ── Photo + Name ── */}
+            <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+              {/* Photo upload */}
               <div className="flex flex-col items-center sm:m-5 shrink-0 sm:w-40">
                 <div className="relative">
-                  <div className="w-[170px] h-[170px] rounded-lg bg-gray-100 border border-gray-300 overflow-hidden flex items-center justify-center">
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="ID Photo" className="w-full h-full object-cover" />
-                    ) : (
-                      <FiUser className="w-14 h-14 text-gray-300" />
-                    )}
+                  <div className="w-[140px] h-[170px] rounded-lg bg-gray-100 border border-gray-300 overflow-hidden flex items-center justify-center">
+                    {photoPreview
+                      ? <img src={photoPreview} alt="ID Photo" className="w-full h-full object-cover" />
+                      : <FiUser className="w-14 h-14 text-gray-300" />}
                   </div>
-                  <button type="button" onClick={() => fileRef.current?.click()}
+                  <button type="button" onClick={() => photoRef.current?.click()}
                     className="absolute bottom-2 right-2 bg-[#005F02] hover:bg-[#004A01] text-white p-2 rounded-lg shadow-md transition-colors"
                     title="Upload photo">
                     <FiCamera className="w-4 h-4" />
                   </button>
-                  <input ref={fileRef} type="file" accept="image/png,image/jpeg"
+                  <input ref={photoRef} type="file" accept="image/png,image/jpeg"
                     onChange={handlePhoto} className="hidden" />
                 </div>
                 <p className="mt-2 text-xs text-gray-400 text-center">We support PNGs and JPGs under 2MB</p>
               </div>
 
-              {/* Right: Name fields — all locked */}
+              {/* Locked name fields */}
               <div className="flex-1 space-y-4">
-                {/* ID Number */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">ID Number:</label>
-                  <div className={lockedWrap}>
-                    <span className={lockedText}>{resident?.id_number || '—'}</span>
-                  </div>
-                </div>
-
-                {/* Last + First */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name:</label>
@@ -189,8 +189,6 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                     <div className={lockedWrap}><span className={lockedText}>{resident?.first_name || '—'}</span></div>
                   </div>
                 </div>
-
-                {/* Middle + Suffix */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Middle Name:</label>
@@ -204,8 +202,8 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
               </div>
             </div>
 
-            {/* Bottom locked fields */}
-            <div className="space-y-4 mt-6">
+            {/* ── Locked personal info ── */}
+            <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <LockedField label="Birthdate:" icon={FiCalendar} value={fmt(resident?.date_of_birth)} />
                 <LockedField label="Sex:" icon={FiUser} value={sex} />
@@ -215,15 +213,67 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
               <LockedField label="Email Address:" icon={FiMail} value={resident?.email} />
             </div>
 
-            <div className="mt-8 pt-8 border-t border-gray-100">
-              <ValidIdForm
-                value={validIdData}
-                onChange={setValidIdData}
-              />
+            {/* ── Valid ID Identification (editable) ── */}
+            <div className="border-t border-gray-200 pt-5 space-y-4">
+              <p className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Valid ID Identification</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Valid ID Type <span className="text-red-500">*</span>
+                  </label>
+                  <select value={validIdType} onChange={(e) => setValidIdType(e.target.value)}
+                    required className={inputCls}>
+                    <option value="">Select ID Type</option>
+                    <option>PhilSys (National ID)</option>
+                    <option>Voter's ID</option>
+                    <option>Driver's License</option>
+                    <option>Passport</option>
+                    <option>SSS ID</option>
+                    <option>PhilHealth ID</option>
+                    <option>Postal ID</option>
+                    <option>UMID</option>
+                    <option>Senior Citizen ID</option>
+                    <option>PWD ID</option>
+                    <option>Barangay ID</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    ID Number <span className="text-red-500">*</span>
+                  </label>
+                  <input type="text" value={validIdNumber}
+                    onChange={(e) => setValidIdNumber(e.target.value)}
+                    placeholder="Enter your ID number"
+                    required className={inputCls} />
+                </div>
+              </div>
+
+              {/* Valid ID photo upload */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Upload Valid ID Photo <span className="text-red-500">*</span>
+                </label>
+                <div onClick={() => validIdRef.current?.click()}
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-[#005F02] transition-colors text-center">
+                  {validIdPreview ? (
+                    <img src={validIdPreview} alt="Valid ID" className="h-24 mx-auto rounded object-contain" />
+                  ) : (
+                    <div className="text-gray-400">
+                      <FiUpload className="w-6 h-6 mx-auto mb-1" />
+                      <p className="text-xs">Click to upload (PNG/JPG, max 2MB)</p>
+                      <p className="text-[10px] mt-0.5 text-gray-400">Clear photo showing ID details and address</p>
+                    </div>
+                  )}
+                </div>
+                <input ref={validIdRef} type="file" accept="image/png,image/jpeg"
+                  onChange={handleValidIdFile} className="hidden" />
+              </div>
             </div>
           </div>
 
-          {/* Footer — matches admin modal exactly */}
+          {/* Footer */}
           <div className="flex justify-end gap-3 px-6 py-4 bg-[#F1F7F2] border-t border-gray-200">
             <button type="button" onClick={onClose}
               className="px-6 py-2.5 rounded-lg text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
@@ -340,7 +390,7 @@ function RenewModal({ eid, onClose, onSubmit, isPending }) {
 function EidCard({ eid, onZoomQr, isInactive = false }) {
   const r = eid.residents;
   return (
-    <div className={`border border-gray-200 rounded-xl overflow-hidden shadow-md ${isInactive ? 'opacity-60 grayscale' : ''}`}
+    <div className={`w-full max-w-[520px] mx-auto rounded-xl overflow-hidden shadow-md border border-gray-200 ${isInactive ? 'opacity-60 grayscale' : ''}`}
       style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
       {/* Green top bar */}
       <div className="h-4 bg-[#005F02]" />
@@ -361,10 +411,10 @@ function EidCard({ eid, onZoomQr, isInactive = false }) {
         </div>
 
         {/* Details */}
-        <div className="flex-1 min-w-0 space-y-2">
+        <div className="flex-1 min-w-0 space-y-1.5">
           <div>
             <p className="text-[9px] text-gray-400 uppercase tracking-wider">ID Number</p>
-            <p className="text-base font-black text-gray-900 font-mono">{eid.eid_number}</p>
+            <p className="text-sm font-black text-gray-900 font-mono">{eid.eid_number}</p>
           </div>
           <div>
             <p className="text-[9px] text-gray-400 uppercase tracking-wider">Name</p>
@@ -372,9 +422,9 @@ function EidCard({ eid, onZoomQr, isInactive = false }) {
           </div>
           <div>
             <p className="text-[9px] text-gray-400 uppercase tracking-wider">Address</p>
-            <p className="text-xs text-gray-700">{r?.address_line ?? '—'}</p>
+            <p className="text-xs text-gray-700 truncate">{r?.address_line ?? '—'}</p>
           </div>
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-0.5">
             {[
               ['Date of Birth', fmt(r?.date_of_birth)],
               ['Blood Type',   r?.blood_type || '—'],
@@ -391,7 +441,7 @@ function EidCard({ eid, onZoomQr, isInactive = false }) {
         </div>
 
         {/* QR */}
-        <div className="shrink-0 flex flex-col items-end justify-between">
+        <div className="shrink-0 flex flex-col items-end justify-start">
           <button type="button" onClick={onZoomQr}
             className="relative group cursor-zoom-in focus:outline-none" style={{ width: 72, height: 72 }}
             aria-label="Expand QR Code">
@@ -514,6 +564,8 @@ export default function ResidentEIdPage() {
 
   const isLoading = loadingEid || loadingApp;
 
+  const hasActiveEid   = !!eid && eid.status === 'active';
+  const hasInactiveEid = !!eid && eid.status !== 'active';
   const hasPending     = !eid && !!application;
 
   if (isLoading) {
@@ -530,7 +582,7 @@ export default function ResidentEIdPage() {
     return (
       <div className="space-y-5 max-w-7xl mx-auto">
 
-        {/* Status banner — frontend dev's design, extended for rejected state */}
+        {/* Status banner */}
         {isRejected ? (
           <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex gap-4 items-start">
             <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
@@ -557,37 +609,39 @@ export default function ResidentEIdPage() {
           </div>
         )}
 
-        {/* Application details */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-9 h-9 rounded-full bg-[#005F02]/10 flex items-center justify-center">
-              <LuClipboardList className="w-5 h-5 text-[#005F02]" />
+        {/* Application details + progress — only shown when NOT rejected */}
+        {!isRejected && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-9 h-9 rounded-full bg-[#005F02]/10 flex items-center justify-center">
+                <LuClipboardList className="w-5 h-5 text-[#005F02]" />
+              </div>
+              <h2 className="font-semibold text-gray-900 text-[24px]">Application Details</h2>
             </div>
-            <h2 className="font-semibold text-gray-900 text-[24px]">Application Details</h2>
-          </div>
 
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between py-1">
-              <span className="text-gray-500">Application Number:</span>
-              <span className="font-semibold font-mono">{application.id?.slice(0, 12).toUpperCase()}</span>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between py-1">
+                <span className="text-gray-500">Application Number:</span>
+                <span className="font-semibold font-mono">{application.id?.slice(0, 12).toUpperCase()}</span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-gray-500">Submitted on:</span>
+                <span className="font-semibold">{fmtLong(application.submitted_at)}</span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-gray-500">Estimated processing:</span>
+                <span className="font-semibold">3-5 business days</span>
+              </div>
             </div>
-            <div className="flex justify-between py-1">
-              <span className="text-gray-500">Submitted on:</span>
-              <span className="font-semibold">{fmtLong(application.submitted_at)}</span>
-            </div>
-            <div className="flex justify-between py-1">
-              <span className="text-gray-500">Estimated processing:</span>
-              <span className="font-semibold">3-5 business days</span>
+
+            <div className="mt-5 pt-4 border-t border-gray-200">
+              <p className="text-sm text-gray-500 font-medium mb-2">Application Progress</p>
+              <ProgressTracker status={application.status} eidIssued={false} />
             </div>
           </div>
+        )}
 
-          <div className="mt-5 pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-500 font-medium mb-2">Application Progress</p>
-            <ProgressTracker status={application.status} eidIssued={false} />
-          </div>
-        </div>
-
-        {/* Footer note */}
+        {/* Footer */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center space-y-3">
           <p className="text-sm text-gray-500">
             For inquiries about your application, please contact the barangay office.
@@ -621,7 +675,6 @@ export default function ResidentEIdPage() {
 
     return (
       <div className="space-y-5 max-w-7xl mx-auto">
-      <div className="space-y-5 max-w-3xl mx-auto">
         {/* Status banner */}
         <div className={`rounded-xl border p-5 flex gap-4 items-start ${statusCfg.bg}`}>
           <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${statusCfg.iconBg}`}>
@@ -640,7 +693,7 @@ export default function ResidentEIdPage() {
 
           {/* Action buttons */}
           <div className="flex justify-center gap-3 mt-5">
-            <button type="button"
+            <button type="button" onClick={() => setQrOpen(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
               <FiDownload className="w-4 h-4" /> Download
             </button>
@@ -678,7 +731,6 @@ export default function ResidentEIdPage() {
         )}
         {qrOpen && <QrLightbox eid={eid} onClose={() => setQrOpen(false)} />}
       </div>
-      </div>
     );
   }
 
@@ -686,7 +738,7 @@ export default function ResidentEIdPage() {
   return (
     <div className="space-y-5 max-w-7xl mx-auto">
       {/* No eID info banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 flex gap-4 items-start p-16">
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 flex gap-4 items-start">
         <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
           <FiAlertCircle className="w-5 h-5 text-blue-600" />
         </div>
@@ -734,5 +786,4 @@ export default function ResidentEIdPage() {
       )}
     </div>
   );
-  
 }

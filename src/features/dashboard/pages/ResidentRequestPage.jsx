@@ -4,20 +4,22 @@ import { FaHandsHoldingChild } from 'react-icons/fa6';
 import RequestDocumentModal from '../components/ResidentPortal/RequestDocumentModal';
 import DocumentPreviewModal from '../components/ResidentPortal/DocumentPreviewModal';
 import PaymentModal from '../components/ResidentPortal/PaymentModal';
-import { useMyResidentProfile } from '../../../hooks/queries/resident/useResidentPortal';
+import { useMyResidentProfile, useMyEid } from '../../../hooks/queries/resident/useResidentPortal';
 import {
   useMyDocumentRequests,
   useSubmitDocumentRequest,
   useUpdatePaymentMethod,
 } from '../../../hooks/queries/documentRequests/useDocumentRequests';
 
-// ── Document catalogue ─────────────────────────────────────────────────────────
+// ── Document catalogue ────────────────────────────────────────────────────────
+// document_type values must match the DB trigger's CASE expression exactly
 const AVAILABLE_DOCUMENTS = [
   {
     id:             'clearance',
     title:          'Barangay Clearance',
+    document_type:  'Barangay Clearance',
     description:    'Required for employment, business permits, and other legal purposes',
-    fee:            50,
+    fee:            100,
     processingTime: '3-5 business days',
     icon:           <FiFileText className="w-8 h-8" />,
     iconBg:         'bg-[#E8F5E9]',
@@ -26,8 +28,9 @@ const AVAILABLE_DOCUMENTS = [
   {
     id:             'residency',
     title:          'Certificate of Residency',
+    document_type:  'Certificate of Residency',
     description:    'Proves your residency in the barangay',
-    fee:            50,
+    fee:            100,
     processingTime: '3-5 business days',
     icon:           <FiHome className="w-8 h-8" />,
     iconBg:         'bg-[#E8F5E9]',
@@ -36,6 +39,7 @@ const AVAILABLE_DOCUMENTS = [
   {
     id:             'indigency',
     title:          'Certificate of Indigency',
+    document_type:  'Certificate of Indigency',
     description:    'For medical, educational, or financial assistance purposes',
     fee:            'Free',
     processingTime: '3-5 business days',
@@ -45,7 +49,7 @@ const AVAILABLE_DOCUMENTS = [
   },
 ];
 
-// ── Status helpers ─────────────────────────────────────────────────────────────
+// ── Status helpers ────────────────────────────────────────────────────────────
 function getStatusLabel(status) {
   const map = {
     pending:    'Pending',
@@ -74,25 +78,30 @@ function getDocIcon(documentType) {
   return <FiFileText className="w-5 h-5" />;
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
+function getDocTitle(documentType) {
+  // DB now stores human-readable names directly
+  return documentType ?? '—';
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export default function ResidentRequestPage() {
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [previewReq,  setPreviewReq]  = useState(null);
   const [paymentReq,  setPaymentReq]  = useState(null);
 
-  const { data: resident }                    = useMyResidentProfile();
-  const { data: myRequests = [], isLoading }  = useMyDocumentRequests();
-  const { mutate: submitRequest, isPending }  = useSubmitDocumentRequest();
-  const { mutate: confirmPayment }            = useUpdatePaymentMethod();
+  const { data: resident }                   = useMyResidentProfile();
+  const { data: eid }                        = useMyEid();
+  const { data: myRequests = [], isLoading } = useMyDocumentRequests();
+  const { mutate: submitRequest, isPending } = useSubmitDocumentRequest();
 
-  // ── Submit handler ──────────────────────────────────────────────────────────
+  // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmitRequest = (formData) => {
     submitRequest(formData, {
       onSuccess: () => setSelectedDoc(null),
     });
   };
 
-  // ── Payment confirm handler ─────────────────────────────────────────────────
+  // ── Payment confirm ─────────────────────────────────────────────────────────
   const handleConfirmPayment = (method) => {
     if (!paymentReq) return;
     confirmPayment(
@@ -104,7 +113,7 @@ export default function ResidentRequestPage() {
   return (
     <div className="max-w mx-8 space-y-10">
 
-      {/* ── Available Documents ─────────────────────────────────────────────── */}
+      {/* ── Available Documents ──────────────────────────────────────────────── */}
       <section>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold text-gray-900">Available Document</h2>
@@ -141,7 +150,7 @@ export default function ResidentRequestPage() {
         </div>
       </section>
 
-      {/* ── My Requests ─────────────────────────────────────────────────────── */}
+      {/* ── My Requests ──────────────────────────────────────────────────────── */}
       <section>
         <h2 className="text-2xl font-semibold text-gray-900 mb-6">My Requests</h2>
 
@@ -157,24 +166,25 @@ export default function ResidentRequestPage() {
           <div className="space-y-4">
             {myRequests.map((req) => {
               const statusLabel = getStatusLabel(req.status);
-              const isApproved  = req.status === 'released' || req.status === 'ready';
+              const isViewable  = req.status === 'released' || req.status === 'ready';
               const isPaid      = req.payment_status === 'paid' || req.payment_status === 'free';
+              const isUnpaid    = req.payment_status === 'unpaid';
               const paymentLabel = req.payment_status === 'free' ? 'Free' : isPaid ? 'Paid' : 'Pending';
 
               return (
                 <div key={req.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="p-5 flex flex-col md:flex-row md:items-center gap-4">
 
-                    {/* Icon & Title Info */}
+                    {/* Icon & Info */}
                     <div className="flex items-center gap-4 flex-1">
                       <div className="w-12 h-12 bg-gray-100 text-[#005F02] rounded-sm flex items-center justify-center shrink-0">
                         {getDocIcon(req.document_type)}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">{req.document_type}</h3>
+                        <h3 className="font-semibold text-gray-900">{getDocTitle(req.document_type)}</h3>
                         <p className="text-base text-gray-500">{req.purpose}</p>
                         <p className="text-[12px] text-gray-500 mt-1">
-                          Request ID: <span className="font-medium">{req.control_number ?? req.id.slice(0, 8).toUpperCase()}</span>
+                          Control No.: <span className="font-medium">{req.control_number ?? '—'}</span>
                           {' • '}
                           Requested: {req.requested_at
                             ? new Date(req.requested_at).toLocaleDateString('en-US')
@@ -194,40 +204,54 @@ export default function ResidentRequestPage() {
                           <span className={isPaid ? 'text-[#2E7D32]' : 'text-orange-600'}>
                             {paymentLabel}
                           </span>
+                          {req.fee_amount > 0 && (
+                            <span className="text-gray-400"> (₱{req.fee_amount})</span>
+                          )}
                         </p>
                       </div>
 
-                      {isApproved ? (
+                      {isViewable ? (
                         <button
                           onClick={() => setPreviewReq(req)}
                           className="flex items-center gap-2 px-6 py-2.5 bg-[#005F02] text-white rounded-lg text-base font-semibold hover:bg-[#004A01] transition-colors"
                         >
                           <FiEye className="w-5 h-5" /> View
                         </button>
-                      ) : req.payment_status === 'unpaid' ? (
+                      ) : isUnpaid && req.status !== 'rejected' ? (
                         <button
-                          onClick={() => setPaymentReq({ ...req, _rawId: req.id, title: req.document_type, fee: req.fee_amount, txnRef: req.control_number ?? '—' })}
+                          onClick={() => setPaymentReq({
+                            ...req,
+                            _rawId:  req.id,
+                            title:   getDocTitle(req.document_type),
+                            fee:     req.fee_amount,
+                            txnRef:  req.control_number ?? '—',
+                          })}
                           className="px-6 py-2.5 border border-gray-200 rounded-lg text-base font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           Pay Now
                         </button>
-                      ) : (
+                      ) : req.status !== 'rejected' ? (
                         <div className="flex items-center gap-1.5 text-sm text-gray-400 px-4">
                           <FiClock className="w-4 h-4" />
                           <span>In progress</span>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </div>
 
-                  {/* Transaction Ref Footer */}
-                  <div className="px-6 py-3 border-t border-gray-100">
+                  {/* Footer row */}
+                  <div className="px-6 py-3 border-t border-gray-100 flex items-center justify-between">
                     <p className="text-[10px] text-gray-500 font-medium">
                       Control No.: {req.control_number ?? '—'}
                       {req.payment_status !== 'free' && req.or_number && (
                         <> &nbsp;•&nbsp; OR No.: {req.or_number}</>
                       )}
                     </p>
+                    {req.status === 'rejected' && (
+                      <span className="text-[10px] text-red-500 font-medium">
+                        {req.admin_notes ? `Reason: ${req.admin_notes}` : 'Request rejected. Please contact the Barangay Office.'}
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -241,6 +265,7 @@ export default function ResidentRequestPage() {
         <RequestDocumentModal
           cert={selectedDoc}
           resident={resident}
+          eidNumber={eid?.eid_number ?? null}
           onClose={() => setSelectedDoc(null)}
           onSubmit={handleSubmitRequest}
           isPending={isPending}
@@ -249,7 +274,11 @@ export default function ResidentRequestPage() {
 
       {previewReq && (
         <DocumentPreviewModal
-          req={{ ...previewReq, title: previewReq.document_type, icon: getDocIcon(previewReq.document_type) }}
+          req={{
+            ...previewReq,
+            title: getDocTitle(previewReq.document_type),
+            icon:  getDocIcon(previewReq.document_type),
+          }}
           resident={previewReq.residents ?? resident}
           onClose={() => setPreviewReq(null)}
         />
@@ -259,7 +288,6 @@ export default function ResidentRequestPage() {
         <PaymentModal
           req={paymentReq}
           onClose={() => setPaymentReq(null)}
-          onConfirm={handleConfirmPayment}
         />
       )}
     </div>

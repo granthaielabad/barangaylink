@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────────
-// All Supabase queries for the `residents` table.
-// Server-side filtering, sorting, and pagination —
-// never manipulate arrays client-side.
-// ─────────────────────────────────────────────────────────────
 import { supabase } from './client';
 
 const TABLE = 'residents';
@@ -13,6 +8,7 @@ const DEFAULT_SELECT = `
   contact_number, email, voter_status,
   address_line, years_of_stay, purok_id,
   philhealth_no, sss_no, tin_no, id_number,
+  valid_id_type, valid_id_url,
   age_group, blood_type,
   status, photo_url, household_id, created_at, updated_at,
   puroks ( id, name ),
@@ -194,4 +190,37 @@ export async function uploadResidentPhoto(residentId, dataUrl) {
   if (updateError) throw updateError;
 
   return publicUrl;
+}
+
+/**
+ * Upload a valid ID photo to the valid-id-photos bucket (private).
+ * Writes the URL back to residents.valid_id_url.
+ * Accepts a File object from an <input type="file">.
+ */
+export async function uploadValidIdPhoto(residentId, file) {
+  const ext  = file.name.split('.').pop().toLowerCase();
+  const path = `${residentId}/valid-id.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('valid-id-photos')
+    .upload(path, file, { upsert: true, contentType: file.type });
+
+  if (uploadError) throw uploadError;
+
+  // Private bucket — use signed URL so only authenticated staff can view
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from('valid-id-photos')
+    .createSignedUrl(path, 60 * 60 * 24 * 365); // 1-year expiry
+
+  if (signedError) throw signedError;
+
+  // Store the path (not URL) so we can re-generate signed URLs later
+  const { error: updateError } = await supabase
+    .from('residents')
+    .update({ valid_id_url: path })
+    .eq('id', residentId);
+
+  if (updateError) throw updateError;
+
+  return signedData.signedUrl;
 }

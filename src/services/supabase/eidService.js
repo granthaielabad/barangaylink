@@ -1,183 +1,198 @@
 import { supabase } from './client';
 
-const TABLE = 'electronic_ids';
+const EID_TABLE = 'electronic_ids';
+const APP_TABLE = 'eid_applications';
 
-const DEFAULT_SELECT = `
-  id, eid_number, qr_token, qr_image_url,
-  issued_at, expires_at, status,
-  issued_by, revoked_at,
-  resident_id,
-  residents (
-    id, first_name, middle_name, last_name, suffix,
-    photo_url, contact_number, date_of_birth, sex, blood_type, civil_status,
-    address_line,
-    puroks ( id, name )
-  )
-`;
+// ── Issued eIDs ───────────────────────────────────────────────────────────────
 
+/**
+ * Fetch a paginated, filtered, sorted list of issued eIDs.
+ */
 export async function getEids({
-  page = 1, pageSize = 8, search = '',
-  status = 'all', sortBy = 'issued_at', order = 'desc',
+  page = 1,
+  pageSize = 10,
+  search = '',
+  status = 'all',
+  sortBy = 'issued_at',
+  order = 'desc',
 } = {}) {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
   let query = supabase
-    .from(TABLE)
-    .select(DEFAULT_SELECT, { count: 'exact' })
+    .from(EID_TABLE)
+    .select(`
+      *,
+      residents (
+        id, resident_no, first_name, middle_name, last_name, suffix,
+        photo_url, date_of_birth, sex, blood_type, civil_status,
+        address_line, puroks ( id, name )
+      )
+    `, { count: 'exact' })
     .range(from, to)
     .order(sortBy, { ascending: order === 'asc' });
 
-  if (status !== 'all') query = query.eq('status', status);
-  if (search.trim()) query = query.ilike('eid_number', `%${search}%`);
+  if (status && status !== 'all') {
+    query = query.eq('status', status);
+  }
+
+  if (search.trim()) {
+    // Search across resident name fields and eID number
+    query = query.or(
+      `eid_number.ilike.%${search}%,residents.first_name.ilike.%${search}%,residents.last_name.ilike.%${search}%`
+    );
+  }
 
   const { data, error, count } = await query;
   if (error) throw error;
-  return { data, total: count ?? 0, page, pageSize, totalPages: Math.ceil((count ?? 0) / pageSize) };
+
+  return {
+    data,
+    total: count ?? 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((count ?? 0) / pageSize),
+  };
 }
 
 export async function getEidById(id) {
-  const { data, error } = await supabase.from(TABLE).select(DEFAULT_SELECT).eq('id', id).single();
+  const { data, error } = await supabase
+    .from(EID_TABLE)
+    .select(`
+      *,
+      residents (*)
+    `)
+    .eq('id', id)
+    .single();
   if (error) throw error;
   return data;
 }
 
-export async function getEidByResidentId(residentId) {
-  const { data, error } = await supabase.from(TABLE).select(DEFAULT_SELECT).eq('resident_id', residentId).maybeSingle();
-  if (error) throw error;
-  return data;
-}
-
-export async function issueEid(residentId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) throw new Error('Not authenticated');
-
-  const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnon = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  const res = await fetch(`${supabaseUrl}/functions/v1/issue-eid`, {
-    method: 'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-      'apikey':        supabaseAnon,
-    },
-    body: JSON.stringify({ resident_id: residentId }),
+/**
+ * Trigger the `issue-eid` Edge Function.
+ */
+export async function issueEid(residentId, photoUrl = null) {
+  const { data, error } = await supabase.functions.invoke('issue-eid', {
+    body: { resident_id: residentId, photo_url: photoUrl },
   });
-
-  const data = await res.json();
-  if (!res.ok || !data?.success) throw new Error(data?.error ?? 'Failed to issue eID');
+  if (error) throw error;
+  if (!data?.success) throw new Error(data?.error ?? 'Failed to issue eID.');
   return data.eid;
 }
 
 export async function revokeEid(id) {
-  const { data, error } = await supabase.from(TABLE)
+  const { data, error } = await supabase
+    .from(EID_TABLE)
     .update({ status: 'revoked', revoked_at: new Date().toISOString() })
-    .eq('id', id).select(DEFAULT_SELECT).single();
+    .eq('id', id)
+    .select()
+    .single();
   if (error) throw error;
   return data;
 }
 
 export async function suspendEid(id) {
-  const { data, error } = await supabase.from(TABLE)
-    .update({ status: 'suspended' }).eq('id', id).select(DEFAULT_SELECT).single();
+  const { data, error } = await supabase
+    .from(EID_TABLE)
+    .update({ status: 'suspended' })
+    .eq('id', id)
+    .select()
+    .single();
   if (error) throw error;
   return data;
 }
 
 export async function reactivateEid(id) {
-  const { data, error } = await supabase.from(TABLE)
-    .update({ status: 'active' }).eq('id', id).select(DEFAULT_SELECT).single();
+  const { data, error } = await supabase
+    .from(EID_TABLE)
+    .update({ status: 'active' })
+    .eq('id', id)
+    .select()
+    .single();
   if (error) throw error;
   return data;
 }
 
 export async function deleteEid(id) {
-  const { error } = await supabase.from(TABLE).delete().eq('id', id);
+  const { error } = await supabase.from(EID_TABLE).delete().eq('id', id);
   if (error) throw error;
 }
 
+/**
+ * Aggregate counts for the eID dashboard cards.
+ */
 export async function getEidStats() {
-  const { data, error } = await supabase.from(TABLE).select('status');
+  const { data, error } = await supabase.from(EID_TABLE).select('status');
   if (error) throw error;
-  const stats = { total: 0, active: 0, suspended: 0, revoked: 0, expired: 0 };
-  for (const row of data ?? []) { stats.total++; if (row.status in stats) stats[row.status]++; }
+
+  const stats = {
+    total: data.length,
+    active: data.filter((e) => e.status === 'active').length,
+    suspended: data.filter((e) => e.status === 'suspended').length,
+    revoked: data.filter((e) => e.status === 'revoked').length,
+    expired: data.filter((e) => e.status === 'expired').length,
+  };
+
   return stats;
 }
 
-export async function verifyQrToken({ token, method = 'qr_scan' }) {
-  const { data: eid, error } = await supabase.from(TABLE)
-    .select(`id, eid_number, status, expires_at,
-      residents ( id, resident_no, first_name, last_name, address_line, contact_number, date_of_birth, sex, photo_url )`)
-    .eq('qr_token', token).maybeSingle();
-  if (error) throw error;
-  if (!eid) return { result: 'invalid', eid: null, resident: null };
+// ── eID Applications ──────────────────────────────────────────────────────────
 
-  let result = 'valid';
-  if (eid.status === 'revoked') result = 'revoked';
-  else if (eid.status === 'suspended') result = 'invalid';
-  else if (eid.expires_at && new Date(eid.expires_at) < new Date()) result = 'expired';
-
-  // Get current user so we can log who performed the verification
-  const { data: { user } } = await supabase.auth.getUser();
-  await supabase.from('qr_verifications').insert({
-    eid_id: eid.id,
-    verification_method: method,
-    result,
-    verified_by: user?.id ?? null,
-  });
-
-  return { result, eid, resident: eid.residents };
-}
-
-// ── eID Applications (admin side) ────────────────────────────────────────────
-
-export async function getEidApplications({ page = 1, pageSize = 10, status = 'all' } = {}) {
+/**
+ * Fetch a paginated, filtered list of eID applications.
+ */
+export async function getEidApplications({
+  page = 1,
+  pageSize = 10,
+  status = 'all',
+} = {}) {
   const from = (page - 1) * pageSize;
-  const to   = from + pageSize - 1;
+  const to = from + pageSize - 1;
 
   let query = supabase
-    .from('eid_applications')
+    .from(APP_TABLE)
     .select(`
-      id, type, status, submitted_at, reviewed_at, remarks,
-      first_name, last_name, middle_name, suffix,
-      date_of_birth, sex, address_line, contact_number, email,
-      photo_url, id_number,
-      residents ( id, resident_no, photo_url, puroks(name) ),
-      reviewed_by_profile:profiles!eid_applications_reviewed_by_fkey ( full_name )
+      *,
+      residents ( id, resident_no )
     `, { count: 'exact' })
     .range(from, to)
     .order('submitted_at', { ascending: false });
 
-  if (status !== 'all') query = query.eq('status', status);
+  if (status && status !== 'all') {
+    query = query.eq('status', status);
+  }
 
   const { data, error, count } = await query;
   if (error) throw error;
-  return { data: data ?? [], total: count ?? 0, totalPages: Math.ceil((count ?? 0) / pageSize) };
+
+  return {
+    data,
+    total: count ?? 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((count ?? 0) / pageSize),
+  };
 }
 
 export async function getEidApplicationStats() {
-  const { data, error } = await supabase
-    .from('eid_applications')
-    .select('status');
+  const { data, error } = await supabase.from(APP_TABLE).select('status');
   if (error) throw error;
-  const counts = { all: 0, pending: 0, under_review: 0, approved: 0, rejected: 0 };
-  (data ?? []).forEach((r) => {
-    counts.all++;
-    if (r.status in counts) counts[r.status]++;
-  });
-  return counts;
+
+  const stats = {
+    total:        data.length,
+    pending:      data.filter((a) => a.status === 'pending').length,
+    under_review: data.filter((a) => a.status === 'under_review').length,
+    approved:     data.filter((a) => a.status === 'approved').length,
+    rejected:     data.filter((a) => a.status === 'rejected').length,
+  };
+
+  return stats;
 }
 
 export async function updateEidApplicationStatus(id, status, remarks = null) {
   const { data, error } = await supabase
-    .from('eid_applications')
-    .update({
-      status,
-      remarks,
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: (await supabase.auth.getUser()).data.user?.id,
-    })
+    .from(APP_TABLE)
+    .update({ status, remarks, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single();
@@ -186,12 +201,69 @@ export async function updateEidApplicationStatus(id, status, remarks = null) {
 }
 
 /**
- * Approve an application: update status to 'approved' then issue the eID.
- * Reuses the existing issueEid Edge Function.
+ * Approve an application and issue the eID in one step (via Edge Function).
  */
-export async function approveEidApplication(applicationId, residentId, photoUrl) {
-  // 1. Mark application approved
-  await updateEidApplicationStatus(applicationId, 'approved');
-  // 2. Issue the eID (uploads photo if provided, calls Edge Function)
+export async function approveEidApplication(applicationId, residentId, photoUrl = null) {
+  // 1. Update application status
+  const { error: appErr } = await supabase
+    .from(APP_TABLE)
+    .update({ status: 'approved', updated_at: new Date().toISOString() })
+    .eq('id', applicationId);
+  if (appErr) throw appErr;
+
+  // 2. Issue the eID (calls the same logic as manual issuance)
   return issueEid(residentId, photoUrl);
+}
+
+/**
+ * Verify a QR token and record the verification attempt.
+ * Returns { result: 'valid'|'expired'|'revoked'|'invalid', eid, resident }
+ */
+export async function verifyQrToken({ token, method = 'manual_entry' }) {
+  // 1. Find the eID by token
+  const { data: eid, error } = await supabase
+    .from(EID_TABLE)
+    .select(`
+      *,
+      residents (
+        id, resident_no, first_name, middle_name, last_name, suffix,
+        photo_url, date_of_birth, sex, blood_type, civil_status,
+        address_line, contact_number, puroks ( id, name )
+      )
+    `)
+    .eq('qr_token', token)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  let result = 'invalid';
+  if (eid) {
+    const now = new Date();
+    const expiry = new Date(eid.expires_at);
+
+    if (eid.status === 'revoked' || eid.status === 'suspended') {
+      result = 'revoked';
+    } else if (expiry < now) {
+      result = 'expired';
+    } else {
+      result = 'valid';
+    }
+  }
+
+  // 2. Log the verification attempt
+  const { data: { user } } = await supabase.auth.getUser();
+  if (eid) {
+    await supabase.from('qr_verifications').insert({
+      eid_id:              eid.id,
+      verifier_id:         user?.id,
+      result,
+      verification_method: method,
+    });
+  }
+
+  return {
+    result,
+    eid:      eid ? { id: eid.id, eid_number: eid.eid_number, status: eid.status } : null,
+    resident: eid?.residents ?? null,
+  };
 }

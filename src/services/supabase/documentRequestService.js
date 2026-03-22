@@ -153,3 +153,26 @@ export async function updatePaymentMethod(id, paymentMethod) {
   if (error) throw error;
   return data;
 }
+
+// ── Resident: create PayMongo payment link ────────────────────────────────────
+export async function createPaymentLink(documentRequestId) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) throw new Error('Not authenticated');
+
+  const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnon = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+  const res = await fetch(`${supabaseUrl}/functions/v1/create-payment-link`, {
+    method: 'POST',
+    headers: {
+      'Content-Type':  'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
+      'apikey':        supabaseAnon,
+    },
+    body: JSON.stringify({ document_request_id: documentRequestId }),
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data?.success) throw new Error(data?.error ?? 'Failed to create payment link.');
+  return data; // { checkout_url, link_id }
+}

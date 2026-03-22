@@ -9,6 +9,7 @@ import { useResidentFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
+import { uploadValidIdPhoto } from '../../../services/supabase/residentService';
 import { RESIDENT_STATUS_FILTER_OPTIONS, BARANGAY } from '../../../core/constants';
 
 export default function Residents() {
@@ -102,17 +103,27 @@ export default function Residents() {
     sss_no:         data.sssNo         || null,
     tin_no:         data.tinNo         || null,
     id_number:      data.idNumber      || null,
+    valid_id_type:  data.validIdType   || null,
     status:         (data.status       || 'active').toLowerCase(),
   });
 
-  const handleAddResident = (data) => {
-    create.mutate(buildPayload(data));
+  const handleAddResident = async (data) => {
+    const result = await create.mutateAsync(buildPayload(data));
+    if (data.validIdFile && result?.id) {
+      try { await uploadValidIdPhoto(result.id, data.validIdFile); }
+      catch (err) { toast.error(`Resident saved but valid ID upload failed: ${err.message}`); }
+    }
     setAddModalOpen(false);
   };
 
-  const handleUpdateResident = (data) => {
+  const handleUpdateResident = async (data) => {
     if (!selectedResident) return;
-    update.mutate({ id: selectedResident._raw?.id ?? selectedResident.id, payload: buildPayload(data) });
+    const residentId = selectedResident._raw?.id ?? selectedResident.id;
+    await update.mutateAsync({ id: residentId, payload: buildPayload(data) });
+    if (data.validIdFile) {
+      try { await uploadValidIdPhoto(residentId, data.validIdFile); }
+      catch (err) { toast.error(`Resident updated but valid ID upload failed: ${err.message}`); }
+    }
     setEditModalOpen(false);
     setSelectedResident(null);
   };

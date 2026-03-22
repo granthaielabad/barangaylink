@@ -75,8 +75,8 @@ function buildEditForm(raw) {
       status:       raw.status        ?? 'active',
     },
     validId: {
-      validIdType:   raw.valid_id_type   ?? '',
-      validIdNumber: raw.valid_id_number ?? '',
+      validIdType:   raw.valid_id_type ?? '',
+      validIdNumber: raw.id_number     ?? '',  // id_number stores the valid ID number
       validIdFile:   null,
     },
   };
@@ -140,7 +140,7 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
       philhealthNo: identification.philhealthNo || null,
       sssNo:        identification.sssNo        || null,
       tinNo:        identification.tinNo        || null,
-      idNumber:     identification.idNumber     || null,
+      idNumber:     identification.idNumber || validId.validIdNumber || null,
       status:       identification.status       || 'active',
       // Valid ID
       validIdType:   validId.validIdType   || null,

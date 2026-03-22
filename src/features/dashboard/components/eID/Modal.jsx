@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { IoMdAdd } from 'react-icons/io';
 import EidForms from './EidForms';
-import ValidIdForm from '../Residents/ResidentAddEdit/ValidIdForm';
+import ValidIdForm from '../residents/ResidentAddEdit/ValidIdForm';
 
 const emptyForm = {
   residentId:    '',
@@ -45,8 +45,8 @@ function buildEditForm(raw) {
     hasEid:        true,
     eidStatus:     raw.status       ?? null,
     eidNumber:     raw.eid_number   ?? null,
-    validIdType:   r.valid_id_type   ?? '',
-    validIdNumber: r.valid_id_number ?? '',
+    validIdType:   r.valid_id_type  ?? '',
+    validIdNumber: r.id_number      ?? '',
     validIdFile:   null,
   };
 }

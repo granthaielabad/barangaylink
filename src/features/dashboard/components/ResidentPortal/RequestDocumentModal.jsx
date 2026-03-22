@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { FiX, FiCheckCircle, FiClock } from 'react-icons/fi';
+import { FiX, FiClock } from 'react-icons/fi';
 
-export default function RequestDocumentModal({ cert, resident, onClose, onSubmit, isPending }) {
+export default function RequestDocumentModal({ cert, resident, eidNumber, onClose, onSubmit, isPending }) {
   const [purpose, setPurpose] = useState('');
 
   useEffect(() => {
@@ -14,15 +14,28 @@ export default function RequestDocumentModal({ cert, resident, onClose, onSubmit
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!purpose.trim()) return;
+    // document_type uses snake_case to match DB constraint
     onSubmit({
-      document_type: cert.title,
-      purpose: purpose,
-      fee: cert.fee,
+      document_type: cert.document_type,
+      purpose:       purpose.trim(),
+      fee_amount:    typeof cert.fee === 'number' ? cert.fee : 0,
     });
   };
 
-  const fullName = [resident?.first_name, resident?.middle_name, resident?.last_name, resident?.suffix]
-    .filter(Boolean).join(' ') || 'Barangay Resident';
+  const fullName = [
+    resident?.first_name,
+    resident?.middle_name,
+    resident?.last_name,
+    resident?.suffix,
+  ].filter(Boolean).join(' ') || 'Barangay Resident';
+
+  const formattedDOB = resident?.date_of_birth
+    ? new Date(resident.date_of_birth).toLocaleDateString('en-US')
+    : '—';
+
+  const civilStatus = resident?.civil_status
+    ? resident.civil_status.charAt(0).toUpperCase() + resident.civil_status.slice(1)
+    : '—';
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -30,7 +43,7 @@ export default function RequestDocumentModal({ cert, resident, onClose, onSubmit
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="absolute inset-0 bg-black/40" />
       <div className="relative bg-white w-full max-w-2xl rounded-xl shadow-xl overflow-hidden flex flex-col">
-        
+
         {/* Header */}
         <div className="flex bg-[#F1FBF1] items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
@@ -49,86 +62,80 @@ export default function RequestDocumentModal({ cert, resident, onClose, onSubmit
         <form onSubmit={handleSubmit} className="flex flex-col">
           <div className="p-6 space-y-4">
 
-          {/* Resident Info Verified */}
-          <div className="bg-[#F0FDF4] border border-[#B9F8CF] rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3 text-[#0D542B]">
-              <span className="font-semibold text-sm">Resident Information Verified</span>
+            {/* Resident Info */}
+            <div className="bg-[#F0FDF4] border border-[#B9F8CF] rounded-lg p-4">
+              <p className="font-semibold text-sm text-[#0D542B] mb-3">Resident Information Verified</p>
+              <div className="grid grid-cols-2 gap-y-3 text-[13px]">
+                <div>
+                  <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">Full Name</p>
+                  <p className="font-semibold text-gray-900">{fullName}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">ID Number</p>
+                  <p className="font-semibold text-gray-900">{eidNumber ?? resident?.id_number ?? '—'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">Address</p>
+                  <p className="font-semibold text-gray-900">{resident?.address_line || '—'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">Date of Birth</p>
+                  <p className="font-semibold text-gray-900">{formattedDOB}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">Civil Status</p>
+                  <p className="font-bold text-gray-900">{civilStatus}</p>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-y-3 text-[13px]">
+
+            {/* Purpose */}
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1.5">
+                Purpose of Request <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                required
+                rows={3}
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+                placeholder="Please specify the purpose of this certificate request..."
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/20 focus:border-[#005F02] bg-gray-50 resize-none"
+              />
+            </div>
+
+            {/* Fee */}
+            <div className="bg-[#E8F0F8] border border-[#B8D8F8] rounded-lg px-5 py-4 flex items-center justify-between">
               <div>
-                <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">Full Name</p>
-                <p className="font-semibold text-gray-900">{fullName}</p>
-              </div>
-              <div>
-                <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">ID Number</p>
-                <p className="font-semibold text-gray-900">{resident?.id_number || '1234-123-12'}</p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">Address</p>
-                <p className="font-semibold text-gray-900">{resident?.address_line || '—'}</p>
-              </div>
-              <div>
-                <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">Date of Birth</p>
-                <p className="font-semibold text-gray-900">
-                  {resident?.date_of_birth ? new Date(resident.date_of_birth).toLocaleDateString('en-US') : '01/01/2001'}
+                <p className="text-[#1838B8] font-semibold text-sm">Processing Fee</p>
+                <p className="text-[#1858D0] text-[11px]">
+                  {typeof cert.fee === 'number' && cert.fee > 0
+                    ? 'Payment reference will be generated upon submission'
+                    : 'This document is free of charge'}
                 </p>
               </div>
-              <div>
-                <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">Civil Status</p>
-                <p className="font-bold text-gray-900">{resident?.civil_status || 'Single'}</p>
-              </div>
+              <p className="text-2xl font-bold text-blue-700">
+                {typeof cert.fee === 'number' ? `₱${cert.fee}` : cert.fee}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 text-[12px] text-gray-500 pb-2">
+              <FiClock className="w-4 h-4" />
+              <span>Processing Time: {cert.processingTime}</span>
             </div>
           </div>
 
-          {/* Purpose of Request */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1.5">
-              Purpose of Request <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              required
-              rows={3}
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              placeholder="Please specify the purpose of this certificate request..."
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/20 focus:border-[#005F02] bg-gray-50"
-            />
-          </div>
-
-          {/* Processing Fee */}
-          <div className="bg-[#E8F0F8] border border-[#B8D8F8] rounded-lg px-5 py-4 flex items-center justify-between">
-            <div>
-              <p className="text-[#1838B8] font-semibold text-sm">Processing Fee</p>
-              <p className="text-[#1858D0] text-[11px]">Payment reference will be generated upon submission</p>
-            </div>
-            <p className="text-2xl font-bold text-blue-700">₱{cert.fee}</p>
-          </div>
-
-          <div className="flex items-center gap-2 text-[12px] text-gray-500 pb-2">
-            <FiClock className="w-4 h-4" />
-            <span>Processing Time: 3-5 business days</span>
-          </div>
-
-          </div>
-
-          {/* Footer Buttons */}
+          {/* Footer */}
           <div className="bg-[#F1FBF1] px-6 py-4 flex justify-end gap-3 border-t border-[#D1E9D1]">
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#E5E7EB] text-gray-700 hover:bg-gray-300 transition-colors"
-            >
+            <button type="button" onClick={onClose}
+              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#E5E7EB] text-gray-700 hover:bg-gray-300 transition-colors">
               Cancel
             </button>
-            <button
-              type="submit"
+            <button type="submit"
               disabled={isPending || !purpose.trim()}
-              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#005F02] text-white hover:bg-[#004A01] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
+              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#005F02] text-white hover:bg-[#004A01] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {isPending ? 'Submitting...' : 'Submit Request'}
             </button>
-
           </div>
         </form>
       </div>
@@ -136,4 +143,3 @@ export default function RequestDocumentModal({ cert, resident, onClose, onSubmit
     document.body
   );
 }
-
