@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
-import { EidOverview, EidCard, EidAddEditModal } from '../components/EId';
+import { EidOverview, EidCard, EidAddEditModal, ReviewApplicationModal } from '../components/EId';
 import { SearchBox, SortFilter, OrderFilter, StatusFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
 import { useEids, useEidStats, useMutateEid } from '../../../hooks/queries/eid/useEids';
 import { useEidFilters } from '../../../store/filterStore';
@@ -21,6 +21,7 @@ export default function Eid() {
   // Create/Edit modal state
   const [eidFormModalOpen, setEidFormModalOpen] = useState(false);
   const [eidFormMode, setEidFormMode] = useState('create');
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -99,7 +100,7 @@ export default function Eid() {
 
       <main className="flex-1 overflow-auto">
         <DashboardHeader
-          title="eID Records"
+          title="eID"
           userName={profile?.full_name ?? ''}
           userRole={profile?.role ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1) : ''}
           onLogout={handleLogout}
@@ -138,6 +139,13 @@ export default function Eid() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                 <button
                   type="button"
+                  onClick={() => setReviewModalOpen(true)}
+                  className="inline-flex justify-center whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium border border-[#E6C36A] bg-[#FFFFFF] text-[#C58F00] hover:bg-orange-100 hover:text-[#E6C36A] transition-colors"
+                >
+                  Review Application: 1
+                </button>
+                <button
+                  type="button"
                   onClick={() => { setSelectedEid(null); setEidFormMode('create'); setEidFormModalOpen(true); }}
                   className="inline-flex justify-center whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium bg-[#005F02] text-white hover:bg-[#004A01] transition-colors"
                 >
@@ -159,7 +167,7 @@ export default function Eid() {
                     onEdit={(e) => { setSelectedEid(e); setEidFormMode('edit'); setEidFormModalOpen(true); }}
                     onDeactivate={(e) => { setSelectedEid(e); setDeactivateModalOpen(true); }}
                     onDelete={(e) => { setSelectedEid(e); setDeleteModalOpen(true); }}
-                    onView={(e) => toast(`Viewing eID Record for ${e.name}`)}
+                    onView={(e) => toast(`Viewing eID for ${e.name}`)}
                   />
                 ))}
                 {cardEids.length === 0 && (
@@ -221,6 +229,11 @@ export default function Eid() {
         message="This action is permanent and cannot be undone."
         onConfirm={handleConfirmDelete}
         onCancel={() => { setDeleteModalOpen(false); setSelectedEid(null); }}
+      />
+
+      <ReviewApplicationModal
+        isOpen={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
       />
     </div>
   );
