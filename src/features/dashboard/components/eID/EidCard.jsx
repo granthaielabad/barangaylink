@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import { HiOutlineDotsHorizontal } from 'react-icons/hi';
-import { FiEdit2, FiTrash2, FiZoomIn, FiX, FiDownload, FiUser } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiZoomIn, FiX, FiDownload, FiUser, FiEye, FiPrinter } from 'react-icons/fi';
 import { TbUserOff } from 'react-icons/tb';
 
 // ── QR canvas ─────────────────────────────────────────────────────────────────
@@ -18,7 +18,7 @@ const QrCanvas = forwardRef(function QrCanvas({ token, size, onError }, ref) {
       }, (err) => { if (err) onError?.(); });
     }).catch(() => onError?.());
     return () => { cancelled = true; };
-  }, [token, size, onError]);
+  }, [token, size, onError, canvasRef]);
   return <canvas ref={canvasRef} width={size} height={size} className="block" />;
 });
 
@@ -84,13 +84,53 @@ const STATUS_CFG = {
 };
 
 // ── Main card ─────────────────────────────────────────────────────────────────
-export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
+export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnly = false }) {
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
   const menuRef = useRef(null);
+  const cardRef = useRef(null);
+
+  const { idNumber = '', name = '', address = '', qrToken = '', photoUrl = '',
+          dateOfBirth = null, bloodType = '', civilStatus = '', issuedAt = null, expiresAt = null, status = '' } = eid || {};
 
   const openLightbox  = useCallback(() => setLightboxOpen(true),  []);
   const closeLightbox = useCallback(() => setLightboxOpen(false), []);
+
+  const handlePrint = useCallback(() => {
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (!printWindow) return;
+
+    const styles = Array.from(document.styleSheets)
+      .map(sheet => {
+        try { return Array.from(sheet.cssRules).map(r => r.cssText).join(''); }
+        catch { return ''; }
+      }).join('');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print eID - ${name}</title>
+          <style>${styles}</style>
+          <style>
+            body { margin: 20px; display: flex; justify-content: center; align-items: flex-start; background: white; }
+            .print-container { width: 520px; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="print-container">${cardRef.current?.innerHTML || ''}</div>
+          <script>
+            setTimeout(() => {
+              window.print();
+              window.close();
+            }, 500);
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  }, [name]);
 
   useEffect(() => {
     function onOutside(e) {
@@ -102,15 +142,12 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
 
   if (!eid) return null;
 
-  const { idNumber, name, address, qrToken, photoUrl,
-          sex, dateOfBirth, bloodType, civilStatus, issuedAt, expiresAt, status } = eid;
-
   const statusCls = STATUS_CFG[status] ?? 'bg-gray-100 text-gray-500 border-gray-200';
 
   return (
     <>
       {/* Card — max-width constrains it to physical ID proportions */}
-      <div className="w-full max-w-[520px] mx-auto rounded-xl overflow-hidden shadow-md border border-gray-200"
+      <div ref={cardRef} className="w-full max-w-[520px] rounded-xl overflow-hidden shadow-md border border-gray-200"
         style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
 
         {/* Green top bar + admin controls overlaid */}
@@ -121,30 +158,44 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
             {status}
           </span>
 
-          {/* Action menu */}
-          <div ref={menuRef} className="ml-auto flex items-center gap-1">
-            <button type="button" onClick={() => setMenuOpen((o) => !o)}
-              className="text-white/70 hover:text-white p-1 rounded transition-colors" aria-label="More actions">
-              <HiOutlineDotsHorizontal className="w-4 h-4" />
-            </button>
-            {menuOpen && (
-              <div className="absolute top-8 right-2 w-44 rounded-lg border border-gray-200 bg-white shadow-xl py-1.5 z-30">
-                <button type="button" onClick={() => { onEdit?.(eid); setMenuOpen(false); }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
-                  <FiEdit2 className="w-3.5 h-3.5" /> Edit Details
+          {/* Interaction buttons */}
+          {!isViewOnly && (
+            <div className="ml-auto flex items-center gap-2">
+              <button type="button" onClick={() => setViewModalOpen(true)}
+                className="text-white/70 hover:text-white p-1 rounded transition-colors" aria-label="View eID">
+                <FiEye className="w-4 h-4" />
+              </button>
+              <button type="button" onClick={handlePrint}
+                className="text-white/70 hover:text-white p-1 rounded transition-colors" aria-label="Print eID">
+                <FiPrinter className="w-4 h-4" />
+              </button>
+
+              {/* Action menu */}
+              <div ref={menuRef} className="relative flex items-center">
+                <button type="button" onClick={() => setMenuOpen((o) => !o)}
+                  className="text-white/70 hover:text-white p-1 rounded transition-colors" aria-label="More actions">
+                  <HiOutlineDotsHorizontal className="w-4 h-4" />
                 </button>
-                <button type="button" onClick={() => { onDeactivate?.(eid); setMenuOpen(false); }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
-                  <TbUserOff className="w-3.5 h-3.5" /> Deactivate eID
-                </button>
-                <div className="my-1 border-t border-gray-100" />
-                <button type="button" onClick={() => { onDelete?.(eid); setMenuOpen(false); }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50">
-                  <FiTrash2 className="w-3.5 h-3.5" /> Delete eID
-                </button>
+                {menuOpen && (
+                  <div className="absolute top-8 right-2 w-44 rounded-lg border border-gray-200 bg-white shadow-xl py-1.5 z-30">
+                    <button type="button" onClick={() => { onEdit?.(eid); setMenuOpen(false); }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
+                      <FiEdit2 className="w-3.5 h-3.5" /> Edit Details
+                    </button>
+                    <button type="button" onClick={() => { onDeactivate?.(eid); setMenuOpen(false); }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
+                      <TbUserOff className="w-3.5 h-3.5" /> Deactivate eID
+                    </button>
+                    <div className="my-1 border-t border-gray-100" />
+                    <button type="button" onClick={() => { onDelete?.(eid); setMenuOpen(false); }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50">
+                      <FiTrash2 className="w-3.5 h-3.5" /> Delete eID
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Card body */}
@@ -212,6 +263,31 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete }) {
 
       {lightboxOpen && (
         <QrLightbox token={qrToken} idNumber={idNumber} name={name} onClose={closeLightbox} />
+      )}
+
+      {/* View Modal — Full screen overlay displaying the card */}
+      {viewModalOpen && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setViewModalOpen(false); }}>
+          <div className="relative w-full max-w-[600px] animate-in fade-in zoom-in duration-200">
+            <button type="button" onClick={() => setViewModalOpen(false)}
+              className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all">
+              <FiX className="w-6 h-6" />
+            </button>
+            
+            {/* Cloned card content in modal */}
+            <div className="shadow-2xl flex justify-center">
+               <EidCard eid={eid} isViewOnly={true} />
+            </div>
+
+            <div className="mt-6 flex justify-center gap-4">
+               <button onClick={handlePrint} className="flex items-center gap-2 px-6 py-2.5 bg-white text-gray-900 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                 <FiPrinter className="w-4 h-4" /> Print eID
+               </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </>
   );

@@ -471,7 +471,7 @@ export default function QRVerification() {
                   {/* Circular profile photo — positioned to overlap header bottom */}
                   <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
                     <div className="rounded-full border-4 border-white shadow-md overflow-hidden w-[90px] h-[90px] bg-gray-200">
-                      <EIdProfile size={90} photoUrl={r?.photo_url} className="!rounded-full" />
+                      <EIdProfile size={80} photoUrl={r?.photo_url} className="!rounded-full" />
                     </div>
                   </div>
                 </div>

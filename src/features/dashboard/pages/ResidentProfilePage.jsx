@@ -99,10 +99,10 @@ function LinkAccountForm() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
+        <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
           {/* Resident Number */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5 mx-auto">
               Resident Number <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#005F02]/30 focus-within:border-[#005F02]">

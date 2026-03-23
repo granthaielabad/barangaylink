@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
-import { EidOverview, EidCard, EidAddEditModal, EidApplicationsTab, ReviewApplicationModal } from '../components/EId';
-import { SearchBox, SortFilter, OrderFilter, StatusFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
+import { EidOverview, EidCard, EidAddEditModal, ReviewApplicationModal } from '../components/EId';
+import { SearchBox, SortFilter, OrderFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
 import { useEids, useEidStats, useMutateEid, useEidApplicationStats } from '../../../hooks/queries/eid/useEids';
 import { useEidFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
@@ -14,7 +14,6 @@ import toast from 'react-hot-toast';
 
 export default function Eid() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab,   setActiveTab]   = useState('issued');
   const [selectedEid, setSelectedEid] = useState(null);
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -110,57 +109,20 @@ export default function Eid() {
         <section className="px-5 py-7">
           <EidOverview stats={overviewStats} />
 
-          {/* ── Tab switcher ── */}
-          <div className="flex gap-1 mb-5 border-b border-gray-200">
-            <button type="button"
-              onClick={() => setActiveTab('issued')}
-              className={`px-5 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'issued'
-                  ? 'border-[#005F02] text-[#005F02]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}>
-              Issued eIDs
-            </button>
-            <button type="button"
-              onClick={() => setActiveTab('applications')}
-              className={`flex items-center gap-2 px-5 py-2.5 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === 'applications'
-                  ? 'border-[#005F02] text-[#005F02]'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}>
-              Applications
-              {pendingCount > 0 && (
-                <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none">
-                  {pendingCount}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* ── Applications tab ── */}
-          {activeTab === 'applications' && (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-              <h1 className="mb-6 font-semibold text-[25px]">eID Applications</h1>
-              <EidApplicationsTab />
-            </div>
-          )}
-
-          {/* ── Issued eIDs tab ── */}
-          {activeTab === 'issued' && (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                  <div className="flex items-center gap-2">
-                    <OrderFilter value={order} onChange={setOrder} />
-                    <SortFilter value={sortBy} onChange={setSortBy} />
-                  </div>
-                  <SearchBox
-                    value={search}
-                    onChange={(v) => { setSearch(v); setPage(1); }}
-                    placeholder="Search eID"
-                  />
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-7">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                <div className="flex items-center gap-2">
+                  <OrderFilter value={order} onChange={setOrder} />
+                  <SortFilter value={sortBy} onChange={setSortBy} />
                 </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                <SearchBox
+                  value={search}
+                  onChange={(v) => { setSearch(v); setPage(1); }}
+                  placeholder="Search eID"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                 <button
                   type="button"
                   onClick={() => setReviewModalOpen(true)}
@@ -168,46 +130,45 @@ export default function Eid() {
                 >
                   Review Application: {pendingCount}
                 </button>
-                  <button
-                    type="button"
-                    onClick={() => { setSelectedEid(null); setEidFormMode('create'); setEidFormModalOpen(true); }}
-                    className="inline-flex justify-center whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium bg-[#005F02] text-white hover:bg-[#004A01] transition-colors"
-                  >
-                    Create New eID
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedEid(null); setEidFormMode('create'); setEidFormModalOpen(true); }}
+                  className="inline-flex justify-center whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium bg-[#005F02] text-white hover:bg-[#004A01] transition-colors"
+                >
+                  Create New eID
+                </button>
               </div>
-
-              {isLoading ? (
-                <div className="flex justify-center py-16">
-                  <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
-                  {cardEids.map((eid) => (
-                    <EidCard
-                      key={eid.id}
-                      eid={eid}
-                      onEdit={(e) => { setSelectedEid(e); setEidFormMode('edit'); setEidFormModalOpen(true); }}
-                      onDeactivate={(e) => { setSelectedEid(e); setDeactivateModalOpen(true); }}
-                      onDelete={(e) => { setSelectedEid(e); setDeleteModalOpen(true); }}
-                    />
-                  ))}
-                  {cardEids.length === 0 && (
-                    <p className="col-span-2 text-center text-gray-400 py-12 text-sm">No eIDs found.</p>
-                  )}
-                </div>
-              )}
-
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                totalEntries={totalEntries}
-                pageSize={pageSize}
-                onPageChange={setPage}
-              />
             </div>
-          )}
+
+            {isLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-6 justify-center lg:justify-start">
+                {cardEids.map((eid) => (
+                  <EidCard
+                    key={eid.id}
+                    eid={eid}
+                    onEdit={(e) => { setSelectedEid(e); setEidFormMode('edit'); setEidFormModalOpen(true); }}
+                    onDeactivate={(e) => { setSelectedEid(e); setDeactivateModalOpen(true); }}
+                    onDelete={(e) => { setSelectedEid(e); setDeleteModalOpen(true); }}
+                  />
+                ))}
+                {cardEids.length === 0 && (
+                  <p className="w-full text-center text-gray-400 py-12 text-sm">No eIDs found.</p>
+                )}
+              </div>
+            )}
+
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalEntries={totalEntries}
+              pageSize={pageSize}
+              onPageChange={setPage}
+            />
+          </div>
         </section>
       </main>
 

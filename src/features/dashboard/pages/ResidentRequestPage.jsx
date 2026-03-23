@@ -194,12 +194,12 @@ export default function ResidentRequestPage() {
                     </div>
 
                     {/* Status & Actions */}
-                    <div className="flex items-center gap-3 shrink-0">
-                      <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-6 shrink-0 md:ml-auto">
+                      <div className="flex flex-col items-end gap-1.5 min-w-[140px]">
                         <span className={`px-3 py-1 rounded-md text-[12px] font-semibold ${getStatusStyle(req.status)}`}>
                           {statusLabel}
                         </span>
-                        <p className="text-[12px] text-gray-600 font-medium ml-1">
+                        <p className="text-[12px] text-gray-500 font-medium">
                           Payment:{' '}
                           <span className={isPaid ? 'text-[#2E7D32]' : 'text-orange-600'}>
                             {paymentLabel}
@@ -210,32 +210,34 @@ export default function ResidentRequestPage() {
                         </p>
                       </div>
 
-                      {isViewable ? (
-                        <button
-                          onClick={() => setPreviewReq(req)}
-                          className="flex items-center gap-2 px-6 py-2.5 bg-[#005F02] text-white rounded-lg text-base font-semibold hover:bg-[#004A01] transition-colors"
-                        >
-                          <FiEye className="w-5 h-5" /> View
-                        </button>
-                      ) : isUnpaid && req.status !== 'rejected' ? (
-                        <button
-                          onClick={() => setPaymentReq({
-                            ...req,
-                            _rawId:  req.id,
-                            title:   getDocTitle(req.document_type),
-                            fee:     req.fee_amount,
-                            txnRef:  req.control_number ?? '—',
-                          })}
-                          className="px-6 py-2.5 border border-gray-200 rounded-lg text-base font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                          Pay Now
-                        </button>
-                      ) : req.status !== 'rejected' ? (
-                        <div className="flex items-center gap-1.5 text-sm text-gray-400 px-4">
-                          <FiClock className="w-4 h-4" />
-                          <span>In progress</span>
-                        </div>
-                      ) : null}
+                      <div className="min-w-[110px] flex justify-center">
+                        {isViewable ? (
+                          <button
+                            onClick={() => setPreviewReq(req)}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-[#005F02] text-white rounded-lg text-[15px] font-semibold hover:bg-[#004A01] transition-colors whitespace-nowrap"
+                          >
+                            <FiEye className="w-5 h-5" /> View
+                          </button>
+                        ) : isUnpaid && req.status !== 'rejected' ? (
+                          <button
+                            onClick={() => setPaymentReq({
+                              ...req,
+                              _rawId:  req.id,
+                              title:   getDocTitle(req.document_type),
+                              fee:     req.fee_amount,
+                              txnRef:  req.control_number ?? '—',
+                            })}
+                            className="px-6 py-2.5 border border-gray-200 rounded-lg text-[15px] font-semibold text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                          >
+                            Pay Now
+                          </button>
+                        ) : req.status !== 'rejected' ? (
+                          <div className="flex items-center gap-1.5 text-sm text-gray-400 px-4 whitespace-nowrap">
+                            <FiClock className="w-4 h-4" />
+                            <span>In progress</span>
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
 
