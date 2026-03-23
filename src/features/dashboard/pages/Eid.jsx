@@ -161,6 +161,13 @@ export default function Eid() {
                   />
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setReviewModalOpen(true)}
+                  className="inline-flex justify-center whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium border border-[#E6C36A] bg-[#FFFFFF] text-[#C58F00] hover:bg-orange-100 hover:text-[#E6C36A] transition-colors"
+                >
+                  Review Application: {pendingCount}
+                </button>
                   <button
                     type="button"
                     onClick={() => { setSelectedEid(null); setEidFormMode('create'); setEidFormModalOpen(true); }}
