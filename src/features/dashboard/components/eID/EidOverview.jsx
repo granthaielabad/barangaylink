@@ -28,7 +28,7 @@ export default function EidOverview({ stats }) {
       textClass: 'text-[#0A7A0C]',
     },
     {
-      label: 'Inactive',
+      label: 'Pending',
       value: pending,
       icon: FaClock,
       containerClass: 'bg-[#FFF4D6] border-[#E6C36A]',
@@ -48,7 +48,7 @@ export default function EidOverview({ stats }) {
   return (
     <section className="mb-6">
       <div className="bg-white rounded-2xl border border-[#CFE8CF] px-4 py-3">
-        <h2 className="text-2xl font-semibold text-[#0B3D10] mb-4 mx-5">eID Records Overview</h2>
+        <h2 className="text-2xl font-semibold text-[#0B3D10] mb-4 mx-5">eID Overview</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mx-5">
           {items.map((item) => {
             const Icon = item.icon;

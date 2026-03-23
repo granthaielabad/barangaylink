@@ -5,6 +5,9 @@ import DashboardSidebar from '../components/DashboardSidebar';
 import { EidOverview, EidCard, EidAddEditModal, EidApplicationsTab } from '../components/eID';
 import { SearchBox, SortFilter, OrderFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
 import { useEids, useEidStats, useMutateEid, useEidApplicationStats } from '../../../hooks/queries/eid/useEids';
+import { EidOverview, EidCard, EidAddEditModal, ReviewApplicationModal } from '../components/EId';
+import { SearchBox, SortFilter, OrderFilter, StatusFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
+import { useEids, useEidStats, useMutateEid } from '../../../hooks/queries/eid/useEids';
 import { useEidFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
@@ -20,6 +23,7 @@ export default function Eid() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [eidFormModalOpen, setEidFormModalOpen] = useState(false);
   const [eidFormMode, setEidFormMode] = useState('create');
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -243,6 +247,11 @@ export default function Eid() {
         message="This action is permanent and cannot be undone."
         onConfirm={handleConfirmDelete}
         onCancel={() => { setDeleteModalOpen(false); setSelectedEid(null); }}
+      />
+
+      <ReviewApplicationModal
+        isOpen={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
       />
     </div>
   );
