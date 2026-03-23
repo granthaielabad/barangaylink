@@ -9,6 +9,8 @@ import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
 import toast from 'react-hot-toast';
+
+const PAGE_SIZE = 8;
 import { SORT_FIELDS, USER_ACCOUNT_STATUS_OPTIONS } from '../../../core/constants';
 
 // Map RoleTabs UI labels → DB role values

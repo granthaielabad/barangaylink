@@ -52,6 +52,14 @@ export const EID_STATUS_FILTER_OPTIONS = [
   { value: 'expired',   label: 'Expired' },
 ];
 
+export const DOCUMENT_TYPES = [
+  { value: 'barangay_clearance',        label: 'Barangay Clearance' },
+  { value: 'certificate_of_residency',  label: 'Certificate of Residency' },
+  { value: 'indigency_certificate',     label: 'Indigency Certificate' },
+  { value: 'business_clearance',        label: 'Business Clearance' },
+  { value: 'other',                     label: 'Other' },
+];
+
 export const DOCUMENT_REQUEST_STATUS = {
   PENDING:    'pending',
   PROCESSING: 'processing',
