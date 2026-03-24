@@ -4,8 +4,9 @@ import { ScrollToTop } from "../shared";
 import { Login, SignUp, ForgotPassword } from '../features/auth'
 import {
   Dashboard, Analytics, Residents, Households, Eid,
-  QRVerification, RequestPage, UserAccount,
-  ResidentPortalLayout, ResidentProfilePage, ResidentEIdPage, ResidentRequestPage
+  QRVerification, RequestPage, UserAccount, NotificationPage,
+  ResidentPortalLayout, ResidentProfilePage, ResidentEIdPage, ResidentRequestPage,
+  ResidentNotificationPage
 } from '../features/dashboard'
 import ProtectedRoute from './ProtectedRoute'
 import RoleGuard from './RoleGuard'
@@ -52,6 +53,7 @@ function AppRoutes() {
             <Route path="/eid"             element={<Eid />} />
             <Route path="/qr-verification" element={<QRVerification />} />
             <Route path="/certificate-request" element={<RequestPage />} />
+            <Route path="/notifications"       element={<NotificationPage />} />
           </Route>
 
           {/* Resident only — self-service portal */}
@@ -61,7 +63,9 @@ function AppRoutes() {
               <Route path="profile" element={<ResidentProfilePage />} />
               <Route path="eid"     element={<ResidentEIdPage />} />
               <Route path="request-certificate" element={<ResidentRequestPage />} />
+              <Route path="notifications" element={<ResidentNotificationPage />} />
             </Route>
+
           </Route>
 
           {/* All authenticated roles */}

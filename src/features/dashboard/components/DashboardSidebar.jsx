@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { Logo } from '../../../shared';
-import { FiHome, FiFileText } from 'react-icons/fi';
+import { FiHome, FiFileText, FiBell } from 'react-icons/fi';
 import { PiUsersThree, PiUsers } from "react-icons/pi";
 import { BsQrCode, } from 'react-icons/bs'
 import { FaRegAddressCard } from "react-icons/fa";
@@ -15,6 +15,7 @@ const navSections = [
     items: [
       { to: '/dashboard', label: 'Dashboard', icon: MdOutlineDashboard },
       { to: '/analytics', label: 'Analytics', icon: TbBrandGoogleAnalytics },
+      { to: '/notifications', label: 'Notification', icon: FiBell },
     ],
   },
   {

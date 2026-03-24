@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { HiOutlineDotsHorizontal } from 'react-icons/hi';
 import { FiEdit2, FiTrash2, FiZoomIn, FiX, FiDownload, FiUser, FiEye, FiPrinter } from 'react-icons/fi';
 import { TbUserOff } from 'react-icons/tb';
+import PrintableEidCard from './PrintableEidCard';
+
 
 // ── QR canvas ─────────────────────────────────────────────────────────────────
 const QrCanvas = forwardRef(function QrCanvas({ token, size, onError }, ref) {
@@ -90,6 +92,7 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const menuRef = useRef(null);
   const cardRef = useRef(null);
+  const backRef = useRef(null);
 
   const { idNumber = '', name = '', address = '', qrToken = '', photoUrl = '',
           dateOfBirth = null, bloodType = '', civilStatus = '', issuedAt = null, expiresAt = null, status = '' } = eid || {};
@@ -97,14 +100,19 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
   const openLightbox  = useCallback(() => setLightboxOpen(true),  []);
   const closeLightbox = useCallback(() => setLightboxOpen(false), []);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handlePrint = useCallback(() => {
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    const printWindow = window.open('', '_blank', 'width=800,height=900');
     if (!printWindow) return;
 
     const styles = Array.from(document.styleSheets)
       .map(sheet => {
-        try { return Array.from(sheet.cssRules).map(r => r.cssText).join(''); }
-        catch { return ''; }
+        try { 
+          return Array.from(sheet.cssRules || []).map(r => r.cssText).join(''); 
+        // eslint-disable-next-line no-unused-vars
+        } catch (e) { 
+          return ''; 
+        }
       }).join('');
 
     printWindow.document.write(`
@@ -113,24 +121,33 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
           <title>Print eID - ${name}</title>
           <style>${styles}</style>
           <style>
-            body { margin: 20px; display: flex; justify-content: center; align-items: flex-start; background: white; }
-            .print-container { width: 520px; }
-            @media print { body { margin: 0; } }
+            body { margin: 0; padding: 40px; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-wrapper { width: 100%; display: flex; flex-direction: column; align-items: center; }
+            @media print { 
+              body { padding: 20px; }
+              .no-print { display: none; }
+            }
           </style>
         </head>
         <body>
-          <div class="print-container">${cardRef.current?.innerHTML || ''}</div>
+          <div class="print-wrapper">
+            ${backRef.current?.outerHTML || ''}
+          </div>
           <script>
-            setTimeout(() => {
-              window.print();
-              window.close();
-            }, 500);
+            window.onload = () => {
+              setTimeout(() => {
+                window.print();
+                window.close();
+              }, 1000);
+            };
           </script>
         </body>
       </html>
     `);
     printWindow.document.close();
-  }, [name]);
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+  }, [name, backRef]);
+
 
   useEffect(() => {
     function onOutside(e) {
@@ -261,6 +278,12 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
         <div className="h-2 bg-[#005F02]" />
       </div>
 
+      {/* Hidden high-fidelity card for printing */}
+      <div className="hidden">
+        <PrintableEidCard ref={backRef} eid={eid} />
+      </div>
+
+
       {lightboxOpen && (
         <QrLightbox token={qrToken} idNumber={idNumber} name={name} onClose={closeLightbox} />
       )}
@@ -275,16 +298,20 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
               <FiX className="w-6 h-6" />
             </button>
             
-            {/* Cloned card content in modal */}
-            <div className="shadow-2xl flex justify-center">
-               <EidCard eid={eid} isViewOnly={true} />
+            {/* High-fidelity card preview in modal */}
+            <div className="shadow-2xl flex justify-center max-h-[80vh] overflow-y-auto p-8 bg-white/10 backdrop-blur-xl rounded-3xl scrollbar-hide border border-white/20">
+               <PrintableEidCard eid={eid} />
             </div>
 
-            <div className="mt-6 flex justify-center gap-4">
-               <button onClick={handlePrint} className="flex items-center gap-2 px-6 py-2.5 bg-white text-gray-900 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                 <FiPrinter className="w-4 h-4" /> Print eID
+            <div className="mt-8 flex justify-center gap-4">
+               <button 
+                 onClick={handlePrint} 
+                 className="flex items-center gap-3 px-8 py-3 bg-white text-[#005F02] rounded-xl font-bold hover:bg-gray-50 transition-all shadow-lg active:scale-95"
+               >
+                 <FiPrinter className="w-5 h-5" /> Print eID
                </button>
             </div>
+
           </div>
         </div>,
         document.body
