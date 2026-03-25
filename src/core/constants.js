@@ -64,19 +64,22 @@ export const PAGE_SIZE = 8;
 
 export const SORT_FIELDS = {
   RESIDENTS: [
+    { value: 'resident_no', label: 'Resident No.' },
     { value: 'last_name',   label: 'Last Name' },
     { value: 'created_at',  label: 'Date Added' },
-    { value: 'status',      label: 'Status' },
   ],
   HOUSEHOLDS: [
-    { value: 'created_at',  label: 'Date Added' },
-    { value: 'house_no',    label: 'House No.' },
-    { value: 'status',      label: 'Status' },
+    { value: 'household_no', label: 'Household No.' },
+    { value: 'house_no',     label: 'House No.' },
+    { value: 'created_at',   label: 'Date Added' },
+  ],
+  EIDS: [
+    { value: 'eid_number', label: 'eID Number' },
+    { value: 'issued_at',  label: 'Date Issued' },
   ],
   REQUESTS: [
-    { value: 'requested_at',   label: 'Date Requested' },
-    { value: 'document_type',  label: 'Document Type' },
-    { value: 'status',         label: 'Status' },
+    { value: 'requested_at',  label: 'Date Requested' },
+    { value: 'document_type', label: 'Document Type' },
   ],
   USER_ACCOUNTS: [
     { value: 'created_at', label: 'Date Joined' },

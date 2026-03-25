@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
-import { EidOverview, EidCard, EidAddEditModal, ReviewApplicationModal } from '../components/EId';
+import { EidOverview, EidCard, EidAddEditModal, ReviewApplicationModal } from '../components/eID';
 import { SearchBox, SortFilter, OrderFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
 import { useEids, useEidStats, useMutateEid, useEidApplicationStats } from '../../../hooks/queries/eid/useEids';
 import { useEidFilters } from '../../../store/filterStore';
@@ -10,18 +10,19 @@ import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
 import { uploadResidentPhoto } from '../../../services/supabase/residentService';
+import { SORT_FIELDS } from '../../../core/constants';
 import toast from 'react-hot-toast';
 
 export default function Eid() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedEid, setSelectedEid] = useState(null);
+  const [sidebarOpen,         setSidebarOpen]         = useState(false);
+  const [selectedEid,         setSelectedEid]         = useState(null);
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [eidFormModalOpen, setEidFormModalOpen] = useState(false);
-  const [eidFormMode, setEidFormMode] = useState('create');
-  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [deleteModalOpen,     setDeleteModalOpen]     = useState(false);
+  const [eidFormModalOpen,    setEidFormModalOpen]    = useState(false);
+  const [eidFormMode,         setEidFormMode]         = useState('create');
+  const [reviewModalOpen,     setReviewModalOpen]     = useState(false);
 
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
   const { profile } = useAuth();
   const clearAuth = useAuthStore((s) => s.clearAuth);
 
@@ -35,43 +36,44 @@ export default function Eid() {
   const setOrder  = useEidFilters((s) => s.setOrder);
   const setPage   = useEidFilters((s) => s.setPage);
 
-  const { data, isLoading } = useEids();
-  const { data: stats } = useEidStats();
-  const { data: appStats } = useEidApplicationStats();
+  const { data, isLoading }  = useEids();
+  const { data: stats }      = useEidStats();
+  const { data: appStats }   = useEidApplicationStats();
   const { issue, suspend, remove } = useMutateEid();
 
-  const pendingCount = appStats?.pending ?? 0;
-  const eids = data?.data ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const totalEntries = data?.total ?? 0;
+  const pendingCount  = appStats?.pending ?? 0;
+  const eids          = data?.data        ?? [];
+  const totalPages    = data?.totalPages  ?? 1;
+  const totalEntries  = data?.total       ?? 0;
 
+  // Adapter: map DB row → EidCard expected shape
   const cardEids = eids.map((e) => {
-    const r = e.residents;
+    const r        = e.residents;
     const fullName = r
       ? `${r.first_name}${r.middle_name ? ' ' + r.middle_name : ''} ${r.last_name}${r.suffix ? ' ' + r.suffix : ''}`.trim()
       : '—';
-    const address = r ? r.address_line ?? r.puroks?.name ?? '—' : '—';
+    const address  = r ? r.address_line ?? r.puroks?.name ?? '—' : '—';
     return {
       id:          e.id,
       idNumber:    e.eid_number,
       name:        fullName,
       address,
       status:      e.status ? e.status.charAt(0).toUpperCase() + e.status.slice(1) : '—',
-      issuedAt:    e.issued_at    ?? null,
-      expiresAt:   e.expires_at   ?? null,
-      qrToken:     e.qr_token     ?? null,
-      photoUrl:    r?.photo_url   ?? null,
-      sex:         r?.sex         ? r.sex.charAt(0).toUpperCase() : '—',
+      issuedAt:    e.issued_at      ?? null,
+      expiresAt:   e.expires_at     ?? null,
+      qrToken:     e.qr_token       ?? null,
+      photoUrl:    r?.photo_url     ?? null,
+      sex:         r?.sex           ? r.sex.charAt(0).toUpperCase() : '—',
       dateOfBirth: r?.date_of_birth ?? null,
-      bloodType:   r?.blood_type  ?? null,
-      civilStatus: r?.civil_status ?? null,
+      bloodType:   r?.blood_type    ?? null,
+      civilStatus: r?.civil_status  ?? null,
       _raw: e,
     };
   });
 
   const overviewStats = {
-    total:       stats?.total ?? 0,
-    active:      stats?.active ?? 0,
+    total:       stats?.total                                  ?? 0,
+    active:      stats?.active                                 ?? 0,
     pending:     pendingCount,
     deactivated: (stats?.suspended ?? 0) + (stats?.revoked ?? 0),
   };
@@ -110,11 +112,12 @@ export default function Eid() {
           <EidOverview stats={overviewStats} />
 
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-7">
+            {/* Toolbar */}
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                 <div className="flex items-center gap-2">
                   <OrderFilter value={order} onChange={setOrder} />
-                  <SortFilter value={sortBy} onChange={setSortBy} />
+                  <SortFilter value={sortBy} onChange={setSortBy} options={SORT_FIELDS.EIDS} />
                 </div>
                 <SearchBox
                   value={search}
@@ -123,12 +126,18 @@ export default function Eid() {
                 />
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                {/* Review Applications button — shows pending badge */}
                 <button
                   type="button"
                   onClick={() => setReviewModalOpen(true)}
-                  className="inline-flex justify-center whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium border border-[#E6C36A] bg-[#FFFFFF] text-[#C58F00] hover:bg-orange-100 hover:text-[#E6C36A] transition-colors"
+                  className="relative inline-flex justify-center items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium border border-[#E6C36A] bg-white text-[#C58F00] hover:bg-amber-50 transition-colors"
                 >
-                  Review Application: {pendingCount}
+                  Review Applications
+                  {pendingCount > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none">
+                      {pendingCount}
+                    </span>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -140,23 +149,24 @@ export default function Eid() {
               </div>
             </div>
 
+            {/* eID card grid */}
             {isLoading ? (
               <div className="flex justify-center py-16">
                 <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
               </div>
             ) : (
-              <div className="flex flex-wrap gap-6 justify-center lg:justify-start">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
                 {cardEids.map((eid) => (
                   <EidCard
                     key={eid.id}
                     eid={eid}
-                    onEdit={(e) => { setSelectedEid(e); setEidFormMode('edit'); setEidFormModalOpen(true); }}
+                    onEdit={(e)       => { setSelectedEid(e); setEidFormMode('edit'); setEidFormModalOpen(true); }}
                     onDeactivate={(e) => { setSelectedEid(e); setDeactivateModalOpen(true); }}
-                    onDelete={(e) => { setSelectedEid(e); setDeleteModalOpen(true); }}
+                    onDelete={(e)     => { setSelectedEid(e); setDeleteModalOpen(true); }}
                   />
                 ))}
                 {cardEids.length === 0 && (
-                  <p className="w-full text-center text-gray-400 py-12 text-sm">No eIDs found.</p>
+                  <p className="col-span-2 w-full text-center text-gray-400 py-12 text-sm">No eIDs found.</p>
                 )}
               </div>
             )}
@@ -172,7 +182,7 @@ export default function Eid() {
         </section>
       </main>
 
-      {/* EID form modal */}
+      {/* Create / Edit eID modal */}
       <EidAddEditModal
         isOpen={eidFormModalOpen}
         onClose={() => { setEidFormModalOpen(false); setSelectedEid(null); }}
@@ -199,6 +209,7 @@ export default function Eid() {
         mode={eidFormMode}
       />
 
+      {/* Deactivate confirmation */}
       <DeactiveModal
         isOpen={deactivateModalOpen}
         title="eID"
@@ -206,6 +217,8 @@ export default function Eid() {
         onConfirm={handleConfirmDeactivate}
         onCancel={() => { setDeactivateModalOpen(false); setSelectedEid(null); }}
       />
+
+      {/* Delete confirmation */}
       <DeleteModal
         isOpen={deleteModalOpen}
         title="eID"
@@ -214,6 +227,7 @@ export default function Eid() {
         onCancel={() => { setDeleteModalOpen(false); setSelectedEid(null); }}
       />
 
+      {/* Review Applications modal (real DB data) */}
       <ReviewApplicationModal
         isOpen={reviewModalOpen}
         onClose={() => setReviewModalOpen(false)}

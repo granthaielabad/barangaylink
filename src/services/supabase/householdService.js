@@ -8,6 +8,7 @@ const DEFAULT_SELECT = `
   purok_id, puroks ( id, name ),
   head_resident_id,
   head:residents!fk_head_resident ( id, first_name, middle_name, last_name, suffix ),
+  residents!residents_household_id_fkey ( id, first_name, middle_name, last_name, suffix ),
   memberCount:household_member_counts ( member_count )
 `;
 
@@ -42,6 +43,7 @@ export async function getHouseholds({
   const normalised = (data ?? []).map((h) => ({
     ...h,
     _memberCount: h.memberCount?.[0]?.member_count ?? 0,
+    _members:     h.residents ?? [],
   }));
 
   return {
@@ -70,7 +72,11 @@ export async function createHousehold(payload) {
     .select(DEFAULT_SELECT)
     .single();
   if (error) throw error;
-  return data;
+  return {
+    ...data,
+    _memberCount: data.memberCount?.[0]?.member_count ?? 0,
+    _members:     data.residents ?? [],
+  };
 }
 
 export async function updateHousehold(id, payload) {
@@ -81,7 +87,11 @@ export async function updateHousehold(id, payload) {
     .select(DEFAULT_SELECT)
     .single();
   if (error) throw error;
-  return data;
+  return {
+    ...data,
+    _memberCount: data.memberCount?.[0]?.member_count ?? 0,
+    _members:     data.residents ?? [],
+  };
 }
 
 /**

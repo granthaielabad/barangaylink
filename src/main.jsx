@@ -19,7 +19,7 @@ createRoot(document.getElementById('root')).render(
       <QueryClientProvider client={queryClient}>
         <App />
         <Toaster
-          position="top-right"
+          position="top-center"
           toastOptions={{
             success: { duration: 4000 },
             error:   { duration: 6000 },

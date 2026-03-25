@@ -8,7 +8,6 @@ import { useMyResidentProfile, useMyEid } from '../../../hooks/queries/resident/
 import {
   useMyDocumentRequests,
   useSubmitDocumentRequest,
-  useUpdatePaymentMethod,
 } from '../../../hooks/queries/documentRequests/useDocumentRequests';
 
 // ── Document catalogue ────────────────────────────────────────────────────────
@@ -99,15 +98,6 @@ export default function ResidentRequestPage() {
     submitRequest(formData, {
       onSuccess: () => setSelectedDoc(null),
     });
-  };
-
-  // ── Payment confirm ─────────────────────────────────────────────────────────
-  const handleConfirmPayment = (method) => {
-    if (!paymentReq) return;
-    confirmPayment(
-      { id: paymentReq._rawId, paymentMethod: method.id },
-      { onSuccess: () => setPaymentReq(null) }
-    );
   };
 
   return (

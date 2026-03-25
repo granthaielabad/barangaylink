@@ -50,7 +50,7 @@ export async function getMyEidApplication() {
 
   const { data, error } = await supabase
     .from('eid_applications')
-    .select('id, type, status, submitted_at, id_number, first_name, last_name')
+    .select('id, type, status, submitted_at, id_number, first_name, last_name, reference_number, valid_id_type, valid_id_url, current_step')
     .eq('resident_id', resident.id)
     .order('submitted_at', { ascending: false })
     .limit(1)
@@ -76,21 +76,44 @@ export async function submitEidApplication(payload) {
   // Extract non-DB fields before insert
   const { _validIdType, _validIdFile, ...rest } = payload;
 
+  // Generate reference number: first 8 chars of a new UUID in uppercase
+  const tempId = crypto.randomUUID();
+  const refNo = tempId.split('-')[0].toUpperCase();
+
+  // Upload valid ID photo if present
+  let validIdPublicUrl = null;
+  if (_validIdFile) {
+    const ext  = _validIdFile.name.split('.').pop().toLowerCase();
+    const path = `${resident.id}/valid-id-${Date.now()}.${ext}`;
+    const { error: uploadErr } = await supabase.storage
+      .from('valid-id-photos')
+      .upload(path, _validIdFile, { upsert: true, contentType: _validIdFile.type });
+    
+    if (uploadErr) throw new Error(`Failed to upload ID photo: ${uploadErr.message}`);
+    
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage.from('valid-id-photos').getPublicUrl(path);
+    validIdPublicUrl = publicUrl;
+  }
+
   // Explicitly whitelist only columns that exist in eid_applications
   const safePayload = {
-    type:           rest.type           ?? 'new',
-    first_name:     rest.first_name     ?? null,
-    middle_name:    rest.middle_name    ?? null,
-    last_name:      rest.last_name      ?? null,
-    suffix:         rest.suffix         ?? null,
-    date_of_birth:  rest.date_of_birth  ?? null,
-    sex:            rest.sex            ?? null,
-    address_line:   rest.address_line   ?? null,
-    contact_number: rest.contact_number ?? null,
-    email:          rest.email          ?? null,
-    id_number:      rest.id_number      ?? null,
-    photo_url:      rest.photo_url      ?? null,
-    resident_id:    resident.id,
+    type:             rest.type             ?? 'new',
+    first_name:       rest.first_name       ?? null,
+    middle_name:      rest.middle_name      ?? null,
+    last_name:        rest.last_name        ?? null,
+    suffix:           rest.suffix           ?? null,
+    date_of_birth:    rest.date_of_birth    ?? null,
+    sex:              rest.sex              ?? null,
+    address_line:     rest.address_line     ?? null,
+    contact_number:   rest.contact_number   ?? null,
+    email:            rest.email            ?? null,
+    id_number:        rest.id_number        ?? null,
+    photo_url:        rest.photo_url        ?? null,
+    resident_id:      resident.id,
+    reference_number: refNo,
+    valid_id_type:    _validIdType          ?? null,
+    valid_id_url:     validIdPublicUrl      ?? null,
   };
 
   const { data, error } = await supabase
@@ -101,21 +124,14 @@ export async function submitEidApplication(payload) {
 
   if (error) throw error;
 
-  // Upload valid ID photo and save type to residents table
-  const updates = {};
-  if (_validIdType) updates.valid_id_type = _validIdType;
+  // Update residents table with latest ID info for convenience
+  const residentUpdates = {};
+  if (_validIdType)    residentUpdates.valid_id_type = _validIdType;
+  if (validIdPublicUrl) residentUpdates.valid_id_url  = validIdPublicUrl;
+  if (rest.id_number)   residentUpdates.id_number     = rest.id_number;
 
-  if (_validIdFile) {
-    const ext  = _validIdFile.name.split('.').pop().toLowerCase();
-    const path = `${resident.id}/valid-id.${ext}`;
-    const { error: uploadErr } = await supabase.storage
-      .from('valid-id-photos')
-      .upload(path, _validIdFile, { upsert: true, contentType: _validIdFile.type });
-    if (!uploadErr) updates.valid_id_url = path;
-  }
-
-  if (Object.keys(updates).length > 0) {
-    await supabase.from('residents').update(updates).eq('id', resident.id);
+  if (Object.keys(residentUpdates).length > 0) {
+    await supabase.from('residents').update(residentUpdates).eq('id', resident.id);
   }
 
   return data;

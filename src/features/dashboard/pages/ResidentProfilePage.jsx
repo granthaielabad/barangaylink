@@ -286,7 +286,7 @@ export default function ResidentProfilePage() {
           <FieldRow
             fields={[
               { label: 'Household No.',      value: val(household.household_no) },
-              { label: 'Ownership Type',     value: val(household.ownership_type) },
+              { label: 'Ownership Type',     value: household.ownership_type ? household.ownership_type.charAt(0).toUpperCase() + household.ownership_type.slice(1) : '—' },
               { label: 'Household Members',  value: household.members?.length ? `${household.members.length}` : '—' },
               { label: 'Household Status',   value: household.status
                   ? household.status.charAt(0).toUpperCase() + household.status.slice(1)

@@ -129,9 +129,10 @@ export function useMutateEidApplication() {
     qc.invalidateQueries({ queryKey: eidKeys.all });
   };
 
-  const setUnderReview = useMutation({
-    mutationFn: (id) => updateEidApplicationStatus(id, 'under_review'),
-    onSuccess:  () => { invalidate(); toast.success('Application marked as Under Review.'); },
+  const updateStatus = useMutation({
+    mutationFn: ({ id, status, remarks, currentStep }) =>
+      updateEidApplicationStatus(id, status, remarks ?? null, currentStep ?? null),
+    onSuccess:  () => { invalidate(); },
     onError:    (err) => toast.error(err.message),
   });
 
@@ -144,9 +145,17 @@ export function useMutateEidApplication() {
   const approve = useMutation({
     mutationFn: ({ applicationId, residentId, photoUrl }) =>
       approveEidApplication(applicationId, residentId, photoUrl),
+    // onSuccess fires AFTER mutateAsync resolves — result is returned to caller
     onSuccess:  () => { invalidate(); toast.success('Application approved — eID issued!'); },
     onError:    (err) => toast.error(err.message ?? 'Failed to approve application.'),
   });
 
-  return { setUnderReview, reject, approve };
+  // Keep setUnderReview as alias for backwards compatibility
+  const setUnderReview = useMutation({
+    mutationFn: (id) => updateEidApplicationStatus(id, 'under_review'),
+    onSuccess:  () => { invalidate(); },
+    onError:    (err) => toast.error(err.message),
+  });
+
+  return { updateStatus, setUnderReview, reject, approve };
 }

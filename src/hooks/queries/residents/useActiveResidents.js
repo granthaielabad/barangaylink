@@ -8,7 +8,7 @@ import { supabase } from '../../../services/supabase/client';
 async function fetchActiveResidents() {
   const { data, error } = await supabase
     .from('residents')
-    .select('id, first_name, middle_name, last_name, suffix')
+    .select('id, resident_no, first_name, middle_name, last_name, suffix')
     .eq('status', 'active')
     .order('last_name')
     .order('first_name');
@@ -17,6 +17,7 @@ async function fetchActiveResidents() {
     const rest = [r.first_name, r.middle_name, r.suffix].filter(Boolean).join(' ');
     return {
       value: r.id,
+      residentNo: r.resident_no,
       label: r.last_name ? `${r.last_name}, ${rest}`.trim() : rest,
     };
   });

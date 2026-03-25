@@ -10,7 +10,8 @@ import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
 import { uploadValidIdPhoto } from '../../../services/supabase/residentService';
-import { RESIDENT_STATUS_FILTER_OPTIONS, BARANGAY } from '../../../core/constants';
+import { RESIDENT_STATUS_FILTER_OPTIONS, BARANGAY, SORT_FIELDS } from '../../../core/constants';
+import toast from 'react-hot-toast';
 
 export default function Residents() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -165,7 +166,7 @@ export default function Residents() {
                   placeholder="Search"
                 />
                 <div className="flex items-center gap-2">
-                  <SortFilter value={sortBy} onChange={setSortBy} />
+                  <SortFilter value={sortBy} onChange={setSortBy} options={SORT_FIELDS.RESIDENTS} />
                   <StatusFilter value={status} onChange={(v) => { setStatus(v); setPage(1); }} options={RESIDENT_STATUS_FILTER_OPTIONS} />
                   <OrderFilter value={order} onChange={setOrder} />
                 </div>

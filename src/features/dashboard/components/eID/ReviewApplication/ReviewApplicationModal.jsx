@@ -1,585 +1,420 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { 
-  FiX, FiFileText, FiUser, FiMapPin, 
-  FiCreditCard, FiBell, FiCheck, 
-  FiChevronRight, FiAlertCircle,
-  FiCheckCircle, FiSearch, FiZoomIn, FiInfo
+import {
+  FiX, FiFileText, FiUser, FiMapPin, FiCreditCard, FiBell,
+  FiCheck, FiChevronLeft, FiChevronRight, FiCheckCircle,
+  FiZoomIn, FiInfo, FiSearch, FiLoader, FiExternalLink,
 } from 'react-icons/fi';
-import ReviewFilter from './ReviewFilter';
-import ApplicantCard from './ApplicantCard';
+import { IoIosArrowDown } from 'react-icons/io';
+import { MdCheck } from 'react-icons/md';
+import {
+  useEidApplications,
+  useMutateEidApplication,
+} from '../../../../../hooks/queries/eid/useEids';
+import toast from 'react-hot-toast';
 
-const MOCK_APPLICANTS = [
-  {
-    id: 1,
-    name: 'Murphy De Guzman Jr.',
-    applicationId: '1234-123-12',
-    submittedAt: 'March 18, 2026',
-    address: '#71 Dahlia Avenue St. Brgy San Bartolome',
-    contactNo: '0910 0976 326',
-    email: 'mayreyes@gmail.com',
-    validIdType: "National ID",
-    status: 'Under Review',
-    currentStep: 1,
-    totalSteps: 5,
-    stepLabel: 'Document Verification',
-    lastReviewedBy: 'Super Admin',
-    lastReviewedAt: 'March 19, 2026 - 9:00 AM',
-    photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80',
-    isComplete: false,
-    dob: '01/01/2001',
-    civilStatus: 'Single',
-    idNumber: '1234-5678-9012-3456'
-  },
-  {
-    id: 2,
-    name: 'Princess May Reyes',
-    applicationId: '1234-123-12',
-    submittedAt: 'March 18, 2026',
-    address: 'Dahlia Avenue St. Brgy. San Bartolome',
-    contactNo: '0910 0976 326',
-    email: 'mayreyes@gmail.com',
-    validIdType: "Driver's License",
-    status: 'Approval Pending',
-    currentStep: 5,
-    totalSteps: 5,
-    stepLabel: 'All verification steps completed - Ready for final approval',
-    lastReviewedBy: 'Super Admin',
-    lastReviewedAt: 'March 19, 2026 - 10:30 AM',
-    photoUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80',
-    isComplete: true
-  }
-];
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function fmt(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '—';
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+function fullName(app) {
+  return [app.first_name, app.middle_name, app.last_name, app.suffix]
+    .filter(Boolean).join(' ') || '—';
+}
+function statusBadge(status) {
+  const cfg = {
+    pending:      'bg-orange-50 text-orange-700 border-orange-200',
+    under_review: 'bg-blue-50 text-blue-700 border-blue-200',
+    approved:     'bg-emerald-50 text-emerald-700 border-emerald-200',
+    rejected:     'bg-red-50 text-red-600 border-red-200',
+  };
+  const labels = {
+    pending:      'Pending',
+    under_review: 'Under Review',
+    approved:     'Approval Pending',
+    rejected:     'Rejected'
+  };
+  return {
+    cls: cfg[status] ?? 'bg-gray-50 text-gray-600 border-gray-200',
+    label: labels[status] ?? status
+  };
+}
 
+// ─── Steps ────────────────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: 'Document Verification', icon: FiFileText },
-  { id: 2, label: 'Identity Confirmation', icon: FiUser },
-  { id: 3, label: 'Address Validation', icon: FiMapPin },
-  { id: 4, label: 'eID Generation', icon: FiCreditCard },
-  { id: 5, label: 'Notification', icon: FiBell },
+  { id: 1, label: 'Document Verification', icon: FiFileText   },
+  { id: 2, label: 'Identity Confirmation', icon: FiUser       },
+  { id: 3, label: 'Address Validation',    icon: FiMapPin     },
+  { id: 4, label: 'eID Generation',        icon: FiCreditCard },
+  { id: 5, label: 'Notification',          icon: FiBell       },
 ];
 
-export default function ReviewApplicationModal({ isOpen, onClose }) {
-  const [view, setView] = useState('list'); // 'list' or 'review'
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedApplicant, setSelectedApplicant] = useState(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-  }, [isOpen]);
-
-  const handleClose = () => {
-    onClose();
-    // Reset state after closing
-    setTimeout(() => {
-      setView('list');
-      setCurrentStep(1);
-      setSelectedApplicant(null);
-    }, 300);
-  };
-
-  if (!isOpen) return null;
-
-  const handleReview = (applicant) => {
-    setSelectedApplicant(applicant);
-    setView('review');
-    setCurrentStep(1);
-  };
-
-
-
-  const nextStep = () => {
-    if (currentStep < 5) setCurrentStep(curr => curr + 1);
-  };
-
-  const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(curr => curr - 1);
-  };
-
-  return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/40"
-      />
-
-      {/* Modal Container */}
-      <div className={`relative bg-white w-full max-w-3xl ${view === 'review' ? 'h-[95vh]' : 'h-[93vh]'} rounded-3xl shadow-xl overflow-hidden flex flex-col transition-all duration-300`}>
-        
-        {/* Header Section */}
-        <div className="bg-white px-8 py-5 border-b border-gray-100 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center">
-              <FiFileText className="w-5 h-5 text-[#005F02]" />
+// ─── Reusable checklist ───────────────────────────────────────────────────────
+function Checklist({ items }) {
+  return (
+    <div className="border border-gray-100 rounded-lg p-5">
+      <h5 className="text-sm font-bold text-gray-900 mb-4">Verification Checklist</h5>
+      <div className="space-y-3.5">
+        {items.map((item, i) => (
+          <label key={i} className="flex items-center gap-3 cursor-pointer group">
+            <div className="relative flex items-center justify-center shrink-0">
+              <input
+                type="checkbox"
+                className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded-md checked:bg-[#005F02] checked:border-[#005F02] transition-all"
+              />
+              <FiCheck className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 tracking-tight">Review eID Application</h2>
-          </div>
-          <button 
-            type="button" 
-            onClick={handleClose}
-            className="p-2 text-gray-400 hover:text-gray-900 transition-colors"
-          >
-            <FiX className="w-6 h-6" />
-          </button>
+            <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">{item}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Applicant card (list view) ───────────────────────────────────────────────
+function ApplicantCard({ app, onReview }) {
+  const { cls, label } = statusBadge(app.status);
+  const reviewer = app.reviewed_by_profile?.full_name;
+  const currentStep = app.current_step || 1;
+  const isComplete = app.status === 'approved' || (app.status === 'under_review' && currentStep === 5);
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-6 mb-4 hover:border-gray-300 transition-all shadow-sm">
+      <div className="flex gap-6">
+        {/* Photo */}
+        <div className="shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
+          {app.photo_url ? (
+            <img src={app.photo_url} alt={fullName(app)} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-300">
+              <FiUser className="w-10 h-10" />
+            </div>
+          )}
         </div>
 
-        {view === 'list' ? (
-          <>
-            {/* Filters and List View */}
-            <div className="flex-1 overflow-y-auto px-8 py-6 bg-white">
-              <ReviewFilter />
-              <div className="space-y-4">
-                {MOCK_APPLICANTS.map((app) => (
-                  <ApplicantCard 
-                    key={app.id} 
-                    applicant={app} 
-                    onReview={handleReview}
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3 mb-2">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">{fullName(app)}</h3>
+              <p className="text-xs text-gray-400">Application #: <span className="font-bold text-gray-600">{app.reference_number || app.id?.slice(0, 8).toUpperCase()}</span></p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`px-3 py-1 rounded-md text-[11px] font-bold border ${cls}`}>{label}</span>
+              <button
+                onClick={() => onReview(app)}
+                className="flex items-center gap-1.5 bg-black text-white px-4 py-1.5 rounded-md text-xs font-bold hover:bg-gray-800 transition-colors"
+              >
+                <FiSearch className="w-3.5 h-3.5" /> Review
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3 mt-4 text-xs">
+            <div className="space-y-1">
+              <p><span className="text-gray-400">Submitted:</span> <span className="text-gray-700 font-medium">{fmt(app.submitted_at)}</span></p>
+              <p><span className="text-gray-400">Contact No.:</span> <span className="text-gray-700 font-medium">{app.contact_number || '—'}</span></p>
+              <p><span className="text-gray-400">Valid ID Type:</span> <span className="text-gray-700 font-medium">{app.valid_id_type || app.residents?.valid_id_type || '—'}</span></p>
+            </div>
+            <div className="space-y-1">
+              <p><span className="text-gray-400">Address:</span> <span className="text-gray-700 font-medium">{app.address_line || '—'}</span></p>
+              <p><span className="text-gray-400">Email:</span> <span className="text-gray-700 font-medium">{app.email || '—'}</span></p>
+              <p className="text-gray-400">Est. Processing: <span className="italic">3-5 business days</span></p>
+            </div>
+          </div>
+
+          {/* Progress bar area */}
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <div className="flex items-center gap-3 text-xs mb-2">
+              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden flex gap-0.5">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <div
+                    key={s}
+                    className={`flex-1 h-full rounded-sm transition-colors ${
+                      s <= currentStep
+                        ? (isComplete ? 'bg-[#005F02]' : 'bg-blue-600')
+                        : 'bg-gray-200'
+                    }`}
                   />
                 ))}
               </div>
             </div>
-
-            {/* List Footer */}
-            <div className="p-6 bg-white border-t border-gray-100 flex justify-end gap-3 shrink-0">
-              <button 
-                type="button" 
-                onClick={handleClose}
-                className="px-6 py-2 rounded-sm border border-gray-300 bg-white text-gray-700 text-base font-semibold hover:bg-gray-50 transition-colors"
-              >
-                Close
-              </button>
-              <button 
-                type="button" 
-                className="px-6 py-2 rounded-sm bg-black text-white text-base font-semibold hover:bg-gray-800 transition-colors"
-              >
-                Next Step
-              </button>
-            </div>
-          </>
-        ) : (
-          /* Review Workflow View */
-          <div className="flex-1 flex flex-col overflow-hidden bg-white">
-            <ReviewWorkflow 
-              applicant={selectedApplicant} 
-              currentStep={currentStep}
-              onNext={nextStep}
-              onPrev={prevStep}
-              onClose={handleClose}
-            />
-          </div>
-        )}
-      </div>
-    </div>,
-    document.body
-  );
-}
-
-function ReviewWorkflow({ applicant, currentStep, onNext, onPrev, onClose }) {
-  return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* Review Sub-header */}
-      <div className="px-8 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
-        <h3 className="text-lg font-medium text-gray-500">
-          Application #{applicant?.applicationId}
-        </h3>
-        <button className="px-5 py-2 rounded-lg border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors">
-          Reject Application
-        </button>
-      </div>
-
-      {/* Progress & Stepper */}
-      <div className="px-8 py-6 shrink-0">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-bold text-gray-900">Review Progress</span>
-          <span className="text-sm font-medium text-gray-400">{currentStep} of 5</span>
-        </div>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-8">
-          <div 
-            className="h-full bg-black transition-all duration-500 ease-out"
-            style={{ width: `${(currentStep / 5) * 100}%` }}
-          />
-        </div>
-
-        {/* Stepper Icons */}
-        <div className="flex items-center justify-between px-4">
-          {STEPS.map((s, idx) => {
-            const Icon = s.icon;
-            const isActive = currentStep === s.id;
-            const isCompleted = currentStep > s.id;
-            
-            return (
-              <div key={s.id} className="flex items-center flex-1 last:flex-none">
-                <div className="flex flex-col items-center gap-2">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                    isCompleted ? 'bg-[#005F02] text-white' : 
-                    isActive ? 'bg-[#005F02] text-white shadow-md scale-110' : 
-                    'bg-[#A5D6A7] text-white opacity-50'
-                  }`}>
-                    {isCompleted ? <FiCheck className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
-                  </div>
-                  <span className={`text-[11px] font-bold text-center max-w-[80px] leading-tight ${
-                    isActive ? 'text-[#005F02]' : 'text-gray-400'
-                  }`}>
-                    {s.label}
-                  </span>
-                </div>
-                {idx < STEPS.length - 1 && (
-                  <div className="flex-1 flex justify-center mb-6">
-                    <FiChevronRight className="w-5 h-5 text-gray-300" />
-                  </div>
+            <div className="flex items-center justify-between">
+              <p className={`text-[11px] font-bold flex items-center gap-1.5 ${isComplete ? 'text-[#005F02]' : 'text-blue-600'}`}>
+                {isComplete ? (
+                  <>
+                    <FiCheckCircle className="w-3.5 h-3.5" />
+                    All verification steps completed - Ready for final approval
+                  </>
+                ) : (
+                  <>
+                    <FiCheckCircle className="w-3.5 h-3.5 text-blue-300" />
+                    Currently at: {STEPS[currentStep - 1]?.label}
+                  </>
                 )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Scrollable Content Area */}
-      <div className="flex-1 overflow-y-auto px-8 py-4 bg-white border-t border-gray-100">
-        <ReviewStepContent step={currentStep} applicant={applicant} />
-      </div>
-
-      {/* Workflow Footer */}
-      <div className="p-6 bg-[#F9FBF9] border-t border-gray-100 flex items-center justify-between shrink-0">
-        <button 
-          onClick={onPrev}
-          disabled={currentStep === 1}
-          className={`px-8 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm ${currentStep === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          Previous
-        </button>
-        <div className="flex gap-3">
-          <button 
-            onClick={onClose}
-            className="px-8 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            Close
-          </button>
-          <button 
-            onClick={currentStep === 5 ? onClose : onNext}
-            className={`px-10 py-2 rounded-lg text-sm font-bold shadow-sm transition-all ${
-              currentStep === 5 
-                ? 'bg-[#005F02] hover:bg-[#004d02] text-white' 
-                : 'bg-black hover:bg-gray-800 text-white'
-            }`}
-          >
-            {currentStep === 5 ? 'Approve & Notify' : 'Next Step'}
-          </button>
+              </p>
+              <p className="text-[10px] text-gray-400 font-medium">
+                {currentStep} of 5 steps completed {isComplete ? '- Awaiting for approval' : ''}
+              </p>
+            </div>
+            {reviewer && (
+              <p className="text-[10px] text-gray-400 mt-1 italic flex items-center gap-1">
+                <FiInfo className="w-3 h-3" /> Last reviewed by {reviewer} on {fmt(app.reviewed_at)}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-function ReviewStepContent({ step, applicant }) {
-  switch (step) {
-    case 1: return <Step1Content applicant={applicant} />;
-    case 2: return <Step2Content applicant={applicant} />;
-    case 3: return <Step3Content applicant={applicant} />;
-    case 4: return <Step4Content applicant={applicant} />;
-    case 5: return <Step5Content applicant={applicant} />;
-    default: return null;
-  }
-}
-
-function Step1Content({ applicant }) {
-  const [isZoomed, setIsZoomed] = useState(false);
+// ─── Step Content ─────────────────────────────────────────────────────────────
+function Step1Content({ app }) {
+  const [zoomed, setZoomed] = useState(false);
+  const resident = app.residents || {};
+  const validIdUrl = app.valid_id_url || resident.valid_id_url || null;
+  const validIdType = app.valid_id_type || resident.valid_id_type || 'Government ID';
 
   return (
-    <>
-      <div className="space-y-3">
-        {/* Alert */}
-        <div className="bg-[#EBF5FF] border border-[#E1EFFE] p-4 rounded-sm flex gap-2">
-          <FiAlertCircle className="w-5 h-5 text-[#3F83F8] shrink-0 mt-0.5" />
-          <div>
-            <h4 className="text-sm font-bold text-[#1E429F]">Document Verification</h4>
-            <p className="text-xs text-[#1E429F] mt-1 leading-relaxed opacity-80">
-              Carefully review the government-issued ID to ensure it's authentic, valid, and matches the applicant's information.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          {/* Info Box */}
-          <div className="flex-1 bg-[#F3FAF7] border border-[#DEF7EC] rounded-sm p-6">
-            <h5 className="text-sm font-bold text-[#057A55] mb-4">Resident Information Verified</h5>
-            <div className="grid grid-cols-2 gap-y-4 gap-x-4 text-sm">
-              <div>
-                <p className="text-[11px] text-[#057A55] opacity-60">Full Name</p>
-                <p className="font-bold text-[#046C4E]">{applicant.name}</p>
-              </div>
-              <div>
-                <p className="text-[11px] text-[#057A55] opacity-60">ID Number</p>
-                <p className="font-bold text-[#046C4E]">{applicant.applicationId}</p>
-              </div>
-              <div className="col-span-1">
-                <p className="text-[11px] text-[#057A55] opacity-60">Address</p>
-                <p className="font-bold text-[#046C4E] leading-tight">{applicant.address}</p>
-              </div>
-              <div>
-                <p className="text-[11px] text-[#057A55] opacity-60">Civil Status</p>
-                <p className="font-bold text-[#046C4E]">{applicant.civilStatus || 'Single'}</p>
-              </div>
-              <div>
-                <p className="text-[11px] text-[#057A55] opacity-60">Date of Birth</p>
-                <p className="font-bold text-[#046C4E]">{applicant.dob || '01/01/2001'}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* ID Preview */}
-          <div className="w-[300px] shrink-0 space-y-3">
-            <div 
-              onClick={() => setIsZoomed(true)}
-              className="aspect-[1.6/1] bg-gray-50 border border-gray-200 rounded-sm flex items-center justify-center relative group cursor-zoom-in overflow-hidden shadow-sm"
-            >
-              <img 
-                src="/src/assets/images/national_id_placeholder.png" 
-                alt="National ID Preview"
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center">
-                <div className="bg-white/90 px-3 py-1.5 rounded-lg flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 shadow-sm">
-                  <FiZoomIn className="w-4 h-4 text-gray-600" />
-                  <span className="text-[11px] font-bold text-gray-600">Click to Zoom</span>
-                </div>
-              </div>
-            </div>
-            <p className="text-[14px] font-semibold text-gray-600 text-center">
-              {applicant.validIdType} - {applicant.idNumber || '1234-5678-9012-3456'}
-            </p>
-          </div>
-        </div>
-
-        {/* Checklist */}
-        <div className="border border-gray-100 rounded-sm p-4">
-          <h5 className="text-sm font-bold text-gray-900 mb-4">Verification Checklist</h5>
-          <div className="space-y-3">
-            {[
-              'ID photo is clear and of good quality',
-              'All information on the ID is readable and legible',
-              'ID appears to be authentic and not expired',
-              "Photo on ID matches the applicant's submitted information"
-            ].map((item, i) => (
-              <label key={i} className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative flex items-center justify-center">
-                  <input type="checkbox" className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-md checked:bg-black checked:border-black transition-all" />
-                  <FiCheck className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
-                </div>
-                <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">{item}</span>
-              </label>
-            ))}
-          </div>
+    <div className="space-y-6">
+      <div className="bg-[#EBF5FF] border border-[#BEE3F8] p-4 rounded-lg flex gap-3">
+        <FiInfo className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-bold text-blue-800">Document Verification</p>
+          <p className="text-xs text-blue-700 mt-0.5 leading-relaxed">
+            Carefully review the government-issued ID to ensure it's authentic, valid, and matches the applicant's information.
+          </p>
         </div>
       </div>
 
-      {/* Zoomed Overlay */}
-      {isZoomed && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-10 cursor-zoom-out"
-          onClick={() => setIsZoomed(false)}
-        >
-          <div className="relative max-w-5xl w-full aspect-[1.6/1] bg-white rounded-xl overflow-hidden shadow-2xl animate-in zoom-in duration-300">
-            <img 
-              src="/src/assets/images/national_id_placeholder.png" 
-              alt="National ID Zoomed"
-              className="w-full h-full object-contain"
-            />
-            <button 
-              onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
-              className="absolute top-6 right-6 p-3 bg-black/20 hover:bg-black/40 text-white rounded-full transition-colors"
-            >
-              <FiX className="w-6 h-6" />
-            </button>
+      <div className="flex gap-6">
+        <div className="flex-1 bg-[#F1FDF3] border border-[#C6F6D5] rounded-lg p-5">
+          <p className="text-[11px] font-bold text-[#2F855A] uppercase tracking-wider mb-4">Resident Information Verified</p>
+          <div className="grid grid-cols-2 gap-y-4 text-[13px]">
+            <div>
+              <p className="text-[10px] text-[#48BB78] font-bold">Full Name</p>
+              <p className="font-bold text-gray-900">{fullName(app)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#48BB78] font-bold">Resident Number</p>
+              <p className="font-bold text-gray-900">{resident.resident_no || '—'}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-[10px] text-[#48BB78] font-bold">Address</p>
+              <p className="font-bold text-gray-900">{app.address_line || '—'}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#48BB78] font-bold">Date of Birth</p>
+              <p className="font-bold text-gray-900">{fmt(app.date_of_birth)}</p>
+            </div>
+            <div>
+              <p className="text-[10px] text-[#48BB78] font-bold">Civil Status</p>
+              <p className="font-bold text-gray-900">{resident.civil_status ? resident.civil_status.charAt(0).toUpperCase() + resident.civil_status.slice(1) : 'Single'}</p>
+            </div>
           </div>
         </div>
+
+        <div className="flex-1">
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden flex flex-col h-full">
+            <div className="flex-1 min-h-[160px] relative group cursor-zoom-in" onClick={() => validIdUrl && setZoomed(true)}>
+              {validIdUrl ? (
+                <img src={validIdUrl} alt="Valid ID" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
+                  <FiFileText className="w-12 h-12" />
+                </div>
+              )}
+            </div>
+            <div className="bg-gray-50 border-t border-gray-200 px-4 py-2 flex items-center justify-center gap-2 text-gray-500 hover:text-gray-700 transition-colors cursor-pointer" onClick={() => validIdUrl && setZoomed(true)}>
+              <FiZoomIn className="w-4 h-4" />
+              <span className="text-[11px] font-bold">Click to Zoom</span>
+            </div>
+          </div>
+          <p className="text-[11px] text-gray-500 mt-2 text-center">{validIdType} - {app.id_number || '—'}</p>
+        </div>
+      </div>
+
+      <Checklist items={[
+        'ID photo is clear and of good quality',
+        'All information on the ID is readable and legible',
+        'ID appears to be authentic and not expired',
+        "Photo on ID matches the applicant's submitted information",
+      ]} />
+
+      {zoomed && validIdUrl && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-10 cursor-zoom-out" onClick={() => setZoomed(false)}>
+          <img src={validIdUrl} alt="Valid ID Zoomed" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+          <button className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors">
+            <FiX className="w-6 h-6" />
+          </button>
+        </div>,
+        document.body
       )}
-    </>
+    </div>
   );
 }
 
-function Step2Content({ applicant }) {
+function Step2Content({ app }) {
+  const resident = app.residents || {};
   return (
-    <div className="space-y-3">
-      <div className="bg-[#EBF5FF] border border-[#E1EFFE] p-4 rounded-sm flex gap-3">
-        <FiUser className="w-5 h-5 text-[#3F83F8] shrink-0 mt-0.5" />
+    <div className="space-y-6">
+      <div className="bg-[#EBF5FF] border border-[#BEE3F8] p-4 rounded-lg flex gap-3">
+        <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
+        </div>
         <div>
-          <h4 className="text-sm font-bold text-[#1E429F]">Final Identity Confirmation</h4>
-          <p className="text-xs text-[#1E429F] mt-1 leading-relaxed opacity-80">
+          <p className="text-sm font-bold text-blue-800">Final Identity Confirmation</p>
+          <p className="text-xs text-blue-700 mt-0.5 leading-relaxed">
             Perform a final review to confirm the applicant's identity and ensure all information is accurate.
           </p>
         </div>
       </div>
 
-      <div className="bg-[#F3FAF7] border border-[#DEF7EC] rounded-sm  p-5">
-        <h5 className="text-sm font-bold text-[#057A55] mb-4">Resident Information Verified</h5>
-        <div className="grid grid-cols-3 gap-y-6 text-sm">
+      <div className="bg-[#F1FDF3] border border-[#C6F6D5] rounded-lg p-5">
+        <p className="text-[11px] font-bold text-[#2F855A] uppercase tracking-wider mb-4">Resident Information Verified</p>
+        <div className="grid grid-cols-3 gap-y-6 gap-x-8 text-[13px]">
           <div>
-            <p className="text-[11px] text-[#057A55] opacity-60">Full Name</p>
-            <p className="font-bold text-[#046C4E]">{applicant.name}</p>
+            <p className="text-[10px] text-[#48BB78] font-bold mb-1">Full Name</p>
+            <p className="font-bold text-gray-900 truncate">{fullName(app)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-[#057A55] opacity-60">ID Number</p>
-            <p className="font-bold text-[#046C4E]">{applicant.applicationId}</p>
+            <p className="text-[10px] text-[#48BB78] font-bold mb-1">Resident Number</p>
+            <p className="font-bold text-gray-900">{resident.resident_no || '—'}</p>
           </div>
           <div>
-            <p className="text-[11px] text-[#057A55] opacity-60">Government ID Type</p>
-            <p className="font-bold text-[#046C4E]">{applicant.validIdType}</p>
-          </div>
-          <div className="col-span-1">
-            <p className="text-[11px] text-[#057A55] opacity-60">Address</p>
-            <p className="font-bold text-[#046C4E] leading-tight">{applicant.address}</p>
+            <p className="text-[10px] text-[#48BB78] font-bold mb-1">Government ID Type</p>
+            <p className="font-bold text-gray-900">{app.valid_id_type || resident.valid_id_type || '—'}</p>
           </div>
           <div>
-            <p className="text-[11px] text-[#057A55] opacity-60">Civil Status</p>
-            <p className="font-bold text-[#046C4E]">{applicant.civilStatus || 'Single'}</p>
+            <p className="text-[10px] text-[#48BB78] font-bold mb-1">Address</p>
+            <p className="font-bold text-gray-900 truncate">{app.address_line || '—'}</p>
           </div>
           <div>
-            <p className="text-[11px] text-[#057A55] opacity-60">Government ID Number</p>
-            <p className="font-bold text-[#046C4E]">NID-1234-5678-9012</p>
+            <p className="text-[10px] text-[#48BB78] font-bold mb-1">Civil Status</p>
+            <p className="font-bold text-gray-900">{resident.civil_status ? resident.civil_status.charAt(0).toUpperCase() + resident.civil_status.slice(1) : 'Single'}</p>
           </div>
           <div>
-            <p className="text-[11px] text-[#057A55] opacity-60">Date of Birth</p>
-            <p className="font-bold text-[#046C4E]">{applicant.dob || '01/01/2001'}</p>
+            <p className="text-[10px] text-[#48BB78] font-bold mb-1">Government ID Number</p>
+            <p className="font-bold text-gray-900">{app.id_number || '—'}</p>
+          </div>
+          <div>
+            <p className="text-[10px] text-[#48BB78] font-bold mb-1">Date of Birth</p>
+            <p className="font-bold text-gray-900">{fmt(app.date_of_birth)}</p>
           </div>
         </div>
       </div>
 
-      <div className="border border-gray-100 rounded-sm p-6">
-        <h5 className="text-sm font-bold text-gray-900 mb-4">Final Confirmation Checklist</h5>
-        <div className="space-y-3">
-          {[
-            'Name on government ID matches application information exactly',
-            'Photos appear authentic with no signs of tampering or manipulation',
-            'No red flags or inconsistencies found during the verification process'
-          ].map((item, i) => (
-            <label key={i} className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input type="checkbox" className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-md checked:bg-black checked:border-black transition-all" />
-                <FiCheck className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
-              </div>
-              <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">{item}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+      <Checklist items={[
+        'Name on government ID matches application information exactly',
+        'Photos appear authentic with no signs of tampering or manipulation',
+        'No red flags or inconsistencies found during the verification process',
+      ]} />
     </div>
   );
 }
 
-function Step3Content({ applicant }) {
+function Step3Content({ app }) {
   return (
-    <div className="space-y-3">
-      <div className="bg-[#EBF5FF] border border-[#E1EFFE] p-4 rounded-sm flex gap-3">
-        <FiMapPin className="w-5 h-5 text-[#3F83F8] shrink-0 mt-0.5" />
+    <div className="space-y-6">
+      <div className="bg-[#EBF5FF] border border-[#BEE3F8] p-4 rounded-lg flex gap-3">
+        <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+          <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
+        </div>
         <div>
-          <h4 className="text-sm font-bold text-[#1E429F]">Address Validation</h4>
-          <p className="text-xs text-[#1E429F] mt-1 leading-relaxed opacity-80">
+          <p className="text-sm font-bold text-blue-800">Address Validation</p>
+          <p className="text-xs text-blue-700 mt-0.5 leading-relaxed">
             Verify that the applicant's address is within the barangay jurisdiction and matches the information provided.
           </p>
         </div>
       </div>
 
       <div className="flex gap-6">
-        <div className="flex-1 bg-[#F3FAF7] border border-[#DEF7EC] rounded-sm p-5">
-          <h5 className="text-sm font-bold text-[#057A55] mb-4">Resident Information Verified</h5>
-          <div className="space-y-4">
-            <div>
-              <p className="text-[11px] text-[#057A55] opacity-60">Full Address</p>
-              <p className="font-bold text-[#046C4E] leading-tight text-sm">
-                {applicant.address}
-              </p>
-            </div>
-          </div>
+        <div className="flex-1 bg-[#F1FDF3] border border-[#C6F6D5] rounded-lg p-5">
+          <p className="text-[11px] font-bold text-[#2F855A] uppercase mb-3">Resident Information Verified</p>
+          <p className="text-[10px] text-[#48BB78] font-bold mb-1">Full Address</p>
+          <p className="font-bold text-[#22543D] leading-relaxed text-[13px]">{app.address_line || '—'}</p>
         </div>
-        <div className="flex-1 border border-gray-200 rounded-xl p-5">
-          <h5 className="text-sm font-bold text-gray-900 mb-4">ID Address Information</h5>
-          <div className="space-y-4">
-            <div>
-              <p className="text-[11px] text-gray-400">Full Address</p>
-              <p className="font-bold text-gray-800 leading-tight text-sm">
-                #71 Dahlia Avenue<br />St. Brgy San<br />Bartolome
-              </p>
-            </div>
-          </div>
+        <div className="flex-1 bg-white border border-gray-200 rounded-lg p-5">
+          <p className="text-[11px] font-bold text-gray-500 uppercase mb-3">ID Address Information</p>
+          <p className="text-[10px] text-gray-400 font-bold mb-1">Full Address</p>
+          <p className="font-bold text-gray-700 leading-relaxed text-[13px]">{app.address_line || '—'}</p>
         </div>
       </div>
 
-      <div className="border border-gray-100 rounded-xl p-6">
-        <h5 className="text-sm font-bold text-gray-900 mb-4">Final Confirmation Checklist</h5>
-        <div className="space-y-3">
-          {[
-            'Address is confirmed to be within Barangay San Sanderiana jurisdiction',
-            'Address on government ID matches the submitted application address',
-            'Address can be verified through barangay records or database'
-          ].map((item, i) => (
-            <label key={i} className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input type="checkbox" className="peer appearance-none w-5 h-5 border-2 border-gray-200 rounded-md checked:bg-black checked:border-black transition-all" />
-                <FiCheck className="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
-              </div>
-              <span className="text-sm font-medium text-gray-600 group-hover:text-gray-900 transition-colors">{item}</span>
-            </label>
-          ))}
-        </div>
-      </div>
+      <Checklist items={[
+        'Address is confirmed to be within Barangay jurisdiction',
+        'Address on government ID matches the submitted application address',
+        'Address can be verified through barangay records or database',
+      ]} />
     </div>
   );
 }
 
-function Step4Content({ applicant }) {
+function Step4Content({ app, issuedEidNumber, setIssuedEidNumber }) {
+  const regenerate = () => {
+    const year = new Date().getFullYear();
+    const rand1 = Math.floor(100 + Math.random() * 900);
+    const rand2 = Math.floor(10 + Math.random() * 90);
+    setIssuedEidNumber(`${year}-${rand1}-${rand2}`);
+    toast.success('New eID number generated.');
+  };
+
   return (
     <div className="space-y-6">
-      <div className="bg-[#F3FAF7] border border-[#DEF7EC] p-4 rounded-xl flex gap-3">
-        <FiCreditCard className="w-5 h-5 text-[#057A55] shrink-0 mt-0.5" />
+      <div className="bg-[#F1FDF3] border border-[#C6F6D5] p-4 rounded-lg flex gap-3">
+        <div className="w-6 h-6 bg-emerald-200 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+          <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full" />
+        </div>
         <div>
-          <h4 className="text-sm font-bold text-[#03543F]">eID Generation</h4>
-          <p className="text-xs text-[#03543F] mt-1 leading-relaxed opacity-80">
+          <p className="text-sm font-bold text-emerald-800">eID Generation</p>
+          <p className="text-xs text-emerald-700 mt-0.5 leading-relaxed">
             Verify that the applicant's address is within the barangay jurisdiction and matches the information provided.
           </p>
         </div>
       </div>
 
-      <div className="border border-gray-100 rounded-xl p-8 flex flex-col items-center">
-        <div className="w-20 h-20 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
-          <FiCreditCard className="w-10 h-10 text-[#005F02]" />
+      <div className="border border-gray-100 rounded-xl p-8 bg-white text-center shadow-sm">
+        <FiCreditCard className="w-14 h-14 text-emerald-500 mb-4 mx-auto" />
+        <h4 className="text-lg font-bold text-gray-900 mb-2">Generated eID Number</h4>
+        <div className="bg-[#F1FDF3] border border-[#C6F6D5] py-3 px-8 rounded-lg inline-block mb-4">
+          <span className="text-3xl font-black text-[#22543D] tracking-widest font-mono">
+            {issuedEidNumber || '2026-123-12'}
+          </span>
         </div>
-        <h5 className="text-lg font-bold text-gray-900 mb-2">Generated eID Number</h5>
-        <div className="bg-[#F3FAF7] border border-[#DEF7EC] px-8 py-3 rounded-lg mb-2 relative group">
-          <span className="text-2xl font-bold text-[#005F02] tracking-widest">2026-123-12</span>
-          <div className="absolute -right-12 top-1/2 -translate-y-1/2">
-          </div>
-        </div>
-        <p className="text-[10px] text-gray-400 font-medium text-center max-w-[200px] mb-6">
-          This unique identifier will be permanently associated with {applicant.name}
+        <p className="text-[11px] text-gray-400 max-w-xs mx-auto mb-6">
+          This unique identifier will be permanently associated with {fullName(app)}
         </p>
-        <button className="px-6 py-2 rounded-lg border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+        <button
+          onClick={regenerate}
+          className="px-6 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+        >
           Regenerate eID
         </button>
       </div>
 
-      <div className="border border-gray-100 rounded-xl p-6">
-        <h5 className="text-sm font-bold text-gray-900 mb-6">eID Details</h5>
-        <div className="grid grid-cols-2 gap-y-8">
+      <div className="bg-[#F7FAFC] border border-[#E2E8F0] rounded-lg p-5">
+        <p className="text-[11px] font-bold text-gray-500 uppercase mb-4">eID Details</p>
+        <div className="grid grid-cols-2 gap-y-6 text-[13px]">
           <div>
-            <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider mb-1">Resident Name</p>
-            <p className="text-sm font-bold text-gray-900">{applicant.name}</p>
+            <p className="text-[10px] text-gray-400 font-bold mb-1">Resident Name</p>
+            <p className="font-bold text-gray-900">{fullName(app)}</p>
           </div>
           <div>
-            <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider mb-1">eID Number</p>
-            <p className="text-sm font-bold text-gray-900">2026-123-12</p>
+            <p className="text-[10px] text-gray-400 font-bold mb-1">eID Number</p>
+            <p className="font-bold text-gray-900">{issuedEidNumber || '2026-123-12'}</p>
           </div>
           <div>
-            <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider mb-1">Issue Date</p>
-            <p className="text-sm font-bold text-gray-900">March 21, 2026</p>
+            <p className="text-[10px] text-gray-400 font-bold mb-1">Issue Date</p>
+            <p className="font-bold text-gray-900">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
           </div>
           <div>
-            <p className="text-[11px] text-gray-400 uppercase font-bold tracking-wider mb-1">Status</p>
-            <p className="text-sm font-bold text-gray-900">Active</p>
+            <p className="text-[10px] text-gray-400 font-bold mb-1">Status</p>
+            <p className="font-bold text-gray-900">Active</p>
           </div>
         </div>
       </div>
@@ -587,58 +422,299 @@ function Step4Content({ applicant }) {
   );
 }
 
-function Step5Content({ applicant }) {
+function Step5Content({ app, issuedEidNumber }) {
   return (
-    <div className="space-y-4">
-      <div className="bg-[#F3FAF7] border border-[#DEF7EC] p-4 rounded-sm flex gap-3">
-        <FiCheckCircle className="w-5 h-5 text-[#057A55] shrink-0 mt-0.5" />
+    <div className="space-y-6">
+      <div className="bg-[#F1FDF3] border border-[#C6F6D5] p-4 rounded-lg flex gap-3">
+        <FiCheckCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
         <div>
-          <h4 className="text-sm font-bold text-[#03543F]">Ready for Approval</h4>
-          <p className="text-xs text-[#03543F] mt-1 leading-relaxed opacity-80">
-            All verification steps are complete for {applicant.name}. Click "Approve & Notify" to finalize the application.
+          <p className="text-sm font-bold text-emerald-800">Ready for Approval</p>
+          <p className="text-xs text-emerald-700 mt-0.5 leading-relaxed">
+            All verification steps are complete. Click "Approve & Notify" to finalize the application.
           </p>
         </div>
       </div>
 
-      <div className="border border-gray-100 rounded-sm p-6">
-        <h5 className="text-sm font-bold text-gray-900 mb-4">Notification Preview</h5>
-        <div className="bg-gray-50 rounded-xl p-5 space-y-4 font-inter">
-          <div>
-            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Recipient</p>
-            <p className="text-sm font-bold text-gray-900">{applicant.name}</p>
+      <div className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
+        <p className="text-sm font-bold text-gray-800 mb-6">Notification Preview</p>
+        <div className="bg-gray-50 border border-gray-100 rounded-lg p-6 space-y-4">
+          <div className="grid grid-cols-[80px_1fr] gap-1 text-xs">
+            <span className="text-gray-400 font-medium">Recipient</span>
+            <span className="text-gray-900 font-bold">{fullName(app)}</span>
+            <span className="text-gray-400 font-medium">Email</span>
+            <span className="text-blue-600 font-medium lowercase">{app.email || '—'}</span>
           </div>
-          <div>
-            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-1">Email</p>
-            <p className="text-sm font-bold text-gray-600">{applicant.email}</p>
-          </div>
-          <hr className="border-gray-200" />
-          <div>
-            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mb-2">Message</p>
-            <div className="bg-white border border-gray-100 p-4 rounded-lg shadow-sm">
-              <p className="text-[11px] font-bold text-gray-900 mb-3">Barangay eID Application Approved</p>
-              <div className="text-[10px] space-y-2 text-gray-500 leading-relaxed">
-                <p>Dear {applicant.name},</p>
-                <p>Your barangay eID application has been approved.</p>
-                <p>Your eID number is: <span className="font-bold text-gray-900">2026-659-12</span></p>
-                <p>Please visit the barangay office to claim your official ID.</p>
-              </div>
+
+          <div className="space-y-2">
+            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Message</p>
+            <div className="bg-white border border-gray-200 p-6 rounded-lg min-h-[120px] text-xs text-gray-600 leading-relaxed">
+              <p className="font-bold text-gray-900 mb-2">Barangay eID Application Approved</p>
+              <p>Dear {app.first_name},</p>
+              <br />
+              <p>We are pleased to inform you that your Barangay Electronic ID application has been approved. Your digital eID is now active and can be accessed through the resident portal.</p>
+              <br />
+              <p>Your eID Number: <span className="font-bold text-gray-900 font-mono">{issuedEidNumber || '2026-659-12'}</span></p>
+              <br />
+              <p>Thank you for your application.</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-[#EBF5FF] border border-[#E1EFFE] p-4 rounded-sm flex gap-3">
-        <FiInfo className="w-5 h-5 text-[#3F83F8] shrink-0 mt-0.5" />
-        <div>
-          <h4 className="text-sm font-bold text-[#1E429F]">Final Review Summary</h4>
-          <ul className="text-xs text-[#1E429F] mt-2 space-y-1.5 font-medium">
-            <li className="flex items-center gap-2">• Document verification: Complete</li>
-            <li className="flex items-center gap-2">• Address validation: Complete</li>
-            <li className="flex items-center gap-2">• Identity confirmation: Complete</li>
-            <li className="flex items-center gap-2">• eID generated: 2026-659-12</li>
+      <div className="bg-[#EBF5FF] border border-[#BEE3F8] p-5 rounded-lg flex gap-4">
+        <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+          <FiInfo className="w-3.5 h-3.5 text-blue-600" />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-bold text-blue-800">Final Review Summary</p>
+          <ul className="text-xs text-blue-600 font-medium space-y-0.5">
+            <li>• Document verification: Complete</li>
+            <li>• Address validation: Complete</li>
+            <li>• Identity confirmation: Complete</li>
+            <li>• eID generated: {issuedEidNumber || '2026-659-12'}</li>
           </ul>
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+export default function ReviewApplicationModal({ isOpen, onClose }) {
+  const [view,            setView]            = useState('list');
+  const [currentStep,     setCurrentStep]     = useState(1);
+  const [selectedApp,     setSelectedApp]     = useState(null);
+  const [issuedEidNumber, setIssuedEidNumber] = useState(null);
+  const [isIssuing,       setIsIssuing]       = useState(false);
+  const [search,          setSearch]          = useState('');
+  const [statusFilter,    setStatusFilter]    = useState('pending');
+
+  const { data, isLoading } = useEidApplications({ page: 1, pageSize: 50, status: statusFilter });
+  const { updateStatus, approve } = useMutateEidApplication();
+
+  const applications = (data?.data ?? [])
+    .filter((app) => !search.trim() || fullName(app).toLowerCase().includes(search.toLowerCase()));
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  const resetToList = () => {
+    setView('list'); setCurrentStep(1);
+    setSelectedApp(null); setIssuedEidNumber(null); setIsIssuing(false);
+  };
+
+  const handleClose = () => { onClose(); setTimeout(resetToList, 300); };
+
+  const handleReview = (app) => {
+    setSelectedApp(app);
+    setIssuedEidNumber(null);
+    setIsIssuing(false);
+    setCurrentStep(app.current_step || 1);
+    setView('review');
+
+    if (app.status === 'pending') {
+      updateStatus.mutate({ id: app.id, status: 'under_review', currentStep: app.current_step || 1 });
+    }
+  };
+
+  const handleNext = async () => {
+    if (currentStep === 4 && !issuedEidNumber) {
+      // Step 4 logic: Finalize if we have an eID number
+      // Actually, image 4 shows "Next Step" leading to Step 5.
+      // We issue the eID in Step 5 "Approve & Notify".
+      const nextStep = 5;
+      setCurrentStep(nextStep);
+      updateStatus.mutate({ id: selectedApp.id, status: 'under_review', currentStep: nextStep });
+      return;
+    }
+    if (currentStep < 5) {
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      updateStatus.mutate({ id: selectedApp.id, status: 'under_review', currentStep: nextStep });
+    }
+  };
+
+  const handleReject = () => {
+    if (!selectedApp) return;
+    updateStatus.mutate(
+      { id: selectedApp.id, status: 'rejected', currentStep: currentStep },
+      { onSuccess: () => { toast.success('Application rejected.'); handleClose(); } }
+    );
+  };
+
+  const handleApproveAndNotify = async () => {
+    setIsIssuing(true);
+    try {
+      await approve.mutateAsync({
+        applicationId: selectedApp.id,
+        residentId:    selectedApp.resident_id,
+        photoUrl:      selectedApp.photo_url ?? null,
+      });
+      toast.success('Application finalized and resident notified!');
+      handleClose();
+    } catch (err) {
+      toast.error(err.message ?? 'Failed to approve application.');
+    } finally {
+      setIsIssuing(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
+      <div className={`relative bg-[#F8FAF8] w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${view === 'review' ? 'h-[95vh]' : 'max-h-[85vh]'}`}>
+
+        {/* Header */}
+        <div className="px-8 py-5 border-b border-emerald-100 flex items-center justify-between shrink-0 bg-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-[#F1FDF3] rounded-lg flex items-center justify-center text-[#005F02]">
+              <FiFileText className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Review eID Application</h2>
+          </div>
+          <button onClick={handleClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all">
+            <FiX className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* LIST VIEW */}
+        {view === 'list' && (
+          <div className="flex flex-col flex-1 min-h-0">
+            {/* Toolbar */}
+            <div className="px-8 py-6 bg-white border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
+              <div className="flex items-center gap-2">
+                <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-all">
+                  Sort by Date <IoIosArrowDown className="text-gray-400" />
+                </button>
+                <div className="h-8 w-px bg-gray-200 mx-2" />
+                <div className="flex items-center gap-2 p-1 bg-gray-50 rounded-xl border border-gray-100">
+                  {[['all','All'],['pending','Pending'],['under_review','Under Review']].map(([v, l]) => (
+                    <button key={v} onClick={() => setStatusFilter(v)}
+                      className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${
+                        statusFilter === v ? 'bg-white text-gray-900 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700'
+                      }`}>{l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="relative w-full md:w-64">
+                <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
+                <input type="text" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)}
+                  className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/10 focus:border-[#005F02] transition-all" />
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-8 py-6">
+              {isLoading ? (
+                <div className="flex justify-center py-20"><FiLoader className="w-10 h-10 text-[#005F02] animate-spin" /></div>
+              ) : applications.length === 0 ? (
+                <div className="text-center py-20 text-gray-400 flex flex-col items-center gap-3">
+                  <FiInfo className="w-12 h-12 opacity-20" />
+                  <p className="font-medium text-sm">{search ? 'No matching applications.' : 'No pending applications.'}</p>
+                </div>
+              ) : applications.map((app) => (
+                <ApplicantCard key={app.id} app={app} onReview={handleReview} />
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="px-8 py-5 border-t border-gray-100 bg-white flex justify-end shrink-0">
+               <button onClick={handleClose} className="px-8 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">Close</button>
+            </div>
+          </div>
+        )}
+
+        {/* REVIEW VIEW */}
+        {view === 'review' && selectedApp && (
+          <div className="flex flex-col flex-1 min-h-0">
+            {/* Review Header Detail */}
+            <div className="px-8 py-4 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
+              <span className="text-sm font-medium text-gray-500">Application #<span className="font-bold text-gray-900">{selectedApp.reference_number || selectedApp.id?.slice(0, 8).toUpperCase()}</span></span>
+              <button onClick={handleReject} className="px-5 py-2.5 rounded-lg border border-red-100 text-red-600 text-sm font-bold hover:bg-red-50 transition-all flex items-center gap-2 shadow-sm">
+                Reject Application
+              </button>
+            </div>
+
+            {/* Step indicator */}
+            <div className="px-8 pt-6 pb-4 bg-white shrink-0">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-gray-800">Review Progress</span>
+                <span className="text-xs font-bold text-gray-400">{currentStep} of 5</span>
+              </div>
+              <div className="h-2 w-full bg-gray-100 rounded-full mb-8 overflow-hidden">
+                <div className="h-full bg-black rounded-full transition-all duration-500" style={{ width: `${(currentStep / 5) * 100}%` }} />
+              </div>
+
+              <div className="flex items-center justify-between relative px-2">
+                {STEPS.map((step, i) => {
+                  const active = step.id === currentStep;
+                  const done   = step.id < currentStep;
+                  const Icon   = step.icon;
+                  return (
+                    <div key={step.id} className="flex flex-col items-center gap-3 z-10">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
+                        active ? 'bg-[#005F02] text-white border-[#005F02]' : done ? 'bg-[#005F02] text-white border-[#005F02]' : 'bg-white text-gray-300 border-gray-100 shadow-sm'
+                      }`}>
+                        {done ? <FiCheck className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
+                      </div>
+                      <span className={`text-[10px] font-bold text-center max-w-[80px] leading-tight ${active ? 'text-[#005F02]' : 'text-gray-400'}`}>
+                        {step.label}
+                      </span>
+                    </div>
+                  );
+                })}
+                {/* Connector lines */}
+                <div className="absolute top-6 left-10 right-10 h-px bg-gray-100 -z-10" />
+              </div>
+            </div>
+
+            {/* Step Content Area */}
+            <div className="flex-1 overflow-y-auto px-8 py-8 bg-[#F8FAF8]">
+              {currentStep === 1 && <Step1Content app={selectedApp} />}
+              {currentStep === 2 && <Step2Content app={selectedApp} />}
+              {currentStep === 3 && <Step3Content app={selectedApp} />}
+              {currentStep === 4 && <Step4Content app={selectedApp} issuedEidNumber={issuedEidNumber} setIssuedEidNumber={setIssuedEidNumber} />}
+              {currentStep === 5 && <Step5Content app={selectedApp} issuedEidNumber={issuedEidNumber} />}
+            </div>
+
+            {/* Action Bar */}
+            <div className="px-8 py-6 bg-white border-t border-gray-100 flex items-center justify-between shrink-0">
+              <button
+                disabled={currentStep === 1}
+                onClick={() => {
+                  const prevStep = currentStep - 1;
+                  setCurrentStep(prevStep);
+                  updateStatus.mutate({ id: selectedApp.id, status: 'under_review', currentStep: prevStep });
+                }}
+                className="px-8 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              >
+                Previous
+              </button>
+              <div className="flex items-center gap-3">
+                <button onClick={handleClose} className="px-8 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">
+                  Close
+                </button>
+                <button
+                  onClick={currentStep === 5 ? handleApproveAndNotify : handleNext}
+                  disabled={isIssuing}
+                  className={`px-8 py-3 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95 ${
+                    currentStep === 5 ? 'bg-[#005F02] text-white hover:bg-[#004A01]' : 'bg-black text-white hover:bg-gray-800'
+                  }`}
+                >
+                  {(isIssuing) && <FiLoader className="w-4 h-4 animate-spin" />}
+                  {currentStep === 5 ? 'Approve & Notify' : 'Next Step'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
   );
 }

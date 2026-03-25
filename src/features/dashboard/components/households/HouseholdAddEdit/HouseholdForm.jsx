@@ -20,14 +20,18 @@ const addonInputClass =
   'flex-1 px-4 py-2.5 bg-white focus:outline-none text-gray-900 text-base placeholder-gray-400';
 
 export default function HouseholdForm({ value = {}, onChange, householdNo = '' }) {
+  // Single atomic update — merges multiple field changes into one onChange call
+  // to avoid the stale-closure bug where sequential update() calls each spread
+  // the original `value` and the last one wins.
+  const updateMany = (fields) => onChange?.({ ...value, ...fields });
   const update = (field, val) => onChange?.({ ...value, [field]: val });
 
   const { data: residentOptions = [], isLoading: residentsLoading } = useActiveResidents();
 
+  const members = value.members ?? [];
+
   // ── Head of Household — searchable text input ────────────────
-  const [headSearch, setHeadSearch] = useState(
-    () => residentOptions.find((r) => r.value === value.headResidentId)?.label ?? ''
-  );
+  const [headSearch, setHeadSearch] = useState('');
   const [showHeadDropdown, setShowHeadDropdown] = useState(false);
   const [headMenuStyles, setHeadMenuStyles] = useState(null);
   const headRef = useRef(null);
@@ -47,24 +51,32 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
     });
   }, []);
 
-  // Keep headSearch label in sync when residentOptions load after mount
+  // Keep headSearch label in sync when residentOptions load or headResidentId is set
+  // (especially important in Edit mode where headResidentId comes from initialData)
   useEffect(() => {
-    if (value.headResidentId && !headSearch) {
+    if (value.headResidentId && residentOptions.length > 0) {
       const match = residentOptions.find((r) => r.value === value.headResidentId);
-      if (match) setHeadSearch(match.label);
+      if (match && headSearch !== match.label) {
+        setHeadSearch(match.label);
+      }
+    }
+    // If headResidentId was cleared externally, clear the search text too
+    if (!value.headResidentId && headSearch) {
+      setHeadSearch('');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [residentOptions]);
+  }, [value.headResidentId, residentOptions]);
 
   useEffect(() => {
     function handleClickOutside(e) {
       if (headRef.current && !headRef.current.contains(e.target)) {
         setShowHeadDropdown(false);
-        // If input doesn't match a selection, clear it
-        const match = residentOptions.find((r) => r.label === headSearch);
-        if (!match) {
+        // Restore display text to the currently selected head on blur
+        if (value.headResidentId && residentOptions.length > 0) {
+          const currentMatch = residentOptions.find((r) => r.value === value.headResidentId);
+          if (currentMatch) setHeadSearch(currentMatch.label);
+        } else if (!value.headResidentId) {
           setHeadSearch('');
-          update('headResidentId', '');
         }
       }
     }
@@ -81,12 +93,29 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
       window.removeEventListener('resize', updateHeadPosition);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [headSearch, residentOptions, showHeadDropdown, updateHeadPosition]);
+  }, [headSearch, residentOptions, showHeadDropdown, updateHeadPosition, value.headResidentId]);
 
+  // Enhanced search: match name OR resident_no
   const headCandidates = residentOptions.filter((r) =>
-    r.label.toLowerCase().includes(headSearch.toLowerCase())
+    r.label.toLowerCase().includes(headSearch.toLowerCase()) ||
+    (r.residentNo && r.residentNo.toLowerCase().includes(headSearch.toLowerCase()))
   );
+
+  const handleSelectHead = (r) => {
+    // Build the updated members list atomically alongside the new headResidentId.
+    // We must not call update() twice — each call spreads the original `value`
+    // object so the second call would overwrite the first change.
+    const currentMembers = value.members ?? [];
+    let updatedMembers = currentMembers;
+    if (!updatedMembers.some((m) => m.id === r.value)) {
+      updatedMembers = [...updatedMembers, { id: r.value, name: r.label }];
+    }
+
+    // Single atomic onChange with both fields merged
+    updateMany({ headResidentId: r.value, members: updatedMembers });
+    setHeadSearch(r.label);
+    setShowHeadDropdown(false);
+  };
 
   // ── Members — searchable input, head excluded ────────────────
   const [memberSearch, setMemberSearch] = useState('');
@@ -130,14 +159,12 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
     };
   }, [showMemberDropdown, updateMemberPosition]);
 
-  const members = value.members ?? [];
-
-  // Exclude: already a member, already the selected head
+  // Exclude residents already added as members from the search candidates
   const memberCandidates = residentOptions.filter(
     (r) =>
-      r.value !== value.headResidentId &&
       !members.some((m) => m.id === r.value) &&
-      r.label.toLowerCase().includes(memberSearch.toLowerCase())
+      (r.label.toLowerCase().includes(memberSearch.toLowerCase()) ||
+       (r.residentNo && r.residentNo.toLowerCase().includes(memberSearch.toLowerCase())))
   );
 
   const handleAddMember = (resident) => {
@@ -147,6 +174,8 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
   };
 
   const handleRemoveMember = (residentId) => {
+    // The Head of Household cannot be removed from the members list
+    if (residentId === value.headResidentId) return;
     update('members', members.filter((m) => m.id !== residentId));
   };
 
@@ -169,14 +198,14 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
           </div>
         </div>
 
-        {/* Head of Household — searchable input */}
+        {/* Head of Household — searchable input, simple design matching other fields */}
         <div className="flex-1" ref={headRef}>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Head of Household <span className="text-red-500">*</span>
           </label>
           <div className="relative" ref={headInputContainerRef}>
             <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-              <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300">
+              <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300 text-gray-400">
                 <CiUser className="w-6 h-6" />
               </div>
               <input
@@ -185,16 +214,11 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
                 onChange={(e) => {
                   setHeadSearch(e.target.value);
                   setShowHeadDropdown(true);
-                  // Clear selection if user edits the text
-                  if (value.headResidentId) update('headResidentId', '');
                 }}
                 onFocus={() => setShowHeadDropdown(true)}
-                placeholder={residentsLoading ? 'Loading…' : 'Search registered resident…'}
+                placeholder={residentsLoading ? 'Loading…' : 'Search by Name or Resident No.…'}
                 className={addonInputClass}
               />
-              {value.headResidentId && (
-                <MdCheck className="w-5 h-5 text-[#005F02] mr-3 shrink-0" />
-              )}
             </div>
 
             {showHeadDropdown && headSearch && headMenuStyles && createPortal(
@@ -210,15 +234,14 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
                     <button
                       key={r.value}
                       type="button"
-                      onMouseDown={(e) => e.preventDefault()} // prevent blur before click
-                      onClick={() => {
-                        update('headResidentId', r.value);
-                        setHeadSearch(r.label);
-                        setShowHeadDropdown(false);
-                      }}
-                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100 flex items-center justify-between"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => handleSelectHead(r)}
+                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100 flex items-center justify-between group"
                     >
-                      {r.label}
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-900">{r.label}</span>
+                        <span className="text-[10px] text-gray-400 font-mono">{r.residentNo || 'No ID'}</span>
+                      </div>
                       {value.headResidentId === r.value && (
                         <MdCheck className="w-5 h-5 text-[#005F02] shrink-0" />
                       )}
@@ -301,40 +324,56 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
       </div>
 
       {/* Members */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <label className="block text-sm font-medium text-gray-700">Members</label>
-          <span className="text-sm font-medium text-gray-600">{members.length}</span>
+      <div className="border-t border-gray-100 pt-6">
+        <div className="flex items-center justify-between mb-4">
+          <label className="block text-sm font-bold text-gray-900 uppercase tracking-wider">Members</label>
+          <span className="bg-[#005F02]/10 text-[#005F02] text-xs font-black px-2.5 py-1 rounded-full">{members.length}</span>
         </div>
 
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2 mb-6">
           {members.length === 0 && (
-            <p className="text-sm text-gray-400 py-2">No members added yet.</p>
+            <p className="text-sm text-gray-400 py-4 text-center border-2 border-dashed border-gray-100 rounded-lg">No members added yet.</p>
           )}
-          {members.map((member) => (
-            <div
-              key={member.id}
-              className="flex items-center gap-3 rounded-lg border border-gray-200"
-            >
-              <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r text-[#005F02] border-gray-300">
-                <CiUser className="w-6 h-6" />
-              </div>
-              <span className="flex-1 text-sm text-gray-700">{member.name}</span>
-              <button
-                type="button"
-                onClick={() => handleRemoveMember(member.id)}
-                className="p-1.5 text-gray-500 rounded-lg transition-colors"
-                aria-label="Remove member"
+          {members.map((member) => {
+            const isHead = member.id === value.headResidentId;
+            return (
+              <div
+                key={member.id}
+                className={`flex items-center gap-3 rounded-lg border transition-all ${isHead ? 'bg-emerald-50/30 border-emerald-100 shadow-sm' : 'border-gray-200 bg-white'}`}
               >
-                <FaRegTrashCan className="w-5 h-5 hover:text-red-500 transition-colors" />
-              </button>
-            </div>
-          ))}
+                <div className={`bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300 ${isHead ? 'text-[#005F02]' : 'text-gray-400'}`}>
+                  <CiUser className="w-6 h-6" />
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <span className="text-sm font-semibold text-gray-900 truncate">{member.name}</span>
+                  {isHead && <span className="text-[10px] text-[#005F02] font-black uppercase tracking-widest">Head of Household</span>}
+                </div>
+                {/* Head of Household cannot be removed — only non-head members show the delete button */}
+                {isHead ? (
+                  <div className="p-3 text-emerald-600 opacity-50 mr-1" title="Head of Household cannot be removed">
+                    <MdCheck className="w-6 h-6" />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveMember(member.id)}
+                    className="p-3 text-gray-400 hover:text-red-500 transition-colors mr-1"
+                    aria-label="Remove member"
+                  >
+                    <FaRegTrashCan className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Add member search */}
         <div className="relative" ref={memberRef}>
           <div className="relative" ref={memberInputContainerRef}>
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+               <CiUser className="w-5 h-5" />
+            </div>
             <input
               type="text"
               value={memberSearch}
@@ -343,8 +382,8 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
                 setShowMemberDropdown(true);
               }}
               onFocus={() => setShowMemberDropdown(true)}
-              placeholder="Search registered resident to add…"
-              className={inputClass}
+              placeholder="Search by Name or Resident No. to add…"
+              className={`${inputClass} pl-11`}
             />
           </div>
           {showMemberDropdown && memberSearch && memberMenuStyles && createPortal(
@@ -362,9 +401,10 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleAddMember(r)}
-                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100"
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100 flex flex-col border-b border-gray-50 last:border-0"
                   >
-                    {r.label}
+                    <span className="font-medium text-gray-900">{r.label}</span>
+                    <span className="text-[10px] text-gray-400 font-mono">{r.residentNo || 'No ID'}</span>
                   </button>
                 ))
               )}
@@ -375,4 +415,4 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
       </div>
     </div>
   );
-}
+}

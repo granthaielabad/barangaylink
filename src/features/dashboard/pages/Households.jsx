@@ -9,7 +9,8 @@ import { useHouseholdFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
-import { HOUSEHOLD_STATUS_OPTIONS } from '../../../core/constants';
+import { HOUSEHOLD_STATUS_OPTIONS, SORT_FIELDS } from '../../../core/constants';
+import toast from 'react-hot-toast';
 
 export default function Household() {
   const [sidebarOpen, setSidebarOpen]           = useState(false);
@@ -158,7 +159,7 @@ export default function Household() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                 <SearchBox value={search} onChange={(v) => { setSearch(v); setPage(1); }} placeholder="Search" />
                 <div className="flex items-center gap-2 flex-wrap">
-                  <SortFilter value={sortBy} onChange={setSortBy} />
+                  <SortFilter value={sortBy} onChange={setSortBy} options={SORT_FIELDS.HOUSEHOLDS} />
                   <StatusFilter value={status} onChange={(v) => { setStatus(v); setPage(1); }} options={HOUSEHOLD_STATUS_OPTIONS} />
                   <OrderFilter value={order} onChange={setOrder} />
                 </div>

@@ -622,7 +622,7 @@ export default function ResidentEIdPage() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between py-1">
                 <span className="text-gray-500">Application Number:</span>
-                <span className="font-semibold font-mono">{application.id?.slice(0, 12).toUpperCase()}</span>
+                <span className="font-semibold font-mono">{application.reference_number || application.id?.slice(0, 8).toUpperCase()}</span>
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-gray-500">Submitted on:</span>
