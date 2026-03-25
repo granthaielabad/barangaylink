@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { FiLogOut, FiMenu } from 'react-icons/fi';
+import { FiLogOut, FiMenu, FiBell } from 'react-icons/fi';
+import NotificationDropdown from './Notifications/NotificationDropdown';
+import { adminNotifications, residentNotifications } from '../data/notificationsData';
+import { useAuth } from '../../../hooks/auth/useAuth';
 
 export default function DashboardHeader({
   title = 'Dashboard',
@@ -8,8 +11,15 @@ export default function DashboardHeader({
   onLogout,
   onMenuToggle,
 }) {
+  const { isSuperadmin, isStaff } = useAuth();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  
+  const notifications = (isSuperadmin || isStaff) ? adminNotifications : residentNotifications;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
   const cancelBtnRef = useRef(null);
+
 
   useEffect(() => {
     if (showConfirm && cancelBtnRef.current) {
@@ -51,6 +61,35 @@ export default function DashboardHeader({
           <div className="text-xs text-gray-500">{userRole}</div>
         </div>
 
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowNotifications(!showNotifications)}
+            onMouseDown={(e) => e.stopPropagation()}
+            aria-label="View Notifications"
+            title="Notifications"
+            className={`
+              inline-flex items-center justify-center
+              w-9 h-9
+              rounded-md
+              hover:text-red-600
+              focus:outline-none
+              transition-colors
+              ${showNotifications ? 'bg-gray-100 text-[#005F02]' : 'text-gray-700'}
+            `}
+          >
+            <FiBell className="w-6 h-6" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+          {showNotifications && (
+            <NotificationDropdown onClose={() => setShowNotifications(false)} />
+          )}
+        </div>
+
         <button
           type="button"
           onClick={handleOpen}
@@ -61,7 +100,7 @@ export default function DashboardHeader({
             w-9 h-9
             rounded-md
             hover:text-red-600
-            focus:outline-none focus:ring-1 focus:ring-red-500/50
+            focus:outline-none 
             transition-colors
           "
         >

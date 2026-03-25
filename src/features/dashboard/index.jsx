@@ -7,9 +7,12 @@ export { default as Eid }                  from './pages/Eid';
 export { default as QRVerification }       from './pages/QRVerification';
 export { default as RequestPage }          from './pages/RequestPage';
 export { default as UserAccount }          from './pages/UserAccount';
+export { default as NotificationPage }     from './pages/NotificationPage';
 
 // Resident Portal
 export { default as ResidentPortalLayout } from './pages/ResidentPortal';
 export { default as ResidentProfilePage }  from './pages/ResidentProfilePage';
 export { default as ResidentEIdPage }      from './pages/ResidentEIdPage';
 export { default as ResidentRequestPage }  from './pages/ResidentRequestPage';
+export { default as ResidentNotificationPage } from './pages/ResidentNotificationPage';
+
