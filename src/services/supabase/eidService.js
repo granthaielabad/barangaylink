@@ -118,7 +118,6 @@ export async function verifyQrToken({ token, method = 'qr_scan' }) {
   else if (eid.status === 'suspended') result = 'invalid';
   else if (eid.expires_at && new Date(eid.expires_at) < new Date()) result = 'expired';
 
-  // Get current user so we can log who performed the verification
   const { data: { user } } = await supabase.auth.getUser();
   await supabase.from('qr_verifications').insert({
     eid_id: eid.id,
@@ -132,14 +131,14 @@ export async function verifyQrToken({ token, method = 'qr_scan' }) {
 
 // ── eID Applications (admin side) ────────────────────────────────────────────
 
-export async function getEidApplications({ page = 1, pageSize = 10, status = 'all' } = {}) {
+export async function getEidApplications({ page = 1, pageSize = 10, status = 'all', sortOrder = 'desc' } = {}) {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
 
   let query = supabase
     .from('eid_applications')
     .select(`
-      id, type, status, submitted_at, reviewed_at, remarks, current_step,
+      id, resident_id, type, status, submitted_at, reviewed_at, remarks, current_step,
       reference_number, valid_id_type, valid_id_url,
       first_name, last_name, middle_name, suffix,
       date_of_birth, sex, address_line, contact_number, email,
@@ -153,7 +152,7 @@ export async function getEidApplications({ page = 1, pageSize = 10, status = 'al
       reviewed_by_profile:profiles!eid_applications_reviewed_by_fkey ( full_name )
     `, { count: 'exact' })
     .range(from, to)
-    .order('submitted_at', { ascending: false });
+    .order('submitted_at', { ascending: sortOrder === 'asc' });
 
   if (status !== 'all') query = query.eq('status', status);
 
@@ -195,12 +194,13 @@ export async function updateEidApplicationStatus(id, status, remarks = null, cur
 }
 
 /**
- * Approve an application: update status to 'approved' then issue the eID.
- * Reuses the existing issueEid Edge Function.
+ * Approve an application: mark status approved then call the issue-eid Edge Function.
+ * residentId comes from the application's resident_id field (now always fetched).
  */
 export async function approveEidApplication(applicationId, residentId, photoUrl) {
+  if (!residentId) throw new Error('resident_id is required to issue an eID');
   // 1. Mark application approved
   await updateEidApplicationStatus(applicationId, 'approved');
-  // 2. Issue the eID (uploads photo if provided, calls Edge Function)
-  return issueEid(residentId, photoUrl);
+  // 2. Issue the eID via Edge Function
+  return issueEid(residentId, photoUrl ?? null);
 }

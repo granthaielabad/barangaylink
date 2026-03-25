@@ -70,7 +70,6 @@ export const SORT_FIELDS = {
   ],
   HOUSEHOLDS: [
     { value: 'household_no', label: 'Household No.' },
-    { value: 'house_no',     label: 'House No.' },
     { value: 'created_at',   label: 'Date Added' },
   ],
   EIDS: [

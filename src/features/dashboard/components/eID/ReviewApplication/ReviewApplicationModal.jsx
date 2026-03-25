@@ -4,9 +4,8 @@ import {
   FiX, FiFileText, FiUser, FiMapPin, FiCreditCard, FiBell,
   FiCheck, FiChevronLeft, FiChevronRight, FiCheckCircle,
   FiZoomIn, FiInfo, FiSearch, FiLoader, FiExternalLink,
+  FiChevronDown, FiChevronUp,
 } from 'react-icons/fi';
-import { IoIosArrowDown } from 'react-icons/io';
-import { MdCheck } from 'react-icons/md';
 import {
   useEidApplications,
   useMutateEidApplication,
@@ -127,7 +126,7 @@ function ApplicantCard({ app, onReview }) {
             </div>
           </div>
 
-          {/* Progress bar area */}
+          {/* Progress bar */}
           <div className="mt-6 pt-4 border-t border-gray-100">
             <div className="flex items-center gap-3 text-xs mb-2">
               <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden flex gap-0.5">
@@ -146,15 +145,9 @@ function ApplicantCard({ app, onReview }) {
             <div className="flex items-center justify-between">
               <p className={`text-[11px] font-bold flex items-center gap-1.5 ${isComplete ? 'text-[#005F02]' : 'text-blue-600'}`}>
                 {isComplete ? (
-                  <>
-                    <FiCheckCircle className="w-3.5 h-3.5" />
-                    All verification steps completed - Ready for final approval
-                  </>
+                  <><FiCheckCircle className="w-3.5 h-3.5" />All verification steps completed - Ready for final approval</>
                 ) : (
-                  <>
-                    <FiCheckCircle className="w-3.5 h-3.5 text-blue-300" />
-                    Currently at: {STEPS[currentStep - 1]?.label}
-                  </>
+                  <><FiCheckCircle className="w-3.5 h-3.5 text-blue-300" />Currently at: {STEPS[currentStep - 1]?.label}</>
                 )}
               </p>
               <p className="text-[10px] text-gray-400 font-medium">
@@ -173,7 +166,6 @@ function ApplicantCard({ app, onReview }) {
   );
 }
 
-// ─── Step Content ─────────────────────────────────────────────────────────────
 function Step1Content({ app }) {
   const [zoomed, setZoomed] = useState(false);
   const resident = app.residents || {};
@@ -389,10 +381,7 @@ function Step4Content({ app, issuedEidNumber, setIssuedEidNumber }) {
         <p className="text-[11px] text-gray-400 max-w-xs mx-auto mb-6">
           This unique identifier will be permanently associated with {fullName(app)}
         </p>
-        <button
-          onClick={regenerate}
-          className="px-6 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
-        >
+        <button onClick={regenerate} className="px-6 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors">
           Regenerate eID
         </button>
       </div>
@@ -488,8 +477,10 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
   const [isIssuing,       setIsIssuing]       = useState(false);
   const [search,          setSearch]          = useState('');
   const [statusFilter,    setStatusFilter]    = useState('pending');
+  // Sort state: 'desc' = newest first (default), 'asc' = oldest first
+  const [sortOrder,       setSortOrder]       = useState('desc');
 
-  const { data, isLoading } = useEidApplications({ page: 1, pageSize: 50, status: statusFilter });
+  const { data, isLoading } = useEidApplications({ page: 1, pageSize: 50, status: statusFilter, sortOrder });
   const { updateStatus, approve } = useMutateEidApplication();
 
   const applications = (data?.data ?? [])
@@ -520,15 +511,6 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
   };
 
   const handleNext = async () => {
-    if (currentStep === 4 && !issuedEidNumber) {
-      // Step 4 logic: Finalize if we have an eID number
-      // Actually, image 4 shows "Next Step" leading to Step 5.
-      // We issue the eID in Step 5 "Approve & Notify".
-      const nextStep = 5;
-      setCurrentStep(nextStep);
-      updateStatus.mutate({ id: selectedApp.id, status: 'under_review', currentStep: nextStep });
-      return;
-    }
     if (currentStep < 5) {
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
@@ -545,6 +527,10 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
   };
 
   const handleApproveAndNotify = async () => {
+    if (!selectedApp?.resident_id) {
+      toast.error('Cannot approve: resident ID is missing from this application.');
+      return;
+    }
     setIsIssuing(true);
     try {
       await approve.mutateAsync({
@@ -560,6 +546,8 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
       setIsIssuing(false);
     }
   };
+
+  const toggleSortOrder = () => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'));
 
   if (!isOpen) return null;
 
@@ -587,8 +575,16 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
             {/* Toolbar */}
             <div className="px-8 py-6 bg-white border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
-                <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-all">
-                  Sort by Date <IoIosArrowDown className="text-gray-400" />
+                {/* Sort by Date — now functional */}
+                <button
+                  onClick={toggleSortOrder}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-all"
+                >
+                  Sort by Date
+                  {sortOrder === 'desc'
+                    ? <FiChevronDown className="text-gray-400 w-4 h-4" />
+                    : <FiChevronUp   className="text-gray-400 w-4 h-4" />
+                  }
                 </button>
                 <div className="h-8 w-px bg-gray-200 mx-2" />
                 <div className="flex items-center gap-2 p-1 bg-gray-50 rounded-xl border border-gray-100">
@@ -624,7 +620,7 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
 
             {/* Footer */}
             <div className="px-8 py-5 border-t border-gray-100 bg-white flex justify-end shrink-0">
-               <button onClick={handleClose} className="px-8 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">Close</button>
+              <button onClick={handleClose} className="px-8 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">Close</button>
             </div>
           </div>
         )}
@@ -632,7 +628,7 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
         {/* REVIEW VIEW */}
         {view === 'review' && selectedApp && (
           <div className="flex flex-col flex-1 min-h-0">
-            {/* Review Header Detail */}
+            {/* Review Header */}
             <div className="px-8 py-4 bg-white border-b border-gray-100 flex items-center justify-between shrink-0">
               <span className="text-sm font-medium text-gray-500">Application #<span className="font-bold text-gray-900">{selectedApp.reference_number || selectedApp.id?.slice(0, 8).toUpperCase()}</span></span>
               <button onClick={handleReject} className="px-5 py-2.5 rounded-lg border border-red-100 text-red-600 text-sm font-bold hover:bg-red-50 transition-all flex items-center gap-2 shadow-sm">
@@ -651,14 +647,14 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
               </div>
 
               <div className="flex items-center justify-between relative px-2">
-                {STEPS.map((step, i) => {
+                {STEPS.map((step) => {
                   const active = step.id === currentStep;
                   const done   = step.id < currentStep;
                   const Icon   = step.icon;
                   return (
                     <div key={step.id} className="flex flex-col items-center gap-3 z-10">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
-                        active ? 'bg-[#005F02] text-white border-[#005F02]' : done ? 'bg-[#005F02] text-white border-[#005F02]' : 'bg-white text-gray-300 border-gray-100 shadow-sm'
+                        active || done ? 'bg-[#005F02] text-white border-[#005F02]' : 'bg-white text-gray-300 border-gray-100 shadow-sm'
                       }`}>
                         {done ? <FiCheck className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
                       </div>
@@ -668,12 +664,11 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
                     </div>
                   );
                 })}
-                {/* Connector lines */}
                 <div className="absolute top-6 left-10 right-10 h-px bg-gray-100 -z-10" />
               </div>
             </div>
 
-            {/* Step Content Area */}
+            {/* Step Content */}
             <div className="flex-1 overflow-y-auto px-8 py-8 bg-[#F8FAF8]">
               {currentStep === 1 && <Step1Content app={selectedApp} />}
               {currentStep === 2 && <Step2Content app={selectedApp} />}
@@ -706,7 +701,7 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
                     currentStep === 5 ? 'bg-[#005F02] text-white hover:bg-[#004A01]' : 'bg-black text-white hover:bg-gray-800'
                   }`}
                 >
-                  {(isIssuing) && <FiLoader className="w-4 h-4 animate-spin" />}
+                  {isIssuing && <FiLoader className="w-4 h-4 animate-spin" />}
                   {currentStep === 5 ? 'Approve & Notify' : 'Next Step'}
                 </button>
               </div>

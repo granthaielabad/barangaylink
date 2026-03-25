@@ -1,12 +1,14 @@
 import React from 'react';
 import { FaAddressCard, FaUserAltSlash, FaUserCheck } from 'react-icons/fa';
 import { FaClock } from 'react-icons/fa6';
+import { MdOutlineRateReview } from 'react-icons/md';
 
 export default function EidOverview({ stats }) {
   const {
     total = 0,
     active = 0,
     pending = 0,
+    underReview = 0,
     deactivated = 0,
   } = stats || {};
 
@@ -36,6 +38,14 @@ export default function EidOverview({ stats }) {
       textClass: 'text-[#C58F00]',
     },
     {
+      label: 'Under Review',
+      value: underReview,
+      icon: MdOutlineRateReview,
+      containerClass: 'bg-[#E3F2FD] border-[#90CAF9]',
+      iconBgClass: 'text-[#1E88E5]',
+      textClass: 'text-[#1565C0]',
+    },
+    {
       label: 'Deactivated',
       value: deactivated,
       icon: FaUserAltSlash,
@@ -48,8 +58,11 @@ export default function EidOverview({ stats }) {
   return (
     <section className="mb-6">
       <div className="bg-white rounded-2xl border border-[#CFE8CF] px-4 py-3">
-        <h2 className="text-2xl font-semibold text-[#0B3D10] mb-4 mx-5">eID Overview</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mx-5">
+        <h2 className="text-2xl font-semibold text-[#0B3D10] mb-4 mx-5">
+          eID Overview
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mx-5">
           {items.map((item) => {
             const Icon = item.icon;
             return (
@@ -62,7 +75,10 @@ export default function EidOverview({ stats }) {
                 >
                   <Icon className="w-5 h-5 xl:w-7 xl:h-7" />
                 </div>
-                <div className={`text-sm md:text-sm xl:text-lg font-semibold ${item.textClass}`}>
+
+                <div
+                  className={`text-sm md:text-sm xl:text-lg font-semibold ${item.textClass}`}
+                >
                   <span className="mr-1">{item.label}:</span>
                   <span>{item.value.toLocaleString()}</span>
                 </div>

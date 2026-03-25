@@ -104,8 +104,8 @@ export function useMutateEid() {
 }
 
 // ── eID Applications ──────────────────────────────────────────────────────────
-export function useEidApplications({ page = 1, pageSize = 10, status = 'all' } = {}) {
-  const params = { page, pageSize, status };
+export function useEidApplications({ page = 1, pageSize = 10, status = 'all', sortOrder = 'desc' } = {}) {
+  const params = { page, pageSize, status, sortOrder };
   return useQuery({
     queryKey:        appKeys.list(params),
     queryFn:         () => getEidApplications(params),
@@ -145,12 +145,10 @@ export function useMutateEidApplication() {
   const approve = useMutation({
     mutationFn: ({ applicationId, residentId, photoUrl }) =>
       approveEidApplication(applicationId, residentId, photoUrl),
-    // onSuccess fires AFTER mutateAsync resolves — result is returned to caller
     onSuccess:  () => { invalidate(); toast.success('Application approved — eID issued!'); },
     onError:    (err) => toast.error(err.message ?? 'Failed to approve application.'),
   });
 
-  // Keep setUnderReview as alias for backwards compatibility
   const setUnderReview = useMutation({
     mutationFn: (id) => updateEidApplicationStatus(id, 'under_review'),
     onSuccess:  () => { invalidate(); },

@@ -41,7 +41,9 @@ export default function Eid() {
   const { data: appStats }   = useEidApplicationStats();
   const { issue, suspend, remove } = useMutateEid();
 
-  const pendingCount  = appStats?.pending ?? 0;
+  const pendingCount     = appStats?.pending      ?? 0;
+  const underReviewCount = appStats?.under_review ?? 0;
+
   const eids          = data?.data        ?? [];
   const totalPages    = data?.totalPages  ?? 1;
   const totalEntries  = data?.total       ?? 0;
@@ -75,6 +77,7 @@ export default function Eid() {
     total:       stats?.total                                  ?? 0,
     active:      stats?.active                                 ?? 0,
     pending:     pendingCount,
+    underReview: underReviewCount,
     deactivated: (stats?.suspended ?? 0) + (stats?.revoked ?? 0),
   };
 
@@ -133,9 +136,9 @@ export default function Eid() {
                   className="relative inline-flex justify-center items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium border border-[#E6C36A] bg-white text-[#C58F00] hover:bg-amber-50 transition-colors"
                 >
                   Review Applications
-                  {pendingCount > 0 && (
+                  {(pendingCount + underReviewCount) > 0 && (
                     <span className="bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none">
-                      {pendingCount}
+                      {pendingCount + underReviewCount}
                     </span>
                   )}
                 </button>
@@ -209,7 +212,6 @@ export default function Eid() {
         mode={eidFormMode}
       />
 
-      {/* Deactivate confirmation */}
       <DeactiveModal
         isOpen={deactivateModalOpen}
         title="eID"
@@ -218,7 +220,6 @@ export default function Eid() {
         onCancel={() => { setDeactivateModalOpen(false); setSelectedEid(null); }}
       />
 
-      {/* Delete confirmation */}
       <DeleteModal
         isOpen={deleteModalOpen}
         title="eID"
@@ -227,7 +228,6 @@ export default function Eid() {
         onCancel={() => { setDeleteModalOpen(false); setSelectedEid(null); }}
       />
 
-      {/* Review Applications modal (real DB data) */}
       <ReviewApplicationModal
         isOpen={reviewModalOpen}
         onClose={() => setReviewModalOpen(false)}
