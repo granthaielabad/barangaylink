@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { FiLogOut, FiMenu, FiBell } from 'react-icons/fi';
 import NotificationDropdown from './Notifications/NotificationDropdown';
-import { adminNotifications, residentNotifications } from '../data/notificationsData';
-import { useAuth } from '../../../hooks/auth/useAuth';
+import { useNotifications } from '../../../hooks/queries/notifications/useNotifications';
 
 export default function DashboardHeader({
   title = 'Dashboard',
@@ -11,15 +10,15 @@ export default function DashboardHeader({
   onLogout,
   onMenuToggle,
 }) {
-  const { isSuperadmin, isStaff } = useAuth();
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirm,      setShowConfirm]      = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  
-  const notifications = (isSuperadmin || isStaff) ? adminNotifications : residentNotifications;
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  // Real unread count from DB — works for both admin and resident
+  // since getNotifications is scoped to auth.uid()
+  const { data: notifications = [] } = useNotifications();
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const cancelBtnRef = useRef(null);
-
 
   useEffect(() => {
     if (showConfirm && cancelBtnRef.current) {
@@ -27,8 +26,8 @@ export default function DashboardHeader({
     }
   }, [showConfirm]);
 
-  const handleOpen = () => setShowConfirm(true);
-  const handleClose = () => setShowConfirm(false);
+  const handleOpen    = () => setShowConfirm(true);
+  const handleClose   = () => setShowConfirm(false);
 
   const handleConfirm = async () => {
     try {
@@ -41,7 +40,6 @@ export default function DashboardHeader({
   return (
     <header className="h-16 lg:h-21 bg-white border-b border-gray-200 px-4 lg:px-8 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        {/* Hamburger — mobile only */}
         {onMenuToggle && (
           <button
             type="button"
@@ -100,7 +98,7 @@ export default function DashboardHeader({
             w-9 h-9
             rounded-md
             hover:text-red-600
-            focus:outline-none 
+            focus:outline-none
             transition-colors
           "
         >
@@ -128,25 +126,20 @@ function ConfirmModal({
   title,
   message,
   confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  cancelLabel  = 'Cancel',
   onConfirm,
   onCancel,
   initialFocusRef,
 }) {
-  // Close on Escape
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onCancel?.();
-    };
+    const onKey = (e) => { if (e.key === 'Escape') onCancel?.(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onCancel]);
 
   const panelRef = useRef(null);
   const onBackdropClick = (e) => {
-    if (panelRef.current && !panelRef.current.contains(e.target)) {
-      onCancel?.();
-    }
+    if (panelRef.current && !panelRef.current.contains(e.target)) onCancel?.();
   };
 
   return (
@@ -157,13 +150,10 @@ function ConfirmModal({
       aria-labelledby="confirm-title"
       onMouseDown={onBackdropClick}
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" />
-
-      {/* Panel */}
       <div
         ref={panelRef}
-        className="relative bg-white w-[90%] max-w-sm rounded-xl shadow-xl p-6 animate-in fade-in zoom-in duration-150 "
+        className="relative bg-white w-[90%] max-w-sm rounded-xl shadow-xl p-6 animate-in fade-in zoom-in duration-150"
       >
         <h2 id="confirm-title" className="text-lg font-semibold text-gray-900">
           {title}

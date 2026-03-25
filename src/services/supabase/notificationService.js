@@ -1,5 +1,39 @@
 import { supabase } from './client';
 
+// ── Relative timestamp formatter ──────────────────────────────────────────────
+// Converts a DB timestamp string → "2 mins ago", "3 hrs ago", "Mar 12, 4:21 PM"
+export function formatTimestamp(isoString) {
+  if (!isoString) return '';
+  const now  = Date.now();
+  const then = new Date(isoString).getTime();
+  const diff = Math.floor((now - then) / 1000); // seconds
+
+  if (diff < 60)           return 'Just now';
+  if (diff < 3600)         return `${Math.floor(diff / 60)} min${Math.floor(diff / 60) === 1 ? '' : 's'} ago`;
+  if (diff < 86400)        return `${Math.floor(diff / 3600)} hr${Math.floor(diff / 3600) === 1 ? '' : 's'} ago`;
+  if (diff < 86400 * 2)    return 'Yesterday';
+
+  return new Date(isoString).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit',
+  });
+}
+
+function toNotification(row) {
+  return {
+    id:         row.id,
+    type:       row.type,
+    message:    row.message,
+    timestamp:  formatTimestamp(row.created_at),
+    attachment: row.attachment ?? null,
+    isRead:     row.is_read,
+    metadata:   row.metadata ?? {},
+    created_at: row.created_at,
+  };
+}
+
+// ── Queries ───────────────────────────────────────────────────────────────────
+
 export async function getNotifications() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
@@ -11,7 +45,7 @@ export async function getNotifications() {
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return data;
+  return (data ?? []).map(toNotification);
 }
 
 export async function markAsRead(id) {
@@ -23,7 +57,7 @@ export async function markAsRead(id) {
     .single();
 
   if (error) throw error;
-  return data;
+  return toNotification(data);
 }
 
 export async function markAllAsRead() {
