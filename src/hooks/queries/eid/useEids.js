@@ -68,6 +68,8 @@ export function useMutateEid() {
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: eidKeys.lists() });
     qc.invalidateQueries({ queryKey: eidKeys.stats() });
+    // Also invalidate resident portal keys
+    qc.invalidateQueries({ queryKey: ['resident-portal'] });
   };
 
   const issue = useMutation({
@@ -127,6 +129,8 @@ export function useMutateEidApplication() {
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: appKeys.all });
     qc.invalidateQueries({ queryKey: eidKeys.all });
+    // Also invalidate resident portal keys so the resident's view updates immediately
+    qc.invalidateQueries({ queryKey: ['resident-portal'] });
   };
 
   const updateStatus = useMutation({

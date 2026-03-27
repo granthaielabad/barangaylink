@@ -194,13 +194,18 @@ export async function updateEidApplicationStatus(id, status, remarks = null, cur
 }
 
 /**
- * Approve an application: mark status approved then call the issue-eid Edge Function.
- * residentId comes from the application's resident_id field (now always fetched).
+ * Approve an application: Issue the eID via Edge Function first, 
+ * then mark status as approved once issuance is successful.
+ * This avoids a race condition where the UI refetches before the eID is created.
  */
 export async function approveEidApplication(applicationId, residentId, photoUrl) {
   if (!residentId) throw new Error('resident_id is required to issue an eID');
-  // 1. Mark application approved
+  
+  // 1. Issue the eID via Edge Function first
+  const eid = await issueEid(residentId, photoUrl ?? null);
+  
+  // 2. Only mark application approved IF issuance succeeded
   await updateEidApplicationStatus(applicationId, 'approved');
-  // 2. Issue the eID via Edge Function
-  return issueEid(residentId, photoUrl ?? null);
+  
+  return eid;
 }
