@@ -1,6 +1,11 @@
+import landingBg from '../assets/images/landing-bg.png';
+
 export default function Background({ children }) {
   return (
-    <section className="relative w-full bg-[url('/src/assets/images/landing-bg.png')] bg-cover bg-center flex items-center justify-center min-h-screen">
+    <section 
+      style={{ backgroundImage: `url(${landingBg})` }}
+      className="relative w-full bg-cover bg-center flex items-center justify-center min-h-screen"
+    >
       {/* Overlay */}
       <div className="absolute inset-0 bg-linear-to-b from-black/40 via-emerald-950/70 to-emerald-980/80"></div>
 

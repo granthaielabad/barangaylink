@@ -1,3 +1,5 @@
+import landingBg from '../assets/images/landing-bg.png';
+
 /**
  * Split layout for Login and SignUp pages:
  * - Top half: background image with dark overlay
@@ -8,7 +10,10 @@ export default function AuthLayout({ header, children }) {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Top half: background image with overlay */}
-      <div className="relative h-[60vh] min-h-[320px] bg-[url('/src/assets/images/landing-bg.png')] bg-cover bg-center">
+      <div 
+        style={{ backgroundImage: `url(${landingBg})` }}
+        className="relative h-[60vh] min-h-[320px] bg-cover bg-center"
+      >
         <div className="absolute inset-0 bg-linear-to-b from-black/40 via-emerald-950/70 to-emerald-980/80" />
       </div>
 

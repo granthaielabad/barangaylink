@@ -1,4 +1,6 @@
 import CheckList from "../../../assets/icons/check-list.svg"
+import aboutUsPic from "../../../assets/images/about-us-pic.png"
+
 export default function About() {
     return (
         <section className="w-full py-16 sm:py-20 lg:py-30 bg-gray-50 px-4 sm:px-8 md:px-20 lg:px-40 mt-16 sm:mt-20 lg:mt-30">
@@ -13,7 +15,7 @@ export default function About() {
 
                 {/* Left Section - Image */}
                 <div className="w-full lg:w-1/2 shrink-0">
-                    <img src="/src/assets/images/about-us-pic.png" alt="About Us" className="w-full h-auto rounded-lg object-cover" loading="lazy" />
+                    <img src={aboutUsPic} alt="About Us" className="w-full h-auto rounded-lg object-cover" loading="lazy" />
                 </div>
 
                 {/* Right Section - Text & Bullet Points */}

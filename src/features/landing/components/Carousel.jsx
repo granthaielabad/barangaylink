@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import slide1 from '../../../assets/images/slides-1.jpg';
+import slide2 from '../../../assets/images/slides-2.png';
 
 export default function Carousel({ images = [] }) {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -8,12 +10,12 @@ export default function Carousel({ images = [] }) {
     const carouselImages = images.length > 0 ? images : [
         {
             id: 1,
-            src: '/src/assets/images/slides-1.jpg',
+            src: slide1,
             alt: 'Barangay Building 1',
         },
         {
             id: 2,
-            src: '/src/assets/images/slides-2.png',
+            src: slide2,
             alt: 'Barangay Building 2',
         }
     ];
