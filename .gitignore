@@ -7,12 +7,27 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+
+# Build output
 dist
 dist-ssr
-*.local
+
+# Environment variables — ALL variants must be ignored
 .env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+.env.*.local
+
+# Supabase
 supabase/.temp
+supabase/functions/.env
 
 # Editor directories and files
 .vscode/*
@@ -24,3 +39,15 @@ supabase/.temp
 *.njsproj
 *.sln
 *.sw?
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# OS
+Thumbs.db
+
+# Local dev / misc
+*.local
+*.pem
