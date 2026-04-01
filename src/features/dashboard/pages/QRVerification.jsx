@@ -8,7 +8,7 @@ import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
 import { useVerifyQr, useQrHistory } from '../../../hooks/queries/qrVerification/useQrVerification';
-import { EIdProfile } from '../components/EId';
+import { EIdProfile } from '../components/eID';
 import toast from 'react-hot-toast';
 
 // ── Helpers ───────────────────────────────────────────────────
