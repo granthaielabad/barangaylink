@@ -28,7 +28,7 @@ export function useNotifications() {
       .channel('notifications-live')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'notifications' },
+        { event: '*', schema: 'barangaylink', table: 'notifications' },
         () => {
           qc.invalidateQueries({ queryKey: notificationKeys.all });
         }

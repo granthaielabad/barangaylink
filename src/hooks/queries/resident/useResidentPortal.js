@@ -51,7 +51,7 @@ export function useMyEidApplication() {
       .channel('eid-application-changes')
       .on('postgres_changes', {
         event:  'UPDATE',
-        schema: 'public',
+        schema: 'barangaylink',
         table:  'eid_applications',
       }, () => {
         qc.invalidateQueries({ queryKey: ['resident-portal', 'eid-application'] });

@@ -89,7 +89,7 @@ export function useMyDocumentRequests() {
     const channel = supabase
       .channel('my-doc-requests-changes')
       .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'document_requests',
+        event: '*', schema: 'barangaylink', table: 'document_requests',
       }, () => {
         qc.invalidateQueries({ queryKey: docReqKeys.mine() });
       })
