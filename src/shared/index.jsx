@@ -16,4 +16,3 @@ export { default as ActionDropdown } from './ActionDropdown';
 export { default as FormSelect } from './FormSelect';
 export { default as ExportButton } from './ExportButton';
 export { default as TabSwitcher } from './TabSwitcher';
-export { default as EIdProfile } from '../features/dashboard/components/EId/EIdProfile';
