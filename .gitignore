@@ -28,6 +28,7 @@ dist-ssr
 # Supabase
 supabase/.temp
 supabase/functions/.env
+supabase/templates/*
 
 # Editor directories and files
 .vscode/*

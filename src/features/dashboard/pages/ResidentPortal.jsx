@@ -5,7 +5,7 @@ import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
 import toast from 'react-hot-toast';
-import { FiUser, FiCreditCard, FiBell } from 'react-icons/fi';
+import { FiUser, FiCreditCard, FiBell, FiMessageSquare } from 'react-icons/fi';
 import { LuFilePen } from "react-icons/lu";
 import LogoDashboard from '../../../assets/images/logo-dashboard.svg';
 
@@ -20,6 +20,7 @@ const NAV_SECTIONS = [
       { to: '/resident-portal/eid',     label: 'eID',              icon: FiCreditCard },
       { to: '/resident-portal/request-certificate', label: 'Request Certificate', icon: LuFilePen },
       { to: '/resident-portal/notifications', label: 'Notifications', icon: FiBell },
+      { to: '/resident-portal/announcements', label: 'Announcements', icon: FiMessageSquare },
     ],
   },
 ];
@@ -123,6 +124,8 @@ export default function ResidentPortal() {
     ? 'Request Certificate'
     : location.pathname.includes('/notifications')
     ? 'Notifications'
+    : location.pathname.includes('/announcements')
+    ? 'Announcements'
     : 'Resident Profile';
 
   const handleLogout = async () => {

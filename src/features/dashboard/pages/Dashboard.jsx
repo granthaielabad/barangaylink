@@ -6,6 +6,7 @@ import { PiUsersThree } from 'react-icons/pi';
 import { IoShieldCheckmarkOutline } from 'react-icons/io5';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
+import AnnouncementsWidget from '../components/Announcements/AnnouncementsWidget';
 import { useDashboardStats, useRecentResidents, useRecentActivity } from '../../../hooks/queries/dashboard/useDashboard';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
@@ -140,7 +141,7 @@ export default function Dashboard() {
           </div>
 
           {/* Lower panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
             {/* Recent Residents */}
             <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 overflow-hidden border-r-6 border-r-[#005F02] shadow-sm p-8">
               <div className="px-5 py-1 border-b border-gray-200 flex items-center justify-between">
@@ -181,8 +182,13 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* Community Announcements */}
+            <div className="lg:col-span-1">
+              <AnnouncementsWidget />
+            </div>
+
             {/* Recent System Activity */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden border-r-6 border-r-[#005F02] shadow-sm p-8">
+            <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 overflow-hidden border-r-6 border-r-[#005F02] shadow-sm p-8">
               <div className="px-5 py-1 border-b border-gray-100">
                 <h2 className="text-[21px] font-semibold text-gray-900">Recent System Activity</h2>
               </div>

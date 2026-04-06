@@ -6,7 +6,7 @@ import {
   Dashboard, Analytics, Residents, Households, Eid,
   QRVerification, RequestPage, UserAccount, NotificationPage,
   ResidentPortalLayout, ResidentProfilePage, ResidentEIdPage, ResidentRequestPage,
-  ResidentNotificationPage
+  ResidentNotificationPage, ResidentAnnouncementsPage
 } from '../features/dashboard'
 import ProtectedRoute from './ProtectedRoute'
 import RoleGuard from './RoleGuard'
@@ -64,6 +64,7 @@ function AppRoutes() {
               <Route path="eid"     element={<ResidentEIdPage />} />
               <Route path="request-certificate" element={<ResidentRequestPage />} />
               <Route path="notifications" element={<ResidentNotificationPage />} />
+              <Route path="announcements" element={<ResidentAnnouncementsPage />} />
             </Route>
 
           </Route>
