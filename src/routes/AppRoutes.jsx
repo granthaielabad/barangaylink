@@ -8,6 +8,7 @@ import {
   ResidentPortalLayout, ResidentProfilePage, ResidentEIdPage, ResidentRequestPage,
   ResidentNotificationPage, ResidentAnnouncementsPage
 } from '../features/dashboard'
+import Inquiries from '../features/dashboard/pages/Inquiries'
 import ProtectedRoute from './ProtectedRoute'
 import RoleGuard from './RoleGuard'
 
@@ -53,6 +54,7 @@ function AppRoutes() {
             <Route path="/eid"             element={<Eid />} />
             <Route path="/qr-verification" element={<QRVerification />} />
             <Route path="/certificate-request" element={<RequestPage />} />
+            <Route path="/inquiries"           element={<Inquiries />} />
             <Route path="/notifications"       element={<NotificationPage />} />
           </Route>
 

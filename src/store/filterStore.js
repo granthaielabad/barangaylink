@@ -75,3 +75,14 @@ export const useEidFilters = create(
 export const useDocumentRequestFilters = create(
   devtools(createFilterSlice('document-requests'), { name: 'document-request-filters' })
 );
+
+export const useInquiryFilters = create(
+  devtools(
+    (set, get) => ({
+      ...createFilterSlice('inquiries')(set, get),
+      sortBy: 'created_at',
+      order: 'desc',
+    }),
+    { name: 'inquiry-filters' }
+  )
+);

@@ -16,4 +16,4 @@ export { default as ResidentEIdPage }      from './pages/ResidentEIdPage';
 export { default as ResidentRequestPage }  from './pages/ResidentRequestPage';
 export { default as ResidentNotificationPage } from './pages/ResidentNotificationPage';
 export { default as ResidentAnnouncementsPage } from './pages/ResidentAnnouncementsPage';
-
+export { default as Inquiries } from './pages/Inquiries';

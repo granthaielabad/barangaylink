@@ -85,7 +85,19 @@ export const SORT_FIELDS = {
     { value: 'full_name',  label: 'Name' },
     { value: 'role',       label: 'Role' },
   ],
+  INQUIRIES: [
+    { value: 'created_at', label: 'Date Submitted' },
+    { value: 'full_name',  label: 'Sender Name' },
+    { value: 'concern',    label: 'Concern' },
+  ],
 };
+
+export const INQUIRY_STATUS_FILTER_OPTIONS = [
+  { value: 'all',      label: 'All Status' },
+  { value: 'unread',   label: 'Unread' },
+  { value: 'read',     label: 'Read' },
+  { value: 'archived', label: 'Archived' },
+];
 
 export const REQUEST_STATUS_FILTER_OPTIONS = [
   { value: 'all',        label: 'All Status' },

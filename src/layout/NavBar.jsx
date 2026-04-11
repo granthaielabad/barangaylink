@@ -47,10 +47,12 @@ export default function NavBar() {
         }`}>
         <div className="mx-4 md:mx-12 px-4 md:px-5 flex justify-between items-center h-20 md:h-28">
           {/* Logo Section */}
-          <Logo variant="navbar" />
+          <div className="flex-shrink-0">
+            <Logo variant="navbar" />
+          </div>
 
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex gap-30">
+          <div className="hidden lg:flex gap-12 xl:gap-24">
             {isLandingPage ? (
               <a href="#home" onClick={handleHomeClick} className={navLinkClass}>HOME</a>
             ) : (
@@ -73,9 +75,9 @@ export default function NavBar() {
           </div>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex gap-3 items-center">
-            <Link to="/login" className="font-poppins px-5 py-3 rounded font-semibold text-lg text-white transition-all">LOGIN</Link>
-            <Link to="/signup" className="font-poppins text-white bg-[#005F02] px-5 py-3 rounded-md font-semibold text-lg hover:bg-[#004A01] transition-colors">SIGN UP</Link>
+          <div className="hidden md:flex gap-4 items-center flex-shrink-0">
+            <Link to="/login" className="font-poppins px-5 py-3 rounded font-semibold text-lg text-white transition-all hover:bg-white/10">LOGIN</Link>
+            <Link to="/signup" className="font-poppins text-white bg-[#005F02] px-6 py-3 rounded-md font-semibold text-lg hover:bg-[#004A01] transition-colors shadow-lg">SIGN UP</Link>
           </div>
 
           {/* Hamburger Button (mobile only) */}
@@ -90,7 +92,7 @@ export default function NavBar() {
           </button>
 
           {/* Desktop border line */}
-          <div className={`absolute bottom-0 left-30 right-30 border-t transition-all hidden md:block ${isScrolled ? 'border-gray-200 opacity-0' : 'border-white opacity-50'
+          <div className={`absolute bottom-0 left-10 right-10 md:left-20 md:right-20 border-t transition-all hidden md:block ${isScrolled ? 'border-gray-200 opacity-0' : 'border-white opacity-50'
             }`}></div>
         </div>
       </nav>
