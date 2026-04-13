@@ -10,6 +10,7 @@ const DEFAULT_SELECT = `
   philhealth_no, sss_no, tin_no, id_number,
   valid_id_type, valid_id_url,
   age_group, blood_type,
+  is_pwd, is_solo_parent, is_indigent,
   status, photo_url, household_id, created_at, updated_at,
   puroks ( id, name ),
   households:households!residents_household_id_fkey ( id, house_no, street )

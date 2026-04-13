@@ -15,6 +15,7 @@ export default function ResidentTable({ residents = [], onEditResident, onArchiv
                         <th className="py-3 px-4 font-semibold">Sex</th>
                         <th className="py-3 px-4 font-semibold">Birthdate</th>
                         <th className="py-3 px-4 font-semibold">Contact No.</th>
+                        <th className="py-3 px-4 font-semibold">Sectoral Status</th>
                         <th className="py-3 px-4 font-semibold">Status</th>
                         <th className="py-3 px-4 font-semibold">Actions</th>
                     </tr>
@@ -32,6 +33,7 @@ export default function ResidentTable({ residents = [], onEditResident, onArchiv
                             <td className="py-3 px-4 text-gray-800">{resident.gender}</td>
                             <td className="py-3 px-4 text-gray-800">{resident.birthdate}</td>
                             <td className="py-3 px-4 text-gray-800">{resident.contactNo}</td>
+                            <td className="py-3 px-4 text-gray-800">{resident.sectoralStatus}</td>
                             <td className="py-3 px-4">
                                 <span
                                     className={`inline-block px-4 py-1 rounded-lg text-xs font-medium ${resident.status === 'Active'

@@ -68,6 +68,11 @@ export default function Residents() {
       gender: r.sex === 'M' ? 'Male' : r.sex === 'F' ? 'Female' : r.sex ?? '—',
       birthdate,
       contactNo: r.contact_number ?? '—',
+      sectoralStatus: [
+        r.is_pwd && 'PWD',
+        r.is_solo_parent && 'Solo Parent',
+        r.is_indigent && 'Indigent',
+      ].filter(Boolean).join(', ') || '—',
       status: r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : '—',
       _raw: r,
     };
@@ -95,6 +100,10 @@ export default function Residents() {
     religion:       data.religion      || null,
     occupation:     data.occupation    || null,
     voter_status:   data.voterStatus   ?? false,
+    // Sectoral Status
+    is_pwd:         data.isPwd         ?? false,
+    is_solo_parent: data.isSoloParent  ?? false,
+    is_indigent:    data.isIndigent    ?? false,
     // Address — barangay is always San Bartolome, locked in form
     address_line: [data.houseNo, data.street, data.purok, BARANGAY].filter(Boolean).join(', ') || null,
     // Only preserve purok_id if the purok text field still has a value

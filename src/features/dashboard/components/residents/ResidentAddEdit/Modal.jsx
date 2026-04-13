@@ -3,6 +3,7 @@ import { PiUserPlus } from 'react-icons/pi';
 import PersonalInformationForm from './PersonalInformationForm';
 import AddressInformationForm from './AddressInformationForm';
 import ValidIdForm from './ValidIdForm';
+import SectoralStatusForm from './SectoralStatusForm';
 import { BARANGAY } from '../../../../../core/constants';
 
 const emptyForm = {
@@ -14,6 +15,9 @@ const emptyForm = {
   },
   address: {
     houseNo: '', street: '', purok: '', purokId: '', barangay: BARANGAY,
+  },
+  sectoral: {
+    isPwd: false, isSoloParent: false, isIndigent: false,
   },
   identification: {
     philhealthNo: '', sssNo: '', tinNo: '', idNumber: '', status: 'active',
@@ -67,6 +71,11 @@ function buildEditForm(raw) {
       purokId:  raw.purok_id             ?? '',
       barangay: BARANGAY,
     },
+    sectoral: {
+      isPwd:        raw.is_pwd          ?? false,
+      isSoloParent: raw.is_solo_parent  ?? false,
+      isIndigent:   raw.is_indigent     ?? false,
+    },
     identification: {
       philhealthNo: raw.philhealth_no ?? '',
       sssNo:        raw.sss_no        ?? '',
@@ -110,7 +119,7 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const { personal, address, identification, validId } = formData;
+    const { personal, address, sectoral, identification, validId } = formData;
 
     onSubmit?.({
       // Personal
@@ -136,6 +145,10 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
       purokId:     address.purokId    ? Number(address.purokId) : null,
       barangay:    address.barangay   || null,
       yearsOfStay: address.yearsOfStay !== '' ? Number(address.yearsOfStay) : null,
+      // Sectoral Status
+      isPwd:        sectoral.isPwd,
+      isSoloParent: sectoral.isSoloParent,
+      isIndigent:   sectoral.isIndigent,
       // Identification
       philhealthNo: identification.philhealthNo || null,
       sssNo:        identification.sssNo        || null,
@@ -186,6 +199,10 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
             <AddressInformationForm
               value={formData.address}
               onChange={(v) => setFormData((d) => ({ ...d, address: v }))}
+            />
+            <SectoralStatusForm
+              value={formData.sectoral}
+              onChange={(v) => setFormData((d) => ({ ...d, sectoral: v }))}
             />
             <ValidIdForm
               value={formData.validId}
