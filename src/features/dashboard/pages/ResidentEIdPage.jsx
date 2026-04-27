@@ -98,7 +98,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const lockedWrap = 'flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50';
   const lockedIcon = 'bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-200 text-gray-400';
   const lockedText = 'flex-1 px-4 py-2.5 bg-gray-50 text-gray-500 text-base cursor-not-allowed select-none';
-  const inputCls   = 'w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
+  const inputCls   = 'w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A]';
 
   const LockedField = ({ label, icon: Icon, value: v }) => (
     <div>
@@ -141,7 +141,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
         {/* Header */}
         <div className="flex items-center justify-between gap-3 px-6 py-3 bg-[#F1F7F2] border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg text-[#005F02]">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg text-[#8C0B1A]">
               <FiPlus className="w-6 h-6" />
             </div>
             <h2 className="text-xl font-semibold text-gray-900">Apply for eID</h2>
@@ -167,7 +167,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                       : <FiUser className="w-14 h-14 text-gray-300" />}
                   </div>
                   <button type="button" onClick={() => photoRef.current?.click()}
-                    className="absolute bottom-2 right-2 bg-[#005F02] hover:bg-[#004A01] text-white p-2 rounded-lg shadow-md transition-colors"
+                    className="absolute bottom-2 right-2 bg-[#8C0B1A] hover:bg-[#7A0915] text-white p-2 rounded-lg shadow-md transition-colors"
                     title="Upload photo">
                     <FiCamera className="w-4 h-4" />
                   </button>
@@ -256,7 +256,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                   Upload Valid ID Photo <span className="text-red-500">*</span>
                 </label>
                 <div onClick={() => validIdRef.current?.click()}
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-[#005F02] transition-colors text-center">
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-[#8C0B1A] transition-colors text-center">
                   {validIdPreview ? (
                     <img src={validIdPreview} alt="Valid ID" className="h-24 mx-auto rounded object-contain" />
                   ) : (
@@ -280,7 +280,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
               Cancel
             </button>
             <button type="submit" disabled={isPending}
-              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#005F02] text-white hover:bg-[#004A01] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               {isPending ? 'Submitting…' : 'Apply for eID'}
             </button>
           </div>
@@ -303,7 +303,7 @@ function RenewModal({ eid, onClose, onSubmit, isPending }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const inputCls = 'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/40 focus:border-[#005F02]';
+  const inputCls = 'w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/40 focus:border-[#8C0B1A]';
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
@@ -311,7 +311,7 @@ function RenewModal({ eid, onClose, onSubmit, isPending }) {
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
         {/* Header */}
         <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
-          <FiRefreshCw className="w-5 h-5 text-[#005F02]" />
+          <FiRefreshCw className="w-5 h-5 text-[#8C0B1A]" />
           <h2 className="font-bold text-gray-900 text-base">Renew eID</h2>
           <button type="button" onClick={onClose} className="ml-auto p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
             <FiX className="w-4 h-4 text-gray-500" />
@@ -360,7 +360,7 @@ function RenewModal({ eid, onClose, onSubmit, isPending }) {
           {/* Certification checkbox */}
           <label className="flex items-start gap-2 cursor-pointer">
             <input type="checkbox" checked={certified} onChange={(e) => setCertified(e.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-[#005F02]" />
+              className="mt-0.5 w-4 h-4 accent-[#8C0B1A]" />
             <span className="text-xs text-gray-600">
               I certify that the information provided is accurate and complete. I understand that providing false information may result in the cancellation of my eID.
             </span>
@@ -376,7 +376,7 @@ function RenewModal({ eid, onClose, onSubmit, isPending }) {
           <button type="button"
             onClick={() => onSubmit({ address_line: address, contact_number: contact })}
             disabled={isPending || !address || !contact || !certified}
-            className="px-5 py-2 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            className="px-5 py-2 rounded-lg bg-[#8C0B1A] text-white text-sm font-semibold hover:bg-[#7A0915] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             {isPending ? 'Submitting…' : 'Renew eID'}
           </button>
         </div>
@@ -393,7 +393,7 @@ function EidCard({ eid, onZoomQr, isInactive = false }) {
     <div className={`w-full max-w-[520px] mx-auto rounded-xl overflow-hidden shadow-md border border-gray-200 ${isInactive ? 'opacity-60 grayscale' : ''}`}
       style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
       {/* Green top bar */}
-      <div className="h-4 bg-[#005F02]" />
+      <div className="h-4 bg-[#8C0B1A]" />
 
       {/* Card body */}
       <div className="bg-white p-4 flex gap-4">
@@ -454,7 +454,7 @@ function EidCard({ eid, onZoomQr, isInactive = false }) {
       </div>
 
       {/* Green bottom bar */}
-      <div className="h-2 bg-[#005F02]" />
+      <div className="h-2 bg-[#8C0B1A]" />
     </div>
   );
 }
@@ -497,7 +497,7 @@ function QrLightbox({ eid, onClose }) {
         </div>
         <p className="text-xs text-gray-400 text-center">Present this QR code for identity verification</p>
         <button type="button" onClick={handleDownload}
-          className="flex items-center gap-2 w-full justify-center px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#005F02] text-white hover:bg-[#004A01] transition-colors">
+          className="flex items-center gap-2 w-full justify-center px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors">
           <FiDownload className="w-4 h-4" /> Download QR Code
         </button>
       </div>
@@ -533,7 +533,7 @@ function ProgressTracker({ status, eidIssued = false }) {
         return (
           <div key={step.key} className="flex items-center gap-3">
             {done ? (
-              <FiCheckCircle className="w-5 h-5 text-[#005F02] shrink-0" />
+              <FiCheckCircle className="w-5 h-5 text-[#8C0B1A] shrink-0" />
             ) : current ? (
               <FiClock className="w-5 h-5 text-blue-500 shrink-0 animate-pulse" />
             ) : (
@@ -571,7 +571,7 @@ export default function ResidentEIdPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <div className="animate-spin w-8 h-8 border-[3px] border-[#005F02] border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-[3px] border-[#8C0B1A] border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -613,8 +613,8 @@ export default function ResidentEIdPage() {
         {!isRejected && (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-9 h-9 rounded-full bg-[#005F02]/10 flex items-center justify-center">
-                <LuClipboardList className="w-5 h-5 text-[#005F02]" />
+              <div className="w-9 h-9 rounded-full bg-[#8C0B1A]/10 flex items-center justify-center">
+                <LuClipboardList className="w-5 h-5 text-[#8C0B1A]" />
               </div>
               <h2 className="font-semibold text-gray-900 text-[24px]">Application Details</h2>
             </div>
@@ -648,7 +648,7 @@ export default function ResidentEIdPage() {
           </p>
           {isRejected && (
             <button type="button" onClick={() => setApplyOpen(true)}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] transition-colors">
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#8C0B1A] text-white text-sm font-semibold hover:bg-[#7A0915] transition-colors">
               <FiPlus className="w-4 h-4" /> Submit New Application
             </button>
           )}
@@ -698,7 +698,7 @@ export default function ResidentEIdPage() {
               <FiDownload className="w-4 h-4" /> Download
             </button>
             <button type="button" onClick={() => setRenewOpen(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] transition-colors">
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#8C0B1A] text-white text-sm font-semibold hover:bg-[#7A0915] transition-colors">
               <FiRefreshCw className="w-4 h-4" /> Renew eID
             </button>
           </div>
@@ -771,7 +771,7 @@ export default function ResidentEIdPage() {
           Complete the application form to get your electronic identification card. Processing typically takes 3-5 business days.
         </p>
         <button type="button" onClick={() => setApplyOpen(true)}
-          className="flex items-center gap-2 px-6 py-3 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] transition-colors">
+          className="flex items-center gap-2 px-6 py-3 rounded-lg bg-[#8C0B1A] text-white text-sm font-semibold hover:bg-[#7A0915] transition-colors">
           <FiCreditCard className="w-4 h-4" /> Apply for eID
         </button>
       </div>
@@ -787,3 +787,4 @@ export default function ResidentEIdPage() {
     </div>
   );
 }
+

@@ -162,8 +162,8 @@ export default function DateRangeFilter({ dateRangeLabel, customStart, customEnd
                       className={`w-8 h-8 rounded-lg text-sm
                         ${!day ? 'invisible' : ''}
                         ${!isCurrent ? 'text-gray-300' : 'text-gray-800'}
-                        ${isStart || isEnd ? 'bg-[#005F02] text-white font-semibold' : ''}
-                        ${inRange ? 'bg-[#005F02]/20' : ''}
+                        ${isStart || isEnd ? 'bg-[#8C0B1A] text-white font-semibold' : ''}
+                        ${inRange ? 'bg-[#8C0B1A]/20' : ''}
                         ${day && isCurrent && !isStart && !isEnd && !inRange ? 'hover:bg-gray-100' : ''}
                       `}>
                       {day ? day.getDate() : ''}
@@ -194,7 +194,7 @@ export default function DateRangeFilter({ dateRangeLabel, customStart, customEnd
                 Reset
               </button>
               <button type="button" onClick={handleCustomApply} disabled={!rangeStart || !rangeEnd}
-                className="px-3 py-1.5 text-sm font-medium bg-[#005F02] text-white rounded-lg hover:bg-[#004a02] disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-3 py-1.5 text-sm font-medium bg-[#8C0B1A] text-white rounded-lg hover:bg-[#004a02] disabled:opacity-50 disabled:cursor-not-allowed">
                 Apply
               </button>
             </div>
@@ -204,3 +204,4 @@ export default function DateRangeFilter({ dateRangeLabel, customStart, customEnd
     </div>
   );
 }
+

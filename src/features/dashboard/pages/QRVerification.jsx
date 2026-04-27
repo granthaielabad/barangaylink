@@ -324,7 +324,7 @@ export default function QRVerification() {
     : null;
 
   return (
-    <div className="flex h-screen bg-[#F3F7F3]">
+    <div className="flex h-screen bg-[#FFFBFC]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
         <DashboardHeader
@@ -386,7 +386,7 @@ export default function QRVerification() {
                       className={`flex-1 flex items-center justify-center gap-2 font-medium py-2.5 px-4 rounded-lg transition-colors text-sm ${
                         cameraActive
                           ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
-                          : 'bg-[#005F02] text-white hover:bg-[#004A01]'
+                          : 'bg-[#8C0B1A] text-white hover:bg-[#7A0915]'
                       }`}
                     >
                       {cameraActive ? <FiCameraOff className="w-4 h-4" /> : <FiCamera className="w-4 h-4" />}
@@ -397,7 +397,7 @@ export default function QRVerification() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex-1 flex items-center justify-center gap-2 font-medium py-2.5 px-4 rounded-lg border border-[#005F02] text-[#005F02] hover:bg-[#F1F7F2] transition-colors text-sm"
+                      className="flex-1 flex items-center justify-center gap-2 font-medium py-2.5 px-4 rounded-lg border border-[#8C0B1A] text-[#8C0B1A] hover:bg-[#F1F7F2] transition-colors text-sm"
                     >
                       <FiUpload className="w-4 h-4" />
                       Upload QR Image
@@ -419,13 +419,13 @@ export default function QRVerification() {
                       onChange={(e) => setManualCode(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleManualSubmit()}
                       placeholder="Or enter QR token manually…"
-                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]"
+                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]"
                     />
                     <button
                       type="button"
                       onClick={handleManualSubmit}
                       disabled={!manualCode.trim() || verifyMutation.isPending}
-                      className="px-5 py-2.5 rounded-lg bg-[#005F02] text-white text-sm font-medium hover:bg-[#004A01] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-5 py-2.5 rounded-lg bg-[#8C0B1A] text-white text-sm font-medium hover:bg-[#7A0915] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       {verifyMutation.isPending ? '…' : 'Verify'}
                     </button>
@@ -553,7 +553,7 @@ export default function QRVerification() {
                         setVerifiedResident(null);
                         setCameraActive(true);
                       }}
-                      className="w-full bg-[#005F02] hover:bg-[#004A01] text-white font-semibold py-3 rounded-lg transition-colors text-base"
+                      className="w-full bg-[#8C0B1A] hover:bg-[#7A0915] text-white font-semibold py-3 rounded-lg transition-colors text-base"
                     >
                       Scan Again
                     </button>
@@ -569,3 +569,4 @@ export default function QRVerification() {
     </div>
   );
 }
+

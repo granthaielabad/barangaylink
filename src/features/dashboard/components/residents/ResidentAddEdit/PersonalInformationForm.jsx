@@ -8,7 +8,7 @@ import {
 } from '../../../../../core/constants';
 
 const inputClass =
-  'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
+  'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A]';
 
 // Age group is auto-computed by a DB trigger (fn_compute_age_group)
 // from date_of_birth on INSERT/UPDATE — no client-side logic needed.
@@ -19,7 +19,7 @@ export default function PersonalInformationForm({ value = {}, onChange }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
-        <FiUser className="w-5 h-5 text-[#005F02]" />
+        <FiUser className="w-5 h-5 text-[#8C0B1A]" />
         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
           Personal Information
         </h3>
@@ -111,9 +111,10 @@ export default function PersonalInformationForm({ value = {}, onChange }) {
 
       {/* Voter status */}
       <div className="flex items-center gap-3 pt-1">
-        <input id="voter-status" type="checkbox" checked={value.voterStatus ?? false} onChange={(e) => update('voterStatus', e.target.checked)} className="w-4 h-4 accent-[#005F02] cursor-pointer" />
+        <input id="voter-status" type="checkbox" checked={value.voterStatus ?? false} onChange={(e) => update('voterStatus', e.target.checked)} className="w-4 h-4 accent-[#8C0B1A] cursor-pointer" />
         <label htmlFor="voter-status" className="text-sm font-medium text-gray-700 cursor-pointer">Registered Voter</label>
       </div>
     </div>
   );
 }
+

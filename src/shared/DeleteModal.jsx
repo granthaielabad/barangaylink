@@ -37,3 +37,5 @@ export default function DeleteModal({ isOpen, title = 'Delete', message = 'This 
     </div>
   );
 }
+
+

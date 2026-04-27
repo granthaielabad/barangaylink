@@ -49,10 +49,10 @@ export default function ReviewFilter() {
                   }}
                   className="flex items-center justify-between w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors"
                 >
-                  <span className={selectedSort.value === opt.value ? 'font-semibold text-[#005F02]' : 'text-gray-700'}>
+                  <span className={selectedSort.value === opt.value ? 'font-semibold text-[#8C0B1A]' : 'text-gray-700'}>
                     {opt.label}
                   </span>
-                  {selectedSort.value === opt.value && <MdCheck className="w-4 h-4 text-[#005F02]" />}
+                  {selectedSort.value === opt.value && <MdCheck className="w-4 h-4 text-[#8C0B1A]" />}
                 </button>
               ))}
             </div>
@@ -94,3 +94,5 @@ export default function ReviewFilter() {
     </div>
   );
 }
+
+

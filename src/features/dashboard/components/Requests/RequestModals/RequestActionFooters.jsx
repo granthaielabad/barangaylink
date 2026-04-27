@@ -20,7 +20,7 @@ export function PendingFooter({ onReject, onProcess, onApprove }) {
         <button
           type="button"
           onClick={onApprove}
-          className="px-6 py-2.5 rounded-lg text-sm font-bold bg-[#005F02] text-white hover:bg-[#004A01] transition-colors shadow-sm"
+          className="px-6 py-2.5 rounded-lg text-sm font-bold bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors shadow-sm"
         >
           Approve & Complete
         </button>
@@ -42,7 +42,7 @@ export function ProcessingFooter({ onReject, onApprove }) {
       <button
         type="button"
         onClick={onApprove}
-        className="px-6 py-2.5 rounded-lg text-sm font-bold bg-[#005F02] text-white hover:bg-[#004A01] transition-colors shadow-sm"
+        className="px-6 py-2.5 rounded-lg text-sm font-bold bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors shadow-sm"
       >
         Approve & Complete
       </button>
@@ -63,3 +63,5 @@ export function CompletedFooter({ onClose }) {
     </div>
   );
 }
+
+

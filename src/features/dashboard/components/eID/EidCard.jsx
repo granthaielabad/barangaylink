@@ -59,7 +59,7 @@ function QrLightbox({ token, idNumber, name, onClose }) {
         </div>
         <p className="text-xs text-gray-400 text-center">Scan to verify resident identity</p>
         <button type="button" onClick={handleDownload}
-          className="flex items-center gap-2 w-full justify-center px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#005F02] text-white hover:bg-[#004A01] transition-colors">
+          className="flex items-center gap-2 w-full justify-center px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors">
           <FiDownload className="w-4 h-4" /> Download QR Code
         </button>
       </div>
@@ -168,7 +168,7 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
         style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
 
         {/* Green top bar + admin controls overlaid */}
-        <div className="relative h-8 bg-[#005F02] flex items-center px-3 gap-2">
+        <div className="relative h-8 bg-[#8C0B1A] flex items-center px-3 gap-2">
           {/* Status badge */}
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusCls}`}>
             <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
@@ -275,7 +275,7 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
         </div>
 
         {/* Green bottom bar */}
-        <div className="h-2 bg-[#005F02]" />
+        <div className="h-2 bg-[#8C0B1A]" />
       </div>
 
       {/* Hidden high-fidelity card for printing */}
@@ -306,7 +306,7 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
             <div className="mt-8 flex justify-center gap-4">
                <button 
                  onClick={handlePrint} 
-                 className="flex items-center gap-3 px-8 py-3 bg-white text-[#005F02] rounded-xl font-bold hover:bg-gray-50 transition-all shadow-lg active:scale-95"
+                 className="flex items-center gap-3 px-8 py-3 bg-white text-[#8C0B1A] rounded-xl font-bold hover:bg-gray-50 transition-all shadow-lg active:scale-95"
                >
                  <FiPrinter className="w-5 h-5" /> Print eID
                </button>
@@ -319,3 +319,4 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
     </>
   );
 }
+

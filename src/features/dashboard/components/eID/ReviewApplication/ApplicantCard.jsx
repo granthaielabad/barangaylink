@@ -87,7 +87,7 @@ export default function ApplicantCard({ applicant, onReview }) {
           {/* Status & Progress Section */}
           <div className="space-y-4">
             {isComplete ? (
-              <div className="flex items-center gap-2 text-[#005F02] text-[15px] font-semibold">
+              <div className="flex items-center gap-2 text-[#8C0B1A] text-[15px] font-semibold">
                 <FiCheckCircle className="w-5 h-5 shrink-0" />
                 <span>All verification steps completed - Ready for final approval</span>
               </div>
@@ -111,7 +111,7 @@ export default function ApplicantCard({ applicant, onReview }) {
                     key={step} 
                     className={`h-2.5 flex-1 rounded-full ${
                       step <= currentStep 
-                        ? (isComplete ? 'bg-[#005F02]' : 'bg-[#4686F2]')
+                        ? (isComplete ? 'bg-[#8C0B1A]' : 'bg-[#4686F2]')
                         : 'bg-gray-200'
                     }`}
                   />
@@ -139,3 +139,5 @@ function DetailItem({ label, value, className = "" }) {
     </div>
   );
 }
+
+

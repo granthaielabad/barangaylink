@@ -12,3 +12,4 @@ function SectionCard({ icon: SectionIcon, title, children, className }) {
 }
 
 export default SectionCard;
+

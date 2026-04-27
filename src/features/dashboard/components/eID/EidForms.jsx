@@ -10,7 +10,7 @@ const wrapClass =
 const lockedWrapClass =
   'flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50';
 const iconClass =
-  'bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300 text-[#005F02]';
+  'bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300 text-[#8C0B1A]';
 const lockedIconClass =
   'bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-200 text-gray-400';
 const inputClass =
@@ -153,7 +153,7 @@ export default function EidForms({ value = {}, onChange, mode = 'create' }) {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-2 right-2 bg-[#005F02] hover:bg-[#004A01] text-white p-2 rounded-lg shadow-md transition-colors"
+                className="absolute bottom-2 right-2 bg-[#8C0B1A] hover:bg-[#7A0915] text-white p-2 rounded-lg shadow-md transition-colors"
                 title="Upload photo"
               >
                 <FiCamera className="w-4 h-4" />
@@ -204,7 +204,7 @@ export default function EidForms({ value = {}, onChange, mode = 'create' }) {
                   disabled={mode === 'edit'}
                 />
                 {isResidentSelected && (
-                  <MdCheck className="w-5 h-5 text-[#005F02] mr-3 shrink-0" />
+                  <MdCheck className="w-5 h-5 text-[#8C0B1A] mr-3 shrink-0" />
                 )}
               </div>
 
@@ -285,3 +285,4 @@ export default function EidForms({ value = {}, onChange, mode = 'create' }) {
     </div>
   );
 }
+

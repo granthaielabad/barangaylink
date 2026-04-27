@@ -9,8 +9,10 @@ export default function SearchBox({ value = '', onChange, placeholder = 'Search'
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         placeholder={placeholder}
-        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02] shadow-sm transition-all"
+        className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A] shadow-sm transition-all"
       />
     </div>
   );
 }
+
+

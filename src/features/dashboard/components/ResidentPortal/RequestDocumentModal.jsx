@@ -47,7 +47,7 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
         {/* Header */}
         <div className="flex bg-[#F1FBF1] items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#005F02]">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C0B1A]">
               {cert.icon}
             </div>
             <h2 className="text-[24px] font-semibold text-gray-900">{cert.title}</h2>
@@ -100,7 +100,7 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
                 placeholder="Please specify the purpose of this certificate request..."
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/20 focus:border-[#005F02] bg-gray-50 resize-none"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/20 focus:border-[#8C0B1A] bg-gray-50 resize-none"
               />
             </div>
 
@@ -133,7 +133,7 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
             </button>
             <button type="submit"
               disabled={isPending || !purpose.trim()}
-              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#005F02] text-white hover:bg-[#004A01] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {isPending ? 'Submitting...' : 'Submit Request'}
             </button>
           </div>
@@ -143,3 +143,4 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
     document.body
   );
 }
+

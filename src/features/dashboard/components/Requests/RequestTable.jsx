@@ -6,7 +6,7 @@ export default function RequestTable({ requests = [], onViewRequest }) {
     switch (status.toLowerCase()) {
       case 'pending':    return 'bg-[#F4E2B8] text-[#C2410C] border-[#F4E2B8]';
       case 'processing': return 'bg-[#DDF3DD] text-[#1838B8] border-[#DDF3DD]';
-      case 'approved':   return 'bg-[#BFE8BF] text-[#005F02] border-[#BBF7D0]';
+      case 'approved':   return 'bg-[#BFE8BF] text-[#8C0B1A] border-[#BBF7D0]';
       case 'rejected':   return 'bg-[#FEE2E2] text-[#DC2626] border-[#FEE2E2]';
       default:           return 'bg-gray-100 text-gray-600 border-gray-200';
     }
@@ -48,7 +48,7 @@ export default function RequestTable({ requests = [], onViewRequest }) {
                 <button
                   type="button"
                   onClick={() => onViewRequest?.(req)}
-                  className="px-4 py-1.5 text-sm font-semibold text-[#005F02] border border-[#005F02] rounded-lg hover:bg-[#F0FDF4] transition-colors"
+                  className="px-4 py-1.5 text-sm font-semibold text-[#8C0B1A] border border-[#8C0B1A] rounded-lg hover:bg-[#F0FDF4] transition-colors"
                 >
                   View
                 </button>
@@ -60,3 +60,5 @@ export default function RequestTable({ requests = [], onViewRequest }) {
     </div>
   );
 }
+
+

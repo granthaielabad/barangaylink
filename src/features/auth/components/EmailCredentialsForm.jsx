@@ -3,7 +3,7 @@ import { sendOtp, sendSignupOtp } from '../../../services/supabase/authService';
 import toast from 'react-hot-toast';
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02] transition-shadow';
+  'w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A] transition-shadow';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OTP_COOLDOWN_SECONDS = 30;
@@ -68,7 +68,7 @@ export default function EmailCredentialsForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label htmlFor="signup-email" className="block text-[#005F02] font-bold mb-2 text-base">
+        <label htmlFor="signup-email" className="block text-[#8C0B1A] font-bold mb-2 text-base">
           Email Address
         </label>
         <input
@@ -96,7 +96,7 @@ export default function EmailCredentialsForm({
       </div>
 
       <div>
-        <label htmlFor="signup-otp" className="block text-[#005F02] font-bold mb-2 text-base">
+        <label htmlFor="signup-otp" className="block text-[#8C0B1A] font-bold mb-2 text-base">
           Verification Code
         </label>
         <input
@@ -115,10 +115,11 @@ export default function EmailCredentialsForm({
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full py-3.5 rounded-lg bg-[#005F02] text-white text-base font-bold uppercase tracking-wide hover:bg-[#004A01] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+        className="w-full py-3.5 rounded-lg bg-[#8C0B1A] text-white text-base font-bold uppercase tracking-wide hover:bg-[#7A0915] transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
       >
         {isLoading ? 'Verifying...' : 'Continue'}
       </button>
     </form>
   );
 }
+

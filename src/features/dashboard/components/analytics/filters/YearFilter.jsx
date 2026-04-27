@@ -57,7 +57,7 @@ export default function YearFilter({ selectedYear, onYearChange }) {
           <div className="grid grid-cols-3 gap-1.5 mb-3">
             {Array.from({ length: PAGE_SIZE }, (_, i) => rangeStart + i).map((y) => (
               <button key={y} type="button" onClick={() => handleSelect(y)}
-                className={`py-2 rounded-lg text-sm font-medium ${String(y) === selectedYear ? 'bg-[#005F02] text-white' : 'text-gray-800 hover:bg-gray-100'}`}>
+                className={`py-2 rounded-lg text-sm font-medium ${String(y) === selectedYear ? 'bg-[#8C0B1A] text-white' : 'text-gray-800 hover:bg-gray-100'}`}>
                 {y}
               </button>
             ))}
@@ -73,3 +73,4 @@ export default function YearFilter({ selectedYear, onYearChange }) {
     </div>
   );
 }
+

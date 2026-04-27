@@ -146,7 +146,7 @@ export default function ResidentRequestPage() {
 
         {isLoading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+            <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
           </div>
         ) : myRequests.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center text-gray-400 text-sm">
@@ -167,7 +167,7 @@ export default function ResidentRequestPage() {
 
                     {/* Icon & Info */}
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="w-12 h-12 bg-gray-100 text-[#005F02] rounded-sm flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 bg-gray-100 text-[#8C0B1A] rounded-sm flex items-center justify-center shrink-0">
                         {getDocIcon(req.document_type)}
                       </div>
                       <div>
@@ -204,7 +204,7 @@ export default function ResidentRequestPage() {
                         {isViewable ? (
                           <button
                             onClick={() => setPreviewReq(req)}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-[#005F02] text-white rounded-lg text-[15px] font-semibold hover:bg-[#004A01] transition-colors whitespace-nowrap"
+                            className="flex items-center gap-2 px-6 py-2.5 bg-[#8C0B1A] text-white rounded-lg text-[15px] font-semibold hover:bg-[#7A0915] transition-colors whitespace-nowrap"
                           >
                             <FiEye className="w-5 h-5" /> View
                           </button>
@@ -285,3 +285,4 @@ export default function ResidentRequestPage() {
     </div>
   );
 }
+

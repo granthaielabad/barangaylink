@@ -37,7 +37,7 @@ export default function SuccessStep({ variant = 'signup' }) {
   return (
     <div className="overflow-hidden h-full rounded-2xl shadow-lg">
       {/* Dark green header with success icon */}
-      <div className="bg-[#005F02] px-6 py-8 flex flex-col items-center">
+      <div className="bg-[#8C0B1A] px-6 py-8 flex flex-col items-center">
         <LuBadgeCheck
           className="w-16 h-16 text-white"
           strokeWidth={2}
@@ -53,7 +53,7 @@ export default function SuccessStep({ variant = 'signup' }) {
         </p>
 
         {/* Redirect button with spinner */}
-        <div className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-[#005F02] text-white font-medium">
+        <div className="flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-[#8C0B1A] text-white font-medium">
           <span>Redirecting you to the Login Page</span>
           <RotatingLines
             visible={true}
@@ -70,3 +70,5 @@ export default function SuccessStep({ variant = 'signup' }) {
     </div>
   );
 }
+
+

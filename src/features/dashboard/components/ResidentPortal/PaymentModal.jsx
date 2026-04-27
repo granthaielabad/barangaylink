@@ -59,7 +59,7 @@ export default function PaymentModal({ req, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-[#F1FBF1] border-b border-gray-200 shrink-0">
           <div className="flex items-center gap-3 font-semibold text-gray-800">
-            <div className="w-8 h-8 rounded-lg bg-[#005F02]/10 flex items-center justify-center text-[#005F02]">
+            <div className="w-8 h-8 rounded-lg bg-[#8C0B1A]/10 flex items-center justify-center text-[#8C0B1A]">
               <FiCreditCard className="w-5 h-5" />
             </div>
             <span>Complete Payment</span>
@@ -88,7 +88,7 @@ export default function PaymentModal({ req, onClose }) {
             </div>
             <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
               <span className="font-bold text-gray-800">Amount to pay:</span>
-              <span className="text-2xl font-black text-[#005F02]">₱{req.fee ?? 50}</span>
+              <span className="text-2xl font-black text-[#8C0B1A]">₱{req.fee ?? 50}</span>
             </div>
           </div>
 
@@ -102,7 +102,7 @@ export default function PaymentModal({ req, onClose }) {
                   onClick={() => setSelectedMethod(method)}
                   className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
                     selectedMethod.id === method.id
-                      ? 'border-[#005F02] bg-[#F1FBF1]'
+                      ? 'border-[#8C0B1A] bg-[#F1FBF1]'
                       : 'border-gray-200 bg-white hover:border-gray-300'
                   }`}>
                   {method.icon}
@@ -130,7 +130,7 @@ export default function PaymentModal({ req, onClose }) {
             Cancel
           </button>
           <button type="button" onClick={handlePay} disabled={isPending}
-            className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#005F02] text-white hover:bg-[#004A01] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+            className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
             {isPending
               ? <><FiLoader className="w-4 h-4 animate-spin" /> Preparing...</>
               : <><FiExternalLink className="w-4 h-4" /> Proceed to Payment</>}
@@ -141,3 +141,4 @@ export default function PaymentModal({ req, onClose }) {
     document.body
   );
 }
+

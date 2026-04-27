@@ -113,7 +113,7 @@ export default function RequestPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F3F7F3]">
+    <div className="min-h-screen flex bg-[#FFFBFC]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto">
@@ -159,7 +159,7 @@ export default function RequestPage() {
 
             {isLoading ? (
               <div className="flex justify-center py-16">
-                <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
               </div>
             ) : (
               <RequestTable requests={requests} onViewRequest={handleView} />
@@ -191,3 +191,4 @@ export default function RequestPage() {
     </div>
   );
 }
+

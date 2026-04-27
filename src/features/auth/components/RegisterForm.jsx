@@ -16,7 +16,7 @@ export default function RegisterForm({ onSubmit }) {
       <div>
         <label
           htmlFor="signup-lastname"
-          className="block text-[#005F02] font-bold mb-2 text-base"
+          className="block text-[#8C0B1A] font-bold mb-2 text-base"
         >
           Last Name
         </label>
@@ -26,7 +26,7 @@ export default function RegisterForm({ onSubmit }) {
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           placeholder="Enter your last name"
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02] transition-shadow"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A] transition-shadow"
           autoComplete="family-name"
           required
         />
@@ -36,7 +36,7 @@ export default function RegisterForm({ onSubmit }) {
       <div>
         <label
           htmlFor="signup-firstname"
-          className="block text-[#005F02] font-bold mb-2 text-base"
+          className="block text-[#8C0B1A] font-bold mb-2 text-base"
         >
           First Name
         </label>
@@ -46,7 +46,7 @@ export default function RegisterForm({ onSubmit }) {
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           placeholder="Enter your first name"
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02] transition-shadow"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A] transition-shadow"
           autoComplete="given-name"
           required
         />
@@ -56,7 +56,7 @@ export default function RegisterForm({ onSubmit }) {
       <div>
         <label
           htmlFor="signup-middlename"
-          className="block text-[#005F02] font-bold mb-2 text-base"
+          className="block text-[#8C0B1A] font-bold mb-2 text-base"
         >
           Middle Name
         </label>
@@ -66,7 +66,7 @@ export default function RegisterForm({ onSubmit }) {
           value={middleName}
           onChange={(e) => setMiddleName(e.target.value)}
           placeholder="Enter your middle name"
-          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02] transition-shadow"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A] transition-shadow"
           autoComplete="additional-name"
         />
       </div>
@@ -74,10 +74,12 @@ export default function RegisterForm({ onSubmit }) {
       {/* Continue button */}
       <button
         type="submit"
-        className="w-full py-3.5 rounded-lg bg-[#005F02] text-white text-base font-bold uppercase tracking-wide hover:bg-[#004A01] transition-colors"
+        className="w-full py-3.5 rounded-lg bg-[#8C0B1A] text-white text-base font-bold uppercase tracking-wide hover:bg-[#7A0915] transition-colors"
       >
         Continue
       </button>
     </form>
   );
 }
+
+

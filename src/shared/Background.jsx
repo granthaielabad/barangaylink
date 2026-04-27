@@ -16,3 +16,5 @@ export default function Background({ children, isSubPage = false }) {
     </section>
   );
 }
+
+

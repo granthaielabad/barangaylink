@@ -54,7 +54,7 @@ function Checklist({ items }) {
         {items.map((item, i) => (
           <label key={i} className="flex items-center gap-3 cursor-pointer group">
             <div className="relative flex items-center justify-center shrink-0">
-              <input type="checkbox" className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded-md checked:bg-[#005F02] checked:border-[#005F02] transition-all" />
+              <input type="checkbox" className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded-md checked:bg-[#8C0B1A] checked:border-[#8C0B1A] transition-all" />
               <FiCheck className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
             </div>
             <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">{item}</span>
@@ -73,7 +73,7 @@ function ApplicantCard({ app, onReview }) {
   const isPending   = app.status === 'pending';
 
   const progressColor = isApproved
-    ? 'bg-[#005F02]'
+    ? 'bg-[#8C0B1A]'
     : isPending
     ? 'bg-orange-500'
     : 'bg-blue-600';
@@ -100,7 +100,7 @@ function ApplicantCard({ app, onReview }) {
               <span className={`px-3 py-1 rounded-md text-[11px] font-bold border ${cls}`}>{label}</span>
               {/* Approved applications are read-only — show a Complete badge instead */}
               {isApproved ? (
-                <span className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-bold text-[#005F02] bg-emerald-50 border border-emerald-200">
+                <span className="flex items-center gap-1.5 px-4 py-1.5 rounded-md text-xs font-bold text-[#8C0B1A] bg-emerald-50 border border-emerald-200">
                   <FiCheckCircle className="w-3.5 h-3.5" /> Complete
                 </span>
               ) : app.status !== 'rejected' && (
@@ -135,7 +135,7 @@ function ApplicantCard({ app, onReview }) {
               ))}
             </div>
             <div className="flex items-center justify-between">
-              <p className={`text-[11px] font-bold flex items-center gap-1.5 ${isApproved ? 'text-[#005F02]' : isPending ? 'text-orange-600' : 'text-blue-600'}`}>
+              <p className={`text-[11px] font-bold flex items-center gap-1.5 ${isApproved ? 'text-[#8C0B1A]' : isPending ? 'text-orange-600' : 'text-blue-600'}`}>
                 <FiCheckCircle className={`w-3.5 h-3.5 ${isApproved ? '' : isPending ? 'text-orange-400' : 'text-blue-300'}`} />
                 {isApproved
                   ? 'Application approved — eID issued'
@@ -454,7 +454,7 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
         {/* Header */}
         <div className="px-8 py-5 border-b border-emerald-100 flex items-center justify-between shrink-0 bg-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#F1FDF3] rounded-lg flex items-center justify-center text-[#005F02]">
+            <div className="w-10 h-10 bg-[#F1FDF3] rounded-lg flex items-center justify-center text-[#8C0B1A]">
               <FiFileText className="w-6 h-6" />
             </div>
             <h2 className="text-xl font-bold text-gray-900">Review eID Application</h2>
@@ -503,14 +503,14 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
                   placeholder="Search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/10 focus:border-[#005F02] transition-all"
+                  className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/10 focus:border-[#8C0B1A] transition-all"
                 />
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-8 py-6">
               {isLoading ? (
-                <div className="flex justify-center py-20"><FiLoader className="w-10 h-10 text-[#005F02] animate-spin" /></div>
+                <div className="flex justify-center py-20"><FiLoader className="w-10 h-10 text-[#8C0B1A] animate-spin" /></div>
               ) : applications.length === 0 ? (
                 <div className="text-center py-20 text-gray-400 flex flex-col items-center gap-3">
                   <FiInfo className="w-12 h-12 opacity-20" />
@@ -560,10 +560,10 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
                   const Icon   = step.icon;
                   return (
                     <div key={step.id} className="flex flex-col items-center gap-3 z-10">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${active || done ? 'bg-[#005F02] text-white border-[#005F02]' : 'bg-white text-gray-300 border-gray-100 shadow-sm'}`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${active || done ? 'bg-[#8C0B1A] text-white border-[#8C0B1A]' : 'bg-white text-gray-300 border-gray-100 shadow-sm'}`}>
                         {done ? <FiCheck className="w-6 h-6" /> : <Icon className="w-6 h-6" />}
                       </div>
-                      <span className={`text-[10px] font-bold text-center max-w-[80px] leading-tight ${active ? 'text-[#005F02]' : 'text-gray-400'}`}>{step.label}</span>
+                      <span className={`text-[10px] font-bold text-center max-w-[80px] leading-tight ${active ? 'text-[#8C0B1A]' : 'text-gray-400'}`}>{step.label}</span>
                     </div>
                   );
                 })}
@@ -595,7 +595,7 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
                   onClick={currentStep === 5 ? handleApproveAndNotify : handleNext}
                   disabled={isIssuing}
                   className={`px-8 py-3 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95 ${
-                    currentStep === 5 ? 'bg-[#005F02] text-white hover:bg-[#004A01]' : 'bg-black text-white hover:bg-gray-800'
+                    currentStep === 5 ? 'bg-[#8C0B1A] text-white hover:bg-[#7A0915]' : 'bg-black text-white hover:bg-gray-800'
                   }`}
                 >
                   {isIssuing && <FiLoader className="w-4 h-4 animate-spin" />}
@@ -610,3 +610,4 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
     document.body
   );
 }
+

@@ -43,7 +43,7 @@ export default function ScanQRCode({ onVerify }) {
       <div className="flex gap-3 mb-6">
         <button
           onClick={handleScanQR}
-          className="flex-1 bg-[#005F02] hover:bg-[#004A01] text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
+          className="flex-1 bg-[#8C0B1A] hover:bg-[#7A0915] text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
         >
           Scan QR Code
         </button>
@@ -53,7 +53,7 @@ export default function ScanQRCode({ onVerify }) {
           onChange={(e) => setManualCode(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleManualEntry()}
           placeholder="Enter Code Manually"
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]"
+          className="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]"
         />
       </div>
 
@@ -72,7 +72,7 @@ export default function ScanQRCode({ onVerify }) {
               <div className="flex items-center gap-3">
                 <span
                   className={`text-xs font-medium ${item.status === 'Active'
-                      ? 'text-[#005F02]'
+                      ? 'text-[#8C0B1A]'
                       : 'text-red-600'
                     }`}
                 >
@@ -87,3 +87,5 @@ export default function ScanQRCode({ onVerify }) {
     </div>
   );
 }
+
+

@@ -77,3 +77,4 @@ export default function GenderDistribution({ filters, analyticsData }) {
     </div>
   );
 }
+

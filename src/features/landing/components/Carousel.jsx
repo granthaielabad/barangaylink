@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import slide1 from '../../../assets/images/slides-1.jpg';
-import slide2 from '../../../assets/images/slides-2.png';
+import slide1 from '../../../assets/images/slides-1.png';
+import slide2 from '../../../assets/images/slides-2.jpg';
 
 export default function Carousel({ images = [] }) {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -116,3 +116,4 @@ export default function Carousel({ images = [] }) {
         </div>
     );
 }
+

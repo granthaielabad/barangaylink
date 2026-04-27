@@ -27,7 +27,7 @@ export default class ErrorBoundary extends Component {
             </p>
             <button
               onClick={() => window.location.reload()}
-              className="bg-[#005F02] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#004A01] transition-colors"
+              className="bg-[#8C0B1A] text-white px-6 py-2 rounded-lg font-semibold hover:bg-[#7A0915] transition-colors"
             >
               Reload Page
             </button>
@@ -38,3 +38,4 @@ export default class ErrorBoundary extends Component {
     return this.props.children;
   }
 }
+

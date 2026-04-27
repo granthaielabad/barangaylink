@@ -48,30 +48,30 @@ export default function UploadQRCode({ onUpload }) {
 
         {/* Full Name */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-[#005F02]">Full Name</label>
+          <label className="text-sm font-medium text-[#8C0B1A]">Full Name</label>
           <p className="text-gray-600 pb-2 border-b border-gray-300">-</p>
         </div>
 
         {/* Address */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-[#005F02]">Address</label>
+          <label className="text-sm font-medium text-[#8C0B1A]">Address</label>
           <p className="text-gray-600 pb-2 border-b border-gray-300">-</p>
         </div>
 
         {/* Contact Number */}
         <div className="mb-6">
-          <label className="text-sm font-medium text-[#005F02]">Contact Number</label>
+          <label className="text-sm font-medium text-[#8C0B1A]">Contact Number</label>
           <p className="text-gray-600 pb-2 border-b border-gray-300">-</p>
         </div>
 
         {/* Birthdate and Sex */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-[#005F02]">Birthdate</label>
+            <label className="text-sm font-medium text-[#8C0B1A]">Birthdate</label>
             <p className="text-gray-600 pb-2 border-b border-gray-300">-</p>
           </div>
           <div>
-            <label className="text-sm font-medium text-[#005F02]">Sex</label>
+            <label className="text-sm font-medium text-[#8C0B1A]">Sex</label>
             <p className="text-gray-600 pb-2 border-b border-gray-300">-</p>
           </div>
         </div>
@@ -81,9 +81,9 @@ export default function UploadQRCode({ onUpload }) {
       <div className="mt-auto">
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="w-full bg-[#F1F7F2] hover:bg-[#005F02]/20 transition-colors rounded-lg py-3 flex items-center justify-center"
+          className="w-full bg-[#F1F7F2] hover:bg-[#8C0B1A]/20 transition-colors rounded-lg py-3 flex items-center justify-center"
         >
-          <span className="text-base font-medium text-[#005F02]">Upload QR Code</span>
+          <span className="text-base font-medium text-[#8C0B1A]">Upload QR Code</span>
         </button>
 
         <input
@@ -97,3 +97,5 @@ export default function UploadQRCode({ onUpload }) {
     </div>
   );
 }
+
+

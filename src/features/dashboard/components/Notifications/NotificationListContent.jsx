@@ -51,7 +51,7 @@ const NotificationListContent = () => {
         <button
           onClick={handleMarkAllAsRead}
           disabled={markAllRead.isPending}
-          className="flex items-center gap-2 text-white bg-[#005F02] font-semibold text-lg transition-colors px-4 py-2 hover:bg-[#004A01] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 text-white bg-[#8C0B1A] font-semibold text-lg transition-colors px-4 py-2 hover:bg-[#7A0915] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <FiCheckSquare className="w-6 h-6" />
           Mark all as read
@@ -67,7 +67,7 @@ const NotificationListContent = () => {
       <div className="space-y-4">
         {isLoading ? (
           <div className="flex justify-center py-24">
-            <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+            <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
           </div>
         ) : filteredNotifications.length > 0 ? (
           filteredNotifications.map((notif) => (
@@ -89,3 +89,4 @@ const NotificationListContent = () => {
 };
 
 export default NotificationListContent;
+

@@ -69,3 +69,4 @@ export default function HouseholdTable({ households = [], onEditHousehold, onArc
     </div>
   );
 }
+

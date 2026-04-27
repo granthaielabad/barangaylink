@@ -29,7 +29,7 @@ export default function StatusFilter({ value, onChange, options = DEFAULT_OPTION
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center text-gray-900 gap-2 px-4 py-2.5 rounded-lg text-base font-medium border border-gray-300 bg-white hover:bg-gray-50 justify-between shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#005F02]/20"
+        className="inline-flex items-center text-gray-900 gap-2 px-4 py-2.5 rounded-lg text-base font-medium border border-gray-300 bg-white hover:bg-gray-50 justify-between shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/20"
       >
         <span className="text-base font-medium">{selectedOption.label}</span>
         <IoIosArrowDown className={`w-4 h-4 text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -47,10 +47,10 @@ export default function StatusFilter({ value, onChange, options = DEFAULT_OPTION
               }}
               className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-100 transition-colors flex items-center justify-between"
             >
-              <span className={value === option.value ? 'font-semibold text-[#005F02]' : 'text-gray-700'}>
+              <span className={value === option.value ? 'font-semibold text-[#8C0B1A]' : 'text-gray-700'}>
                 {option.label}
               </span>
-              {value === option.value && <MdCheck className="w-5 h-5 text-[#005F02]" />}
+              {value === option.value && <MdCheck className="w-5 h-5 text-[#8C0B1A]" />}
             </button>
           ))}
         </div>
@@ -58,3 +58,4 @@ export default function StatusFilter({ value, onChange, options = DEFAULT_OPTION
     </div>
   );
 }
+
