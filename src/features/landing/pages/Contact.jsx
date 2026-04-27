@@ -94,7 +94,7 @@ export default function Contact() {
                       <span className="font-semibold text-[#8C0B1A]">
                         Office Address:
                       </span>{' '}
-                      123 Barangay Sta. Lucia, Quezon City
+                      6 Sta. Lucia, Novaliches, Quezon City, Metro Manila
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
