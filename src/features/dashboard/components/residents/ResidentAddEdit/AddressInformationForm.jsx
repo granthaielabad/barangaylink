@@ -12,6 +12,7 @@ export default function AddressInformationForm({ value = {}, onChange }) {
 
   return (
     <div className="space-y-4">
+      {/* Section Header */}
       <div className="flex items-center gap-2 mb-4">
         <IoLocationOutline className="w-5 h-5 text-[#8C0B1A]" />
         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
@@ -19,43 +20,50 @@ export default function AddressInformationForm({ value = {}, onChange }) {
         </h3>
       </div>
 
+      {/* House No. and Street Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            House No. <span className="text-red-500">*</span>
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1.5 sm:min-h-[40px] flex items-end">
+            <span>House No., block, lot, apt, suite, unit, building, floor, etc: <span className="text-red-500">*</span></span>
           </label>
           <input
             type="text"
             value={value.houseNo ?? ''}
             onChange={(e) => update('houseNo', e.target.value)}
             className={inputClass}
+            placeholder="e.g. Blk 1 Lot 2, Phase 3"
             required
           />
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Street <span className="text-red-500">*</span>
+        <div className="flex flex-col">
+          <label className="text-sm font-medium text-gray-700 mb-1.5 sm:min-h-[40px] flex items-end">
+            <span>Street, village, etc. <span className="text-red-500">*</span></span>
           </label>
           <input
             type="text"
             value={value.street ?? ''}
             onChange={(e) => update('street', e.target.value)}
             className={inputClass}
+            placeholder="e.g. Sampaguita St., Greenview Village"
             required
           />
         </div>
+      </div>
+
+      {/* Sitio and Barangay Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Purok/Zone</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Sitio</label>
           <input
             type="text"
             value={value.purok ?? ''}
-            onChange={(e) => {
+            onInput={(e) => {
               const v = e.target.value;
               // If user clears the text, also clear the associated purokId
               onChange?.({ ...value, purok: v, purokId: v ? (value.purokId ?? '') : '' });
             }}
-            placeholder="e.g. Purok 1, Zone 3"
             className={inputClass}
+            placeholder="e.g. Sitio Uno"
           />
         </div>
         <div>
@@ -71,4 +79,3 @@ export default function AddressInformationForm({ value = {}, onChange }) {
     </div>
   );
 }
-

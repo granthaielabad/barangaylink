@@ -241,7 +241,7 @@ export default function Privacy() {
                         <div className="flex items-start gap-3">
                             <img src={Checklist} alt="Checklist Icon" className="w-5 h-5 mt-0.5" />
                             <p className="text-lg">
-                                <b>Barangay Office:</b>  123 Barangay San Bartolome, Quezon City
+                                <b>Barangay Office:</b>  123 Barangay Sta. Lucia, Quezon City
                             </p>
                         </div>
 

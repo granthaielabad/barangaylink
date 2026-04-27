@@ -72,7 +72,7 @@ export default function Residents() {
       sectoralStatus: [
         r.is_pwd && 'PWD',
         r.is_solo_parent && 'Solo Parent',
-        r.is_indigent && 'Indigent',
+        r.is_indigent && 'LGBTQ+',
       ].filter(Boolean).join(', ') || '—',
       status: r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : '—',
       _raw: r,
@@ -105,7 +105,7 @@ export default function Residents() {
     is_pwd:         data.isPwd         ?? false,
     is_solo_parent: data.isSoloParent  ?? false,
     is_indigent:    data.isIndigent    ?? false,
-    // Address — barangay is always San Bartolome, locked in form
+    // Address — barangay is always Sta. Lucia, locked in form
     address_line: [data.houseNo, data.street, data.purok, BARANGAY].filter(Boolean).join(', ') || null,
     // Only preserve purok_id if the purok text field still has a value
     purok_id:     (data.purok && data.purokId) ? Number(data.purokId) : null,

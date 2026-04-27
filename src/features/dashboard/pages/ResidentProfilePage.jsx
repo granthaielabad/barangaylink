@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FiUser, FiMapPin, FiHome, FiAlertCircle, FiLink, FiCreditCard, FiCalendar } from 'react-icons/fi';
 import { useMyResidentProfile, useMyHousehold, useLinkResidentAccount } from '../../../hooks/queries/resident/useResidentPortal';
 import SectionCard from '../components/ResidentPortal/SectionCard';
+import { BARANGAY } from '../../../core/constants';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 function fmt(dateStr) {
@@ -201,7 +202,7 @@ export default function ResidentProfilePage() {
   // otherwise parse back from the concatenated address_line string.
   const parseAddr = (line) => {
     if (!line) return { houseNo: '', street: '', purok: '' };
-    const withoutBarangay = line.replace(/,?\s*San Bartolome\s*$/i, '').trim();
+    const withoutBarangay = line.replace(new RegExp(`,?\\s*${BARANGAY}\\s*$`, 'i'), '').trim();
     const parts = withoutBarangay.split(',').map((s) => s.trim()).filter(Boolean);
     return { houseNo: parts[0] ?? '', street: parts[1] ?? '', purok: parts[2] ?? '' };
   };
@@ -260,9 +261,9 @@ export default function ResidentProfilePage() {
         <FieldRow
           fields={[
             { label: 'House No.',    value: val(houseNo) },
-            { label: 'Purok / Zone', value: val(purok) },
+            { label: 'Sitio',        value: val(purok) },
             { label: 'Street',       value: val(street) },
-            { label: 'Barangay',     value: 'San Bartolome' },
+            { label: 'Barangay',     value: BARANGAY },
           ]}
         />
       </SectionCard>
@@ -299,4 +300,3 @@ export default function ResidentProfilePage() {
     </div>
   );
 }
-

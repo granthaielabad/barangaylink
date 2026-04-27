@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import {
   FiUser, FiCreditCard, FiDownload, FiZoomIn, FiX, FiXCircle,
   FiAlertCircle, FiCheckCircle, FiClock, FiRefreshCw, FiPlus,
-  FiMapPin, FiPhone, FiMail, FiCalendar, FiCamera, FiUpload,
+  FiMapPin, FiPhone, FiMail, FiCalendar, FiCamera, FiUpload, FiRotateCcw,
 } from 'react-icons/fi';
 import { LuClipboardList } from 'react-icons/lu';
 import {
@@ -63,8 +63,18 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const [validIdNumber,   setValidIdNumber]   = useState('');
   const [validIdFile,     setValidIdFile]     = useState(null);
   const [validIdPreview,  setValidIdPreview]  = useState(null);
+  const [signaturePreview, setSignaturePreview] = useState(null);
+  const [drawSignature,    setDrawSignature]    = useState(false);
+  const [signatureError,   setSignatureError]   = useState('');
+  const [signatureDirty,   setSignatureDirty]   = useState(false);
+  const [canUndoSignature, setCanUndoSignature] = useState(false);
   const photoRef   = useRef(null);
   const validIdRef = useRef(null);
+  const signatureRef = useRef(null);
+  const signatureCanvasRef = useRef(null);
+  const isDrawingRef = useRef(false);
+  const lastPointRef = useRef({ x: 0, y: 0 });
+  const signatureHistoryRef = useRef([]);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -95,6 +105,198 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
     e.target.value = '';
   };
 
+  const handleSignatureUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert('File size must be under 2MB.'); return; }
+    if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPG are supported.'); return; }
+
+    const validateSignatureImage = (dataUrl) => new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxW = 420;
+        const maxH = 200;
+        const scale = Math.min(maxW / img.width, maxH / img.height, 1);
+        const w = Math.max(1, Math.floor(img.width * scale));
+        const h = Math.max(1, Math.floor(img.height * scale));
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const { data } = ctx.getImageData(0, 0, w, h);
+        let ink = 0;
+        let minX = w;
+        let minY = h;
+        let maxX = -1;
+        let maxY = -1;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const a = data[i + 3];
+          const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          const isInk = a > 20 && luminance < 235;
+          if (!isInk) continue;
+          ink += 1;
+          const px = (i / 4) % w;
+          const py = Math.floor((i / 4) / w);
+          if (px < minX) minX = px;
+          if (px > maxX) maxX = px;
+          if (py < minY) minY = py;
+          if (py > maxY) maxY = py;
+        }
+
+        if (ink === 0) {
+          resolve({ ok: false, message: 'Upload a clearer signature image.' });
+          return;
+        }
+
+        const total = w * h;
+        const inkRatio = ink / total;
+        const boxW = Math.max(1, maxX - minX + 1);
+        const boxH = Math.max(1, maxY - minY + 1);
+        const boxArea = boxW * boxH;
+        const boxFill = ink / boxArea;
+        const aspect = boxW / boxH;
+
+        if (inkRatio < 0.002) {
+          resolve({ ok: false, message: 'Signature is too faint. Please upload a clearer one.' });
+          return;
+        }
+        if (inkRatio > 0.35 || (inkRatio > 0.2 && boxFill > 0.45)) {
+          resolve({ ok: false, message: 'Image looks like a full photo. Please upload only your signature.' });
+          return;
+        }
+        if (aspect < 0.8 && inkRatio > 0.05) {
+          resolve({ ok: false, message: 'Please upload a handwritten signature on a plain background.' });
+          return;
+        }
+
+        resolve({ ok: true });
+      };
+      img.onerror = () => resolve({ ok: false, message: 'Unable to read the signature image.' });
+      img.src = dataUrl;
+    });
+
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      const validation = await validateSignatureImage(dataUrl);
+      if (!validation.ok) {
+        setSignatureError(validation.message || 'Please upload a valid signature image.');
+        setSignaturePreview(null);
+        e.target.value = '';
+        return;
+      }
+      setSignaturePreview(dataUrl);
+      setDrawSignature(false);
+      setSignatureError('');
+      setSignatureDirty(true);
+      signatureHistoryRef.current = [];
+      setCanUndoSignature(false);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  useEffect(() => {
+    if (!drawSignature || !signatureCanvasRef.current) return;
+    const canvas = signatureCanvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(320, Math.floor(rect.width));
+    canvas.height = 120;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#111827';
+    setSignatureDirty(false);
+    signatureHistoryRef.current = [];
+    setCanUndoSignature(false);
+  }, [drawSignature]);
+
+  const getPoint = (e) => {
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const startDraw = (e) => {
+    if (!drawSignature) return;
+    e.preventDefault();
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    if (canvas.setPointerCapture && e.pointerId !== undefined) canvas.setPointerCapture(e.pointerId);
+    const ctx = canvas.getContext('2d');
+    const p = getPoint(e);
+    signatureHistoryRef.current.push(canvas.toDataURL('image/png'));
+    setCanUndoSignature(signatureHistoryRef.current.length > 0);
+    setSignatureError('');
+    isDrawingRef.current = true;
+    lastPointRef.current = p;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+  };
+
+  const moveDraw = (e) => {
+    if (!isDrawingRef.current || !drawSignature) return;
+    e.preventDefault();
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const p = getPoint(e);
+    if (!signatureDirty) setSignatureDirty(true);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    lastPointRef.current = p;
+  };
+
+  const endDraw = () => {
+    if (!isDrawingRef.current) return;
+    isDrawingRef.current = false;
+    const canvas = signatureCanvasRef.current;
+    if (!canvas) return;
+    if (signatureDirty) setSignaturePreview(canvas.toDataURL('image/png'));
+  };
+
+  const clearSignature = () => {
+    setSignaturePreview(null);
+    setSignatureError('');
+    setSignatureDirty(false);
+    signatureHistoryRef.current = [];
+    setCanUndoSignature(false);
+    if (drawSignature && signatureCanvasRef.current) {
+      const canvas = signatureCanvasRef.current;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  };
+
+  const undoSignature = () => {
+    if (!drawSignature || !signatureCanvasRef.current || signatureHistoryRef.current.length === 0) return;
+    const canvas = signatureCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const prev = signatureHistoryRef.current.pop();
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      setSignaturePreview(canvas.toDataURL('image/png'));
+      setSignatureDirty(true);
+      setCanUndoSignature(signatureHistoryRef.current.length > 0);
+    };
+    img.src = prev;
+  };
+
   const lockedWrap = 'flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50';
   const lockedIcon = 'bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-200 text-gray-400';
   const lockedText = 'flex-1 px-4 py-2.5 bg-gray-50 text-gray-500 text-base cursor-not-allowed select-none';
@@ -114,6 +316,13 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const drawnSignature = drawSignature && signatureDirty && signatureCanvasRef.current
+      ? signatureCanvasRef.current.toDataURL('image/png')
+      : null;
+    if (!signaturePreview && !drawnSignature) {
+      setSignatureError('Please provide your signature before submitting.');
+      return;
+    }
     onSubmit({
       first_name:     resident?.first_name,
       middle_name:    resident?.middle_name,
@@ -128,6 +337,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
       photo_url:      photoPreview  || null,
       _validIdType:   validIdType   || null,
       _validIdFile:   validIdFile   || null,
+      _signature:     drawnSignature || signaturePreview || null,
     });
   };
 
@@ -270,6 +480,95 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                 <input ref={validIdRef} type="file" accept="image/png,image/jpeg"
                   onChange={handleValidIdFile} className="hidden" />
               </div>
+            </div>
+
+            {/* ── Signature ── */}
+            <div className="border-t border-gray-200 pt-5 space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Signature <span className="text-red-500">*</span>
+              </label>
+
+              <div className={`relative w-full h-[120px] rounded-lg border bg-gray-50 overflow-hidden ${signatureError ? 'border-red-400' : 'border-gray-300'}`}>
+                {drawSignature ? (
+                  <canvas
+                    ref={signatureCanvasRef}
+                    className="w-full h-full bg-white touch-none"
+                    style={{ touchAction: 'none' }}
+                    onPointerDown={startDraw}
+                    onPointerMove={moveDraw}
+                    onPointerUp={endDraw}
+                    onPointerLeave={endDraw}
+                  />
+                ) : signaturePreview ? (
+                  <img src={signaturePreview} alt="Signature" className="w-full h-full object-contain bg-white" />
+                ) : null}
+                {!signaturePreview && (!drawSignature || !signatureDirty) && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <p className="text-xs text-gray-400">Draw your signature here</p>
+                  </div>
+                )}
+                {drawSignature && (
+                  <button
+                    type="button"
+                    onClick={undoSignature}
+                    disabled={!canUndoSignature}
+                    aria-label="Undo signature stroke"
+                    title="Undo"
+                    className="absolute top-2 right-2 inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-300 bg-white/95 text-gray-700 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <FiRotateCcw className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSignaturePreview(null);
+                    setDrawSignature(true);
+                    setSignatureError('');
+                  }}
+                  className="px-4 py-2 rounded-md border border-gray-300 bg-white text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Draw Signature
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDrawSignature(false);
+                    setSignatureError('');
+                    signatureRef.current?.click();
+                  }}
+                  className="px-4 py-2 rounded-md border border-gray-300 bg-gray-100 text-sm text-gray-700 hover:bg-gray-200 transition-colors"
+                >
+                  Upload Signature
+                </button>
+                <input
+                  ref={signatureRef}
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={handleSignatureUpload}
+                  className="hidden"
+                />
+              </div>
+              {signatureError && <p className="text-xs text-red-600">{signatureError}</p>}
+
+              <button
+                type="button"
+                onClick={clearSignature}
+                className="text-xs text-[#8C0B1A] hover:underline"
+              >
+                Clear signature
+              </button>
+
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Use your finger, stylus, or mouse to sign. Keep the signature within the box for best clarity.
+              </p>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                I agree that this signature is my own and may be used as my official signature for my Barangay eID
+                application, serving as my authorization for the processing, verification, and validation of my submitted information.
+              </p>
             </div>
           </div>
 
