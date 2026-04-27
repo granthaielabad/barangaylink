@@ -63,7 +63,7 @@ export default function DocumentPreviewModal({ req, resident, onClose }) {
         {/* Header */}
         <div className="flex items-center bg-[#F1FBF1] justify-between px-6 py-4 border-b border-gray-300 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#005F02]">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C0B1A]">
               {req.icon}
             </div>
             <h2 className="text-[24px] font-semibold text-gray-900">{req.title} Preview</h2>
@@ -95,7 +95,7 @@ export default function DocumentPreviewModal({ req, resident, onClose }) {
             Close
           </button>
           <button type="button" onClick={handleDownload}
-            className="px-6 py-2.5 flex items-center gap-2 rounded-lg text-sm font-semibold bg-[#005F02] text-white hover:bg-[#004A01] transition-colors">
+            className="px-6 py-2.5 flex items-center gap-2 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors">
             <FiDownload className="w-4 h-4" /> Download / Print
           </button>
         </div>
@@ -104,3 +104,4 @@ export default function DocumentPreviewModal({ req, resident, onClose }) {
     document.body
   );
 }
+

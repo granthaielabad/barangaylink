@@ -57,7 +57,7 @@ function SidebarContent({ onClose }) {
                       [
                         'flex items-center gap-3 px-2 py-2 rounded-lg text-lg transition-colors',
                         isActive
-                          ? 'bg-[#005F02]/15 text-[#005F02] font-semibold'
+                          ? 'bg-[#8C0B1A]/15 text-[#8C0B1A] font-semibold'
                           : 'text-gray-700 hover:bg-gray-100',
                       ].join(' ')
                     }
@@ -159,3 +159,4 @@ export default function ResidentPortal() {
     </div>
   );
 }
+

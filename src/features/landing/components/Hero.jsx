@@ -24,7 +24,7 @@ export default function Hero() {
                         The resident and housing registry system organizes community records into a single digital platform. It enables efficient data management, consistent record-keeping, and better support for local administrative decision-making.
                     </p>
                     <div className="flex items-center gap-4 sm:gap-6 flex-wrap">
-                        <a href="https://quezoncity.gov.ph/brgy-directory/san-bartolome/" target="_blank"> <button className="px-6 sm:px-8 py-3 border-2 border-white text-white font-semibold hover:bg-white hover:text-emerald-900 rounded-lg transition-all duration-300">
+                        <a href="https://quezoncity.gov.ph/brgy-directory/sta-lucia/" target="_blank"> <button className="px-6 sm:px-8 py-3 border-2 border-white text-white font-semibold hover:bg-white hover:text-emerald-900 rounded-lg transition-all duration-300">
                             VISIT US
                         </button> </a>
                         <div className="flex -space-x-2">
@@ -48,3 +48,4 @@ export default function Hero() {
         </Background>
     );
 }
+

@@ -19,7 +19,7 @@ export default function EidOverview({ stats }) {
       icon: FaAddressCard,
       containerClass: 'bg-[#E6F4E6] border-[#B7DDB8]',
       iconBgClass: 'text-[#2F7A37]',
-      textClass: 'text-[#005F02]',
+      textClass: 'text-[#8C0B1A]',
     },
     {
       label: 'Active',
@@ -90,3 +90,4 @@ export default function EidOverview({ stats }) {
     </section>
   );
 }
+

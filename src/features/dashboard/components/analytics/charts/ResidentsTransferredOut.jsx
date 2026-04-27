@@ -58,3 +58,4 @@ export default function ResidentsTransferredOut({ filters, analyticsData }) {
     </div>
   );
 }
+

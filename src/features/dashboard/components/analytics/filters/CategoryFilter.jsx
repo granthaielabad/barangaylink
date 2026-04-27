@@ -39,3 +39,4 @@ export default function CategoryFilter({ selectedCategory, onCategoryChange }) {
     </div>
   );
 }
+

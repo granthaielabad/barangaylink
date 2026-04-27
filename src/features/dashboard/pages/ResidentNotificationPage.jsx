@@ -9,3 +9,4 @@ const ResidentNotificationPage = () => {
 };
 
 export default ResidentNotificationPage;
+

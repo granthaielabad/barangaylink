@@ -58,7 +58,7 @@ export default function Pagination({
                 onClick={() => onPageChange?.(page)}
                 className={`min-w-9 h-9 px-4 rounded-lg text-sm font-medium border transition-colors ${
                   currentPage === page
-                    ? 'bg-[#005F02] text-white border-[#005F02]'
+                    ? 'bg-[#8C0B1A] text-white border-[#8C0B1A]'
                     : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >
@@ -81,3 +81,5 @@ export default function Pagination({
     </div>
   );
 }
+
+

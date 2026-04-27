@@ -78,7 +78,7 @@ export default function Inquiries() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F3F7F3]">
+    <div className="min-h-screen flex bg-[#FFFBFC]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto relative">
@@ -111,7 +111,7 @@ export default function Inquiries() {
 
             {isLoading ? (
               <div className="flex justify-center py-16">
-                <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -166,7 +166,7 @@ export default function Inquiries() {
                             <div className="flex items-center justify-end gap-2">
                               <button 
                                 onClick={() => handleView(inquiry)}
-                                className="p-2 text-gray-400 hover:text-[#005F02] hover:bg-green-50 rounded-lg transition-all"
+                                className="p-2 text-gray-400 hover:text-[#8C0B1A] hover:bg-green-50 rounded-lg transition-all"
                                 title="View Message"
                               >
                                 <FiEye className="w-5 h-5" />
@@ -217,7 +217,7 @@ export default function Inquiries() {
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 rounded-lg">
-                  <FiMail className="w-6 h-6 text-[#005F02]" />
+                  <FiMail className="w-6 h-6 text-[#8C0B1A]" />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Inquiry Details</h2>
@@ -245,7 +245,7 @@ export default function Inquiries() {
               <div>
                 <label className="text-xs font-bold text-gray-400 uppercase">Concern Type</label>
                 <div className="mt-1">
-                  <span className="px-3 py-1 bg-[#005F02]/10 text-[#005F02] text-sm font-bold rounded-full capitalize">
+                  <span className="px-3 py-1 bg-[#8C0B1A]/10 text-[#8C0B1A] text-sm font-bold rounded-full capitalize">
                     {selectedInquiry.concern}
                   </span>
                 </div>
@@ -294,3 +294,5 @@ export default function Inquiries() {
     </div>
   );
 }
+
+

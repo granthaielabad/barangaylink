@@ -56,7 +56,7 @@ export default function ViewRequestModal({ isOpen, request, onClose, onAction })
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-[#F1F7F2] border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <FiFileText className="w-6 h-6 text-[#005F02]" />
+            <FiFileText className="w-6 h-6 text-[#8C0B1A]" />
             <h2 className="text-xl font-bold text-gray-900">{request.type}</h2>
           </div>
           <button
@@ -82,3 +82,5 @@ export default function ViewRequestModal({ isOpen, request, onClose, onAction })
     document.body
   );
 }
+
+

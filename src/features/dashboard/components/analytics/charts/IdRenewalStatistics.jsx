@@ -119,3 +119,4 @@ export default function IdRenewalStatistics({ filters, analyticsData }) {
     </div>
   );
 }
+

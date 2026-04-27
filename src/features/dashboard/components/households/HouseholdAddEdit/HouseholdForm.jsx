@@ -14,7 +14,7 @@ import {
 } from '../../../../../core/constants';
 
 const inputClass =
-  'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
+  'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A]';
 
 const addonInputClass =
   'flex-1 px-4 py-2.5 bg-white focus:outline-none text-gray-900 text-base placeholder-gray-400';
@@ -243,7 +243,7 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
                         <span className="text-[10px] text-gray-400 font-mono">{r.residentNo || 'No ID'}</span>
                       </div>
                       {value.headResidentId === r.value && (
-                        <MdCheck className="w-5 h-5 text-[#005F02] shrink-0" />
+                        <MdCheck className="w-5 h-5 text-[#8C0B1A] shrink-0" />
                       )}
                     </button>
                   ))
@@ -262,7 +262,7 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
             Street <span className="text-red-500">*</span>
           </label>
           <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
-            <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r text-[#005F02] border-gray-300">
+            <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r text-[#8C0B1A] border-gray-300">
               <LuHouse className="w-6 h-6" />
             </div>
             <input
@@ -327,7 +327,7 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
       <div className="border-t border-gray-100 pt-6">
         <div className="flex items-center justify-between mb-4">
           <label className="block text-sm font-bold text-gray-900 uppercase tracking-wider">Members</label>
-          <span className="bg-[#005F02]/10 text-[#005F02] text-xs font-black px-2.5 py-1 rounded-full">{members.length}</span>
+          <span className="bg-[#8C0B1A]/10 text-[#8C0B1A] text-xs font-black px-2.5 py-1 rounded-full">{members.length}</span>
         </div>
 
         <div className="space-y-2 mb-6">
@@ -341,12 +341,12 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
                 key={member.id}
                 className={`flex items-center gap-3 rounded-lg border transition-all ${isHead ? 'bg-emerald-50/30 border-emerald-100 shadow-sm' : 'border-gray-200 bg-white'}`}
               >
-                <div className={`bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300 ${isHead ? 'text-[#005F02]' : 'text-gray-400'}`}>
+                <div className={`bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300 ${isHead ? 'text-[#8C0B1A]' : 'text-gray-400'}`}>
                   <CiUser className="w-6 h-6" />
                 </div>
                 <div className="flex-1 min-w-0 flex flex-col">
                   <span className="text-sm font-semibold text-gray-900 truncate">{member.name}</span>
-                  {isHead && <span className="text-[10px] text-[#005F02] font-black uppercase tracking-widest">Head of Household</span>}
+                  {isHead && <span className="text-[10px] text-[#8C0B1A] font-black uppercase tracking-widest">Head of Household</span>}
                 </div>
                 {/* Head of Household cannot be removed — only non-head members show the delete button */}
                 {isHead ? (
@@ -416,3 +416,4 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
     </div>
   );
 }
+

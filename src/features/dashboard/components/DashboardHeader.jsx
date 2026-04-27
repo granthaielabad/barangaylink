@@ -73,7 +73,7 @@ export default function DashboardHeader({
               hover:text-red-600
               focus:outline-none
               transition-colors
-              ${showNotifications ? 'bg-gray-100 text-[#005F02]' : 'text-gray-700'}
+              ${showNotifications ? 'bg-gray-100 text-[#8C0B1A]' : 'text-gray-700'}
             `}
           >
             <FiBell className="w-6 h-6" />
@@ -181,3 +181,4 @@ function ConfirmModal({
     </div>
   );
 }
+

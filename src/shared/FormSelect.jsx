@@ -99,10 +99,10 @@ export default function FormSelect({
                 type="button"
                 onClick={toggle}
                 onMouseDown={(e) => e.stopPropagation()}
-                className="w-full flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white text-base focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02] transition-colors group"
+                className="w-full flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white text-base focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A] transition-colors group"
             >
                 {Icon && (
-                    <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300 text-[#005F02] group-focus-within:bg-emerald-50 transition-colors">
+                    <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r border-gray-300 text-[#8C0B1A] group-focus-within:bg-emerald-50 transition-colors">
                         <Icon className="w-5 h-5" />
                     </div>
                 )}
@@ -145,3 +145,5 @@ export default function FormSelect({
         </div>
     );
 }
+
+

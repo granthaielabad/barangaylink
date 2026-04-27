@@ -139,7 +139,7 @@ export default function Household() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F3F7F3]">
+    <div className="min-h-screen flex bg-[#FFFBFC]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto relative">
@@ -168,7 +168,7 @@ export default function Household() {
                 <button
                   type="button"
                   onClick={() => setAddModalOpen(true)}
-                  className="px-4 py-2.5 rounded-lg text-sm font-medium bg-[#005F02] text-white hover:bg-[#004A01] transition-colors whitespace-nowrap"
+                  className="px-4 py-2.5 rounded-lg text-sm font-medium bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors whitespace-nowrap"
                 >
                   Add New Household
                 </button>
@@ -177,7 +177,7 @@ export default function Household() {
 
             {isLoading ? (
               <div className="flex justify-center py-16">
-                <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
               </div>
             ) : (
               <HouseholdTable
@@ -229,3 +229,4 @@ export default function Household() {
     </div>
   );
 }
+

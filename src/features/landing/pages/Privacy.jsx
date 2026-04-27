@@ -20,7 +20,7 @@ export default function Privacy() {
       </Background>
       <section className='w-full bg-gray-50'>
         <div className="py-12 md:py-20 px-4 md:px-8 lg:px-12 container mx-auto">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-[#005F02]">Privacy Policy</h1>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 text-[#8C0B1A]">Privacy Policy</h1>
             <p className="text-base md:text-lg mb-10 leading-relaxed">
                 The Resident and Household Registry System values the privacy and protection of personal information of all residents and barangay officials. This Privacy Policy explains how the system collects, uses, stores, and protects personal data in compliance with data privacy standards and to ensure secure barangay services.
             </p>
@@ -31,7 +31,7 @@ export default function Privacy() {
                 <div>
                     <div className="flex items-center gap-3 mb-3">
                     <img src={InformationUser} alt="Privacy Policy" className="w-8 h-full md:w-auto" />
-                    <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#005F02]"> Information We Collect</h3>
+                    <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#8C0B1A]"> Information We Collect</h3>
                     </div>
                     <p className="text-base md:text-lg mb-4 leading-relaxed">
                         The system collects and processes information necessary for maintaining accurate and organized resident and household records.                   
@@ -61,7 +61,7 @@ export default function Privacy() {
 
                     <div className="flex items-center gap-3 mb-3 mt-10">
                     <img src={Protect} alt="Privacy Policy" className="w-8 h-full md:w-auto" />
-                    <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#005F02]"> How We Protect Your Information</h3>
+                    <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#8C0B1A]"> How We Protect Your Information</h3>
                     </div>
                     <p className="text-base md:text-lg mb-4 leading-relaxed">
                         The system implements security measures to safeguard personal data, including:                   
@@ -106,7 +106,7 @@ export default function Privacy() {
 
                     <div className="flex items-center gap-3 mb-3 mt-10">
                     <img src={Rights} alt="Privacy Policy" className="w-8 h-full md:w-auto" />
-                    <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#005F02]"> Your Rights</h3>
+                    <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#8C0B1A]"> Your Rights</h3>
                     </div>
                     <p className="text-base md:text-lg mb-4 leading-relaxed">
                         Residents have the right to:                  
@@ -148,7 +148,7 @@ export default function Privacy() {
                 <div>
                     <div className="flex items-center gap-3 mb-3">
                         <img src={InformationUser2} alt="Privacy Policy" className="w-8 h-full md:w-auto" />
-                        <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#005F02]"> How We Use Your Information</h3>
+                        <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#8C0B1A]"> How We Use Your Information</h3>
                     </div>
                     <p className="text-base md:text-lg mb-4 leading-relaxed">
                         Collected information is used for the following purposes:                  
@@ -200,7 +200,7 @@ export default function Privacy() {
 
                         <div className="flex items-center gap-3 mb-3 mt-10">
                         <img src={Share} alt="Privacy Policy" className="w-8 h-full md:w-auto" />
-                        <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#005F02]"> Sharing of Information</h3>
+                        <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#8C0B1A]"> Sharing of Information</h3>
                     </div>
                     <p className="text-base md:text-lg mb-4 leading-relaxed">
                         Personal information will not be sold or shared with unauthorized third parties. Information may only be shared under the following conditions:                 
@@ -231,7 +231,7 @@ export default function Privacy() {
                     </div>
                         <div className="flex items-center gap-3 mb-3">
                         <img src={Mail} alt="Privacy Policy" className="w-8 h-full md:w-auto" />
-                        <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#005F02]"> Contact Us</h3>
+                        <h3 className="text-xl md:text-2xl font-bold mb-2 text-[#8C0B1A]"> Contact Us</h3>
                     </div>
                     <p className="text-base md:text-lg mb-4 leading-relaxed">
                         For questions, concerns, or requests regarding data privacy, residents may contact the barangay office through:                 
@@ -266,7 +266,7 @@ export default function Privacy() {
 
             {/* Bottom */}
             <div className="mt-10 md:mt-16">
-                <h3 className='font-bold text-2xl md:text-4xl text-[#005F02]'>Policy Changes</h3>
+                <h3 className='font-bold text-2xl md:text-4xl text-[#8C0B1A]'>Policy Changes</h3>
                 <p className="text-base md:text-lg mt-4 leading-relaxed">
                     This Privacy Policy may be updated to improve system security and compliance with regulations. Residents will be informed of major updates through system notifications or official announcements.
                 </p>
@@ -280,3 +280,5 @@ export default function Privacy() {
     </>
   )
 }
+
+

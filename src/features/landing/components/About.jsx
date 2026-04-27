@@ -6,8 +6,8 @@ export default function About() {
         <section className="w-full py-16 sm:py-20 lg:py-30 bg-gray-50 px-4 sm:px-8 md:px-20 lg:px-40 mt-16 sm:mt-20 lg:mt-30">
             {/* Text Header */}
             <div className="mb-10 sm:mb-16">
-                <p className="text-lg text-[#005F02] font-semibold text-left mb-2">● About Us</p>
-                <h1 className="font-bold text-[#005F02] text-3xl sm:text-4xl mb-8 sm:mb-12">Get to Know Our Barangay</h1>
+                <p className="text-lg text-[#8C0B1A] font-semibold text-left mb-2">● About Us</p>
+                <h1 className="font-bold text-[#8C0B1A] text-3xl sm:text-4xl mb-8 sm:mb-12">Get to Know Our Barangay</h1>
             </div>
 
             {/* Content Section - stacks on mobile, side-by-side on large */}
@@ -52,3 +52,4 @@ export default function About() {
         </section>
     );
 }
+

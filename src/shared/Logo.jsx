@@ -34,7 +34,7 @@ export default function Logo({ variant = 'auth', className = '' }) {
             isNavbar
               ? 'text-xl font-extrabold tracking-wider'
               : isDashboard
-                ? 'text-xl font-extrabold tracking-wider text-[#005F02]'
+                ? 'text-xl font-extrabold tracking-wider text-[#8C0B1A]'
                 : 'text-white font-bold text-xl md:text-2xl tracking-tight'
           }
         >
@@ -55,3 +55,5 @@ export default function Logo({ variant = 'auth', className = '' }) {
     </Link>
   );
 }
+
+

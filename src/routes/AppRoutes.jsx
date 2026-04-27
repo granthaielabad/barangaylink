@@ -36,7 +36,7 @@ function AppRoutes() {
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h1>
                 <p className="text-gray-500 mb-4">You do not have permission to view this page.</p>
-                <a href="/login" className="text-[#005F02] underline font-medium">Back to Login</a>
+                <a href="/login" className="text-[#8C0B1A] underline font-medium">Back to Login</a>
               </div>
             </div>
           }
@@ -81,3 +81,4 @@ function AppRoutes() {
 }
 
 export default AppRoutes
+

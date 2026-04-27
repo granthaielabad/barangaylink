@@ -26,7 +26,7 @@ const NotificationPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F3F7F3]">
+    <div className="min-h-screen flex bg-[#FFFBFC]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto">
@@ -47,3 +47,4 @@ const NotificationPage = () => {
 };
 
 export default NotificationPage;
+

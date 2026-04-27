@@ -38,7 +38,7 @@ const NotificationDropdown = ({ onClose }) => {
         <button
           onClick={handleMarkAllAsRead}
           disabled={markAllRead.isPending}
-          className="text-xs font-bold text-[#005F02] hover:underline transition-all"
+          className="text-xs font-bold text-[#8C0B1A] hover:underline transition-all"
         >
           Mark all as read
         </button>
@@ -47,7 +47,7 @@ const NotificationDropdown = ({ onClose }) => {
       <div className="max-h-[480px] overflow-y-auto scrollbar-hide">
         {isLoading ? (
           <div className="flex justify-center items-center py-10">
-            <FiLoader className="w-6 h-6 text-[#005F02] animate-spin" />
+            <FiLoader className="w-6 h-6 text-[#8C0B1A] animate-spin" />
           </div>
         ) : notifications.length === 0 ? (
           <div className="py-10 text-center text-sm text-gray-400">
@@ -68,7 +68,7 @@ const NotificationDropdown = ({ onClose }) => {
         <Link
           to={isAdmin ? '/notifications' : '/resident-portal/notifications'}
           onClick={onClose}
-          className="text-sm font-semibold text-[#005F02] hover:underline"
+          className="text-sm font-semibold text-[#8C0B1A] hover:underline"
         >
           See all notifications
         </Link>
@@ -78,3 +78,4 @@ const NotificationDropdown = ({ onClose }) => {
 };
 
 export default NotificationDropdown;
+

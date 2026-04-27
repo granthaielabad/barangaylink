@@ -68,7 +68,7 @@ function LinkAccountForm() {
     linkAccount({ residentNo, lastName, dateOfBirth });
   };
 
-  const inputCls = 'w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02] bg-white';
+  const inputCls = 'w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A] bg-white';
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
@@ -88,8 +88,8 @@ function LinkAccountForm() {
       {/* Linking form card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-9 h-9 rounded-lg bg-[#005F02]/10 flex items-center justify-center">
-            <FiLink className="w-5 h-5 text-[#005F02]" />
+          <div className="w-9 h-9 rounded-lg bg-[#8C0B1A]/10 flex items-center justify-center">
+            <FiLink className="w-5 h-5 text-[#8C0B1A]" />
           </div>
           <div>
             <h2 className="font-semibold text-gray-900 text-lg">Link Your Resident Record</h2>
@@ -105,7 +105,7 @@ function LinkAccountForm() {
             <label className="block text-sm font-medium text-gray-700 mb-1.5 mx-auto">
               Resident Number <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#005F02]/30 focus-within:border-[#005F02]">
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#8C0B1A]/30 focus-within:border-[#8C0B1A]">
               <div className="bg-gray-50 px-3 py-2.5 border-r border-gray-300 text-gray-400">
                 <FiCreditCard className="w-5 h-5" />
               </div>
@@ -143,7 +143,7 @@ function LinkAccountForm() {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Date of Birth <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#005F02]/30 focus-within:border-[#005F02]">
+            <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#8C0B1A]/30 focus-within:border-[#8C0B1A]">
               <div className="bg-gray-50 px-3 py-2.5 border-r border-gray-300 text-gray-400">
                 <FiCalendar className="w-5 h-5" />
               </div>
@@ -160,7 +160,7 @@ function LinkAccountForm() {
           <button
             type="submit"
             disabled={isPending || !residentNo || !lastName || !dateOfBirth}
-            className="w-full py-2.5 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2"
+            className="w-full py-2.5 rounded-lg bg-[#8C0B1A] text-white text-sm font-semibold hover:bg-[#7A0915] disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2"
           >
             {isPending ? 'Verifying…' : 'Link My Account'}
           </button>
@@ -214,7 +214,7 @@ export default function ResidentProfilePage() {
     <div className="space-y-5 mx-auto max-w-7xl">
 
       {/* ── Profile Header Card ─────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-center gap-5 border-t-4 border-t-[#005F02]">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-center gap-5 border-t-4 border-t-[#8C0B1A]">
         <div className="w-24 h-24 rounded-sm bg-gray-200 border border-gray-300 flex items-center justify-center overflow-hidden shrink-0">
           {resident.photo_url ? (
             <img src={resident.photo_url} alt="Profile" className="w-full h-full object-cover" />
@@ -268,7 +268,7 @@ export default function ResidentProfilePage() {
       </SectionCard>
 
       {/* ── Household Information ───────────────────────────── */}
-      <SectionCard icon={FiHome} title="Household Information" className="border-b-4 border-b-[#005F02]">
+      <SectionCard icon={FiHome} title="Household Information" className="border-b-4 border-b-[#8C0B1A]">
         {loadingHousehold ? (
           <div className="animate-pulse space-y-3">
             <div className="h-3 w-28 bg-gray-200 rounded" />
@@ -299,3 +299,4 @@ export default function ResidentProfilePage() {
     </div>
   );
 }
+
