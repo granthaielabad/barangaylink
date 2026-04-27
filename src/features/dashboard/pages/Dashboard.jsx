@@ -101,10 +101,10 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen flex bg-[#F3F7F3]">
+    <div className="min-h-screen flex bg-[#FFFBFC]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <main className="flex-1">
+      <main className="flex-1 overflow-auto">
         <DashboardHeader
           title="Dashboard"
           userName={profile?.full_name ?? 'Loading...'}
@@ -113,26 +113,26 @@ export default function Dashboard() {
           onMenuToggle={() => setSidebarOpen((o) => !o)}
         />
 
-        <section className="px-5 py-7">
+        <section className="px-5 py-7 space-y-6">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {statCards.map((card) => {
               const Icon = card.icon;
               return (
                 <div
                   key={card.label}
-                  className="bg-white rounded-xl border border-gray-200 border-r-6 border-r-[#005F02] shadow-sm p-8 relative"
+                  className="bg-white rounded-xl border border-gray-200 border-r-6 border-r-[#8C0B1A] shadow-sm p-6 relative"
                 >
-                  <div className="grid gap-y-3">
-                    <div className="grid grid-cols-[44px_1fr] items-center gap-x-2">
-                      <div className="flex items-center justify-center text-[#005F02]">
-                        <Icon className="w-10 h-10" />
+                  <div className="grid gap-y-2.5">
+                    <div className="grid grid-cols-[36px_1fr] items-center gap-x-2.5">
+                      <div className="flex items-center justify-center text-[#8C0B1A]">
+                        <Icon className="w-8 h-8" />
                       </div>
-                      <div className="text-2xl font-semibold text-gray-800">{card.label}</div>
+                      <div className="text-lg font-semibold text-gray-800">{card.label}</div>
                     </div>
                     <div>
-                      <div className="text-3xl font-bold text-gray-900">{card.value}</div>
-                      <div className="text-lg text-gray-500">{card.sub}</div>
+                      <div className="text-3xl font-bold text-gray-900 leading-tight">{card.value}</div>
+                      <div className="text-sm text-gray-500 mt-0.5">{card.sub}</div>
                     </div>
                   </div>
                 </div>
@@ -141,17 +141,17 @@ export default function Dashboard() {
           </div>
 
           {/* Lower panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-stretch">
             {/* Recent Residents */}
-            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 overflow-hidden border-r-6 border-r-[#005F02] shadow-sm p-8">
-              <div className="px-5 py-1 border-b border-gray-200 flex items-center justify-between">
-                <h2 className="text-[21px] font-semibold text-gray-900">Recent Residents</h2>
+            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 overflow-hidden border-r-6 border-r-[#8C0B1A] shadow-sm p-6 h-full flex flex-col">
+              <div className="px-0 pb-3 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">Recent Residents</h2>
               </div>
-              <div className="p-4">
+              <div className="pt-4 flex-1">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-base">
+                  <table className="w-full text-sm min-w-[640px]">
                     <thead>
-                      <tr className="text-left text-[12px] bg-gray-50 text-gray-500 border-b border-gray-200">
+                      <tr className="text-left text-xs bg-gray-50 text-gray-500 border-b border-gray-200">
                         <th className="py-2 pr-4 font-semibold">Residents Name</th>
                         <th className="py-2 pr-4 font-semibold">Address</th>
                         <th className="py-2 pr-4 font-semibold">Gender</th>
@@ -182,27 +182,22 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Community Announcements */}
-            <div className="lg:col-span-1">
-              <AnnouncementsWidget />
-            </div>
-
             {/* Recent System Activity */}
-            <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 overflow-hidden border-r-6 border-r-[#005F02] shadow-sm p-8">
-              <div className="px-5 py-1 border-b border-gray-100">
-                <h2 className="text-[21px] font-semibold text-gray-900">Recent System Activity</h2>
+            <div className="lg:col-span-1 bg-white rounded-xl border border-gray-200 overflow-hidden border-r-6 border-r-[#8C0B1A] shadow-sm p-6 h-full flex flex-col min-h-[360px]">
+              <div className="px-0 pb-3 border-b border-gray-100">
+                <h2 className="text-xl font-semibold text-gray-900">Recent System Activity</h2>
               </div>
-              <div className="p-5 space-y-4">
+              <div className="pt-4 space-y-3.5 flex-1 overflow-y-auto">
                 {recentActivity.map((a) => {
                   const Icon = ACTIVITY_ICONS[a.table_name] ?? IoShieldCheckmarkOutline;
                   return (
-                    <div key={a.id} className="flex items-start gap-3 border-b border-gray-100">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-[#005F02] shrink-0">
-                        <Icon className="w-12 h-12" />
+                    <div key={a.id} className="flex items-start gap-3 border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C0B1A] shrink-0">
+                        <Icon className="w-7 h-7" />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-base font-semibold text-gray-800 truncate">{activityLabel(a)}</div>
-                        <div className="text-base text-gray-500 mt-0.5">{timeAgo(a.changed_at)}</div>
+                        <div className="text-sm font-semibold text-gray-800 truncate">{activityLabel(a)}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{timeAgo(a.changed_at)}</div>
                       </div>
                     </div>
                   );
@@ -212,9 +207,16 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
+
+            {/* Community Announcements */}
+            <div className="lg:col-span-1 h-full min-h-[360px]">
+              <AnnouncementsWidget />
+            </div>
           </div>
+
         </section>
       </main>
     </div>
   );
 }
+

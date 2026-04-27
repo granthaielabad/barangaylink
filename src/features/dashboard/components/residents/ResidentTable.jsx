@@ -73,3 +73,5 @@ export default function ResidentTable({ residents = [], onEditResident, onArchiv
         </div>
     );
 }
+
+

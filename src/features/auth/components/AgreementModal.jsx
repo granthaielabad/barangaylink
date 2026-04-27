@@ -52,7 +52,7 @@ export default function AgreementModal({ isOpen, onClose, onAgree, initialAgreed
         aria-modal="true"
       >
         {/* Header */}
-        <div className="bg-[#005F02] px-6 py-7 text-center">
+        <div className="bg-[#8C0B1A] px-6 py-7 text-center">
           <h2 id="agreement-title" className="text-white text-xl font-bold">
             Agreement for Registration
           </h2>
@@ -65,7 +65,7 @@ export default function AgreementModal({ isOpen, onClose, onAgree, initialAgreed
           </p>
 
           <div className="border border-gray-300 p-3 max-h-48 overflow-y-auto">
-            <h3 className="text-[#005F02] font-bold mb-3 border-b border-gray-300 pb-2">Terms and Condition</h3>
+            <h3 className="text-[#8C0B1A] font-bold mb-3 border-b border-gray-300 pb-2">Terms and Condition</h3>
             <ul className="space-y-2 text-sm text-gray-700 list-disc list-inside">
               {TERMS_ITEMS.map((item, i) => (
                 <li key={i}>{item}</li>
@@ -79,7 +79,7 @@ export default function AgreementModal({ isOpen, onClose, onAgree, initialAgreed
               type="checkbox"
               checked={agreed}
               onChange={(e) => setAgreed(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#005F02] focus:ring-[#005F02] accent-[#0096FF]"
+              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#8C0B1A] focus:ring-[#8C0B1A] accent-[#0096FF]"
             />  
             <label htmlFor="modal-agree-terms" className="text-sm text-gray-700">
               I have read and agree to the terms and conditions.<span className="text-red-500">*</span>
@@ -100,7 +100,7 @@ export default function AgreementModal({ isOpen, onClose, onAgree, initialAgreed
             type="button"
             onClick={handleAgreeAndContinue}
             disabled={!agreed}
-            className="px-5 py-2.5 rounded-lg bg-[#005F02] text-white font-medium hover:bg-[#004A01] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-5 py-2.5 rounded-lg bg-[#8C0B1A] text-white font-medium hover:bg-[#7A0915] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Agree and Continue
           </button>
@@ -113,3 +113,5 @@ export default function AgreementModal({ isOpen, onClose, onAgree, initialAgreed
 
   return createPortal(modalContent, document.body);
 }
+
+

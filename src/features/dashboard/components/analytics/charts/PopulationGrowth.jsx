@@ -28,11 +28,11 @@ export default function PopulationGrowth({ filters, analyticsData }) {
         datasets: [{
           label: 'Residents',
           data: cumulative.length ? cumulative : [0],
-          borderColor: '#005F02',
+          borderColor: '#8C0B1A',
           backgroundColor: 'rgba(0,95,2,0.08)',
           borderWidth: 2,
           fill: true,
-          pointBackgroundColor: '#005F02',
+          pointBackgroundColor: '#8C0B1A',
           pointBorderColor: '#fff',
           pointBorderWidth: 2,
           pointRadius: 5,
@@ -66,3 +66,4 @@ export default function PopulationGrowth({ filters, analyticsData }) {
     </div>
   );
 }
+

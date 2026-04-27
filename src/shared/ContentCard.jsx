@@ -21,7 +21,7 @@ export default function ContentCard({
   return (
     <article className={`bg-white rounded-xl shadow-md p-5 md:p-6  ${className}`}>
       {title && (
-        <h3 className="text-center text-lb md:text-xl font-bold text-[#005F02] mb-6">
+        <h3 className="text-center text-lb md:text-xl font-bold text-[#8C0B1A] mb-6">
           {title}
         </h3>
       )}
@@ -48,7 +48,7 @@ export default function ContentCard({
               <img
                 src={Checklist}
                 alt=""
-                className="w-5 h-5 mt-0.5 shrink-0 text-[#005F02]"
+                className="w-5 h-5 mt-0.5 shrink-0 text-[#8C0B1A]"
                 aria-hidden
               />
               <span className="text-black text-base md:text-base leading-relaxed">
@@ -64,4 +64,6 @@ export default function ContentCard({
   );
 }
 ``
+
+
 

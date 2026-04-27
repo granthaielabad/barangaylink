@@ -68,13 +68,13 @@ export default function Contact() {
       {/* Main Content */}
       <section className="w-full bg-gray-50 py-12 md:py-20 px-4 md:px-8">
         <div className="container mx-auto">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-10 text-[#005F02] px-4">Contact Us</h1>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-10 text-[#8C0B1A] px-4">Contact Us</h1>
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.1fr)] gap-8 lg:gap-10 xl:gap-14 items-start px-4">
             {/* Left Column – Contact info & help */}
             <div className="space-y-6 mb-6 lg:mb-0">
               {/* Contact Information Card */}
               <article className="bg-white font-semibold rounded-xl shadow-md p-5 md:p-6 border border-gray-200">
-                <h3 className="text-left text-lg md:text-xl font-bold text-[#005F02] mb-4">
+                <h3 className="text-left text-lg md:text-xl font-bold text-[#8C0B1A] mb-4">
                   Contact Information
                 </h3>
                 <hr className="mx-5 md:-mx-6 border-t border-gray-300 my-3" />
@@ -91,7 +91,7 @@ export default function Contact() {
                       className="w-6 h-6 mt-0.5 shrink-0"
                     />
                     <p>
-                      <span className="font-semibold text-[#005F02]">
+                      <span className="font-semibold text-[#8C0B1A]">
                         Office Address:
                       </span>{' '}
                       123 Barangay Sta. Lucia, Quezon City
@@ -104,7 +104,7 @@ export default function Contact() {
                       className="w-6 h-6 mt-0.5 shrink-0"
                     />
                     <p>
-                      <span className="font-semibold text-[#005F02]">
+                      <span className="font-semibold text-[#8C0B1A]">
                         Phone Number:
                       </span>{' '}
                       (0912) 345-6789
@@ -117,7 +117,7 @@ export default function Contact() {
                       className="w-6 h-6 mt-0.5 shrink-0"
                     />
                     <p>
-                      <span className="font-semibold text-[#005F02]">Email:</span>{' '}
+                      <span className="font-semibold text-[#8C0B1A]">Email:</span>{' '}
                       info@brgy123.ph
                     </p>
                   </div>
@@ -128,7 +128,7 @@ export default function Contact() {
                       className="w-6 h-6 mt-0.5 shrink-0"
                     />
                     <p>
-                      <span className="font-semibold text-[#005F02]">
+                      <span className="font-semibold text-[#8C0B1A]">
                         Office Hours:
                       </span>{' '}
                       Monday – Friday, 8:00 AM – 5:00 PM
@@ -139,7 +139,7 @@ export default function Contact() {
 
               {/* Need Help Card */}
               <article className="bg-white rounded-xl font-semibold shadow-md p-5 md:p-6 border border-gray-200">
-                <h3 className="text-left text-lg md:text-xl text-[#005F02] mb-4">
+                <h3 className="text-left text-lg md:text-xl text-[#8C0B1A] mb-4">
                   Need Help?
                 </h3>
                 <hr className="mx-5 md:-mx-6 border-t border-gray-300 my-3" />
@@ -175,7 +175,7 @@ export default function Contact() {
             <div className="rounded-xl shadow-md border border-gray-200 overflow-hidden bg-white">
               {/* Card Header */}
               <div className="bg-white px-5 md:px-6 pt-5">
-                <h3 className="text-left text-2xl font-bold text-[#005F02] mb-4">
+                <h3 className="text-left text-2xl font-bold text-[#8C0B1A] mb-4">
                   Contact Form
                 </h3>
                 <hr className="mx-5 md:-mx-6 border-t border-gray-300 my-3" />
@@ -266,7 +266,7 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="mt-2 w-full rounded-md bg-[#005F02] text-white font-semibold py-2.5 md:py-3 text-sm md:text-base hover:bg-[#004701] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-2 w-full rounded-md bg-[#8C0B1A] text-white font-semibold py-2.5 md:py-3 text-sm md:text-base hover:bg-[#004701] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPending ? 'Submitting...' : 'Submit'}
                 </button>
@@ -276,7 +276,7 @@ export default function Contact() {
 
           {/* Bottom Privacy Notice */}
           <div className="mt-10 mx-4 border border-gray-200 bg-white rounded-xl shadow-sm px-5 md:px-6 py-4">
-            <h3 className="text-lg md:text-xl font-bold text-[#005F02] mb-2">
+            <h3 className="text-lg md:text-xl font-bold text-[#8C0B1A] mb-2">
               Privacy Notice
             </h3>
             <hr className="mx-5 md:-mx-6 border-t border-gray-300 my-3" />
@@ -293,3 +293,5 @@ export default function Contact() {
     </>
   )
 }
+
+

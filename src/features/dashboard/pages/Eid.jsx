@@ -99,7 +99,7 @@ export default function Eid() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F3F7F3]">
+    <div className="min-h-screen flex bg-[#FFFBFC]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto">
@@ -145,7 +145,7 @@ export default function Eid() {
                 <button
                   type="button"
                   onClick={() => { setSelectedEid(null); setEidFormMode('create'); setEidFormModalOpen(true); }}
-                  className="inline-flex justify-center whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium bg-[#005F02] text-white hover:bg-[#004A01] transition-colors"
+                  className="inline-flex justify-center whitespace-nowrap px-4 py-2.5 rounded-lg text-sm font-medium bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors"
                 >
                   Create New eID
                 </button>
@@ -155,7 +155,7 @@ export default function Eid() {
             {/* eID card grid */}
             {isLoading ? (
               <div className="flex justify-center py-16">
-                <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
               </div>
             ) : (
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
@@ -235,3 +235,4 @@ export default function Eid() {
     </div>
   );
 }
+

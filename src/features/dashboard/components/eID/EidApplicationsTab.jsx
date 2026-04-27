@@ -62,7 +62,7 @@ function ReviewModal({ app, onClose, onUnderReview, onApprove, onReject, isPendi
         {/* Header */}
         <div className="flex items-center justify-between gap-3 px-6 py-3 bg-[#F1F7F2] border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <FiEye className="w-5 h-5 text-[#005F02]" />
+            <FiEye className="w-5 h-5 text-[#8C0B1A]" />
             <h2 className="text-lg font-semibold text-gray-900">Review eID Application</h2>
           </div>
           <button type="button" onClick={onClose}
@@ -163,7 +163,7 @@ function ReviewModal({ app, onClose, onUnderReview, onApprove, onReject, isPendi
             {app.status === 'under_review' && !showRejectInput && (
               <button type="button" disabled={isPending}
                 onClick={() => onApprove(app.id, app.residents?.id, app.photo_url)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#005F02] text-white text-sm font-semibold hover:bg-[#004A01] disabled:opacity-40 transition-colors">
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#8C0B1A] text-white text-sm font-semibold hover:bg-[#7A0915] disabled:opacity-40 transition-colors">
                 <FiCheckCircle className="w-4 h-4" /> Approve & Issue eID
               </button>
             )}
@@ -221,12 +221,12 @@ export default function EidApplicationsTab() {
             onClick={() => { setStatusFilter(tab.key); setPage(1); }}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
               statusFilter === tab.key
-                ? 'border-[#005F02] text-[#005F02]'
+                ? 'border-[#8C0B1A] text-[#8C0B1A]'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}>
             {tab.label}
             <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-              statusFilter === tab.key ? 'bg-[#005F02]/10 text-[#005F02]' : 'bg-gray-100 text-gray-500'
+              statusFilter === tab.key ? 'bg-[#8C0B1A]/10 text-[#8C0B1A]' : 'bg-gray-100 text-gray-500'
             }`}>
               {counts?.[tab.key] ?? 0}
             </span>
@@ -237,7 +237,7 @@ export default function EidApplicationsTab() {
       {/* Table */}
       {isLoading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+          <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
         </div>
       ) : applications.length === 0 ? (
         <div className="text-center py-16 text-gray-400 text-sm">
@@ -309,3 +309,5 @@ export default function EidApplicationsTab() {
     </>
   );
 }
+
+

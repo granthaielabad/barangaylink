@@ -52,9 +52,9 @@ const PrintableEidCard = forwardRef(({ eid }, ref) => {
         </div>
 
         {/* Header Section */}
-        <div className="h-16 bg-[#005F02] flex items-center px-5 gap-3">
+        <div className="h-16 bg-[#8C0B1A] flex items-center px-5 gap-3">
           <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0">
-            <span className="text-[#005F02] font-black text-xs">LOGO</span>
+            <span className="text-[#8C0B1A] font-black text-xs">LOGO</span>
           </div>
           <div className="flex-1">
             <h1 className="text-white font-bold text-[14px] leading-tight tracking-wide uppercase">Republic of the Philippines</h1>
@@ -79,8 +79,8 @@ const PrintableEidCard = forwardRef(({ eid }, ref) => {
                 </div>
               )}
             </div>
-            <div className="w-full h-4 bg-[#005F02]/10 rounded flex items-center justify-center px-2">
-               <span className="text-[7px] text-[#005F02] font-black uppercase tracking-tighter italic">Verified Member</span>
+            <div className="w-full h-4 bg-[#8C0B1A]/10 rounded flex items-center justify-center px-2">
+               <span className="text-[7px] text-[#8C0B1A] font-black uppercase tracking-tighter italic">Verified Member</span>
             </div>
           </div>
 
@@ -121,7 +121,7 @@ const PrintableEidCard = forwardRef(({ eid }, ref) => {
             </div>
             <div className="text-right">
               <p className="text-[7px] font-bold text-gray-400 mb-0.5">VERIFY VIA</p>
-              <p className="text-[9px] font-black text-[#005F02] tracking-tighter italic">BarangayLink HMS</p>
+              <p className="text-[9px] font-black text-[#8C0B1A] tracking-tighter italic">BarangayLink HMS</p>
             </div>
           </div>
         </div>
@@ -144,7 +144,7 @@ const PrintableEidCard = forwardRef(({ eid }, ref) => {
 
         <div className="p-8 flex-1 flex flex-col justify-between">
           <div className="text-center space-y-4">
-            <h3 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.2em] underline decoration-[#005F02]/30 underline-offset-4">Terms & Conditions</h3>
+            <h3 className="text-[12px] font-black text-gray-900 uppercase tracking-[0.2em] underline decoration-[#8C0B1A]/30 underline-offset-4">Terms & Conditions</h3>
             <div className="space-y-3 text-left text-[10px] text-gray-600 leading-relaxed italic px-2">
               <p>1. This card is the official property of the issuing Barangay and must be surrendered upon expiration or revocation.</p>
               <p>2. It serves as primary identification for all transactions and access to social services within the jurisdiction.</p>
@@ -190,3 +190,5 @@ const PrintableEidCard = forwardRef(({ eid }, ref) => {
 PrintableEidCard.displayName = 'PrintableEidCard';
 
 export default PrintableEidCard;
+
+

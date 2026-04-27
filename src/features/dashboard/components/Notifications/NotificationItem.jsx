@@ -12,13 +12,13 @@ const NotificationItem = ({ notification, variant = 'full' }) => {
         ? 'p-4 hover:bg-gray-50 border-b border-gray-100 last:border-0' 
         : 'p-8 bg-white rounded-xl border-1 border-gray-300 mb-6 flex items-center gap-16 group shadow-sm transition-all'}
       ${!isRead && !isDropdown 
-        ? 'border-[#005F02] bg-[#005F02]/5 shadow-md scale-[1.01]' 
+        ? 'border-[#8C0B1A] bg-[#8C0B1A]/5 shadow-md scale-[1.01]' 
         : isDropdown ? 'opacity-100' : 'border-gray-100 opacity-60 grayscale-[0.5]'}
     `}>
       {/* FULL VIEW - Category on the left (Column 1) */}
       {!isDropdown && (
         <div className="w-40 shrink-0">
-          <span className={`text-[15px] font-semibold ${!isRead ? 'text-[#005F02]' : 'text-gray-400'}`}>
+          <span className={`text-[15px] font-semibold ${!isRead ? 'text-[#8C0B1A]' : 'text-gray-400'}`}>
             {notification.type}
           </span>
         </div>
@@ -28,7 +28,7 @@ const NotificationItem = ({ notification, variant = 'full' }) => {
         <div className="flex justify-between items-start mb-1">
           {/* DROPDOWN VIEW - Category on top row */}
           {isDropdown && (
-            <span className={`text-[13px] font-semibold ${!isRead ? 'text-[#005F02]' : 'text-gray-500'}`}>
+            <span className={`text-[13px] font-semibold ${!isRead ? 'text-[#8C0B1A]' : 'text-gray-500'}`}>
               {notification.type}
             </span>
           )}
@@ -50,7 +50,7 @@ const NotificationItem = ({ notification, variant = 'full' }) => {
         {notification.attachment && (
           <div className={`
             mt-3 inline-flex items-center gap-2 px-3 py-1.5 border rounded-full text-[12px] transition-colors cursor-pointer shadow-sm
-            ${!isRead ? 'bg-white border-[#005F02]/30 text-[#005F02]' : 'bg-gray-50 border-gray-200 text-gray-400'}
+            ${!isRead ? 'bg-white border-[#8C0B1A]/30 text-[#8C0B1A]' : 'bg-gray-50 border-gray-200 text-gray-400'}
           `}>
             <div className={`w-4 h-4 rounded flex items-center justify-center ${!isRead ? 'bg-red-500' : 'bg-red-200'}`}>
               <span className="text-[8px] font-semibold text-white">PDF</span>
@@ -70,7 +70,7 @@ const NotificationItem = ({ notification, variant = 'full' }) => {
       {/* FULL VIEW - Timestamp on the right (Column 3) */}
       {!isDropdown && (
         <div className="w-32 text-right shrink-0">
-          <span className={`text-[15px] font-semibold tracking-tight ${!isRead ? 'text-[#005F02]' : 'text-gray-400'}`}>
+          <span className={`text-[15px] font-semibold tracking-tight ${!isRead ? 'text-[#8C0B1A]' : 'text-gray-400'}`}>
             {notification.timestamp}
           </span>
         </div>
@@ -80,3 +80,5 @@ const NotificationItem = ({ notification, variant = 'full' }) => {
 };
 
 export default NotificationItem;
+
+

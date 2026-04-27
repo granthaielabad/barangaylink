@@ -4,7 +4,7 @@ import CheckList from '../../../assets/icons/check-list.svg';
 import AgreementModal from './AgreementModal';
 
 const inputClass =
-  'w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02] transition-shadow';
+  'w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 caret-gray-900 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A] transition-shadow';
 
 export default function PasswordForm({ onSubmit, variant = 'signup' }) {
   const [password, setPassword] = useState('');
@@ -34,7 +34,7 @@ export default function PasswordForm({ onSubmit, variant = 'signup' }) {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Password */}
         <div>
-          <label htmlFor="signup-password" className="block text-[#005F02] font-bold mb-2 text-base">
+          <label htmlFor="signup-password" className="block text-[#8C0B1A] font-bold mb-2 text-base">
             Password
           </label>
           <div className="relative">
@@ -51,7 +51,7 @@ export default function PasswordForm({ onSubmit, variant = 'signup' }) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-[#005F02] focus:outline-none focus:ring-0 shrink-0"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-[#8C0B1A] focus:outline-none focus:ring-0 shrink-0"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
               tabIndex={-1}
             >
@@ -66,7 +66,7 @@ export default function PasswordForm({ onSubmit, variant = 'signup' }) {
 
         {/* Confirm Password */}
         <div>
-          <label htmlFor="signup-confirm-password" className="block text-[#005F02] font-bold mb-2 text-base">
+          <label htmlFor="signup-confirm-password" className="block text-[#8C0B1A] font-bold mb-2 text-base">
             Confirm Password
           </label>
           <div className="relative">
@@ -83,7 +83,7 @@ export default function PasswordForm({ onSubmit, variant = 'signup' }) {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-[#005F02] focus:outline-none focus:ring-0 shrink-0"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-[#8C0B1A] focus:outline-none focus:ring-0 shrink-0"
               aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
               tabIndex={-1}
             >
@@ -140,7 +140,7 @@ export default function PasswordForm({ onSubmit, variant = 'signup' }) {
         <button
           type="submit"
           disabled={!canSubmit}
-          className="w-full py-3.5 rounded-lg bg-[#005F02] text-white text-base font-bold uppercase tracking-wide hover:bg-[#004A01] transition-colors disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-[#005F02]"
+          className="w-full py-3.5 rounded-lg bg-[#8C0B1A] text-white text-base font-bold uppercase tracking-wide hover:bg-[#7A0915] transition-colors disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:bg-[#8C0B1A]"
         >
           {isForgotPassword ? 'Update Password' : 'Register'}
         </button>
@@ -154,7 +154,7 @@ export default function PasswordForm({ onSubmit, variant = 'signup' }) {
                 type="checkbox"
                 checked={agreedToTerms}
                 onChange={(e) => setAgreedToTerms(e.target.checked)}
-                className="mt-0.5   h-4 w-4 rounded border-gray-300 text-[#005F02] focus:ring-[#005F02] accent-[#0096FF]"
+                className="mt-0.5   h-4 w-4 rounded border-gray-300 text-[#8C0B1A] focus:ring-[#8C0B1A] accent-[#0096FF]"
               />
               <label htmlFor="signup-agree-terms" className="text-sm text-black">
                 I agree to the{' '}
@@ -185,3 +185,5 @@ export default function PasswordForm({ onSubmit, variant = 'signup' }) {
     </>
   );
 }
+
+

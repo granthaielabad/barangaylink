@@ -15,7 +15,7 @@ export default function Terms() {
       
       <section className='w-full bg-gray-50 py-12 md:py-20 px-4 md:px-8'>
         <div className="container mx-auto">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-10 text-[#005F02] px-4">Terms of Service</h1>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-10 text-[#8C0B1A] px-4">Terms of Service</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 px-4">
             <ContentCard
               title="Acceptance of Terms"
@@ -87,3 +87,5 @@ export default function Terms() {
     </>
   )
 }
+
+

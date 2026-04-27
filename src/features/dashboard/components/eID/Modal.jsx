@@ -117,7 +117,7 @@ export default function EidModal({
         {/* Header */}
         <div className="flex items-center justify-between gap-3 px-6 py-3 bg-[#F1F7F2] border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg text-[#005F02]">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg text-[#8C0B1A]">
               <IoMdAdd className="w-6 h-6" />
             </div>
             <h2 id="eid-modal-title" className="text-xl font-semibold text-gray-900">
@@ -153,7 +153,7 @@ export default function EidModal({
             <button
               type="submit"
               disabled={!canSubmit}
-              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#005F02] text-white hover:bg-[#004A01] disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {mode === 'edit' ? 'Save Changes' : 'Issue eID'}
             </button>
@@ -163,3 +163,4 @@ export default function EidModal({
     </div>
   );
 }
+

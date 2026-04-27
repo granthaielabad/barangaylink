@@ -63,8 +63,8 @@ export default function BarangayClearanceTemplate({
         <p className="text-xs text-gray-600">City of Quezon</p>
         <p className="text-sm font-bold text-gray-800 mt-1">BARANGAY STA. LUCIA</p>
         <p className="text-xs text-gray-600">Novaliches, Quezon City</p>
-        <div className="border-t-2 border-b-2 border-[#005F02] my-4 py-2">
-          <p className="text-xl font-black text-[#005F02] tracking-wider uppercase">{documentType}</p>
+        <div className="border-t-2 border-b-2 border-[#8C0B1A] my-4 py-2">
+          <p className="text-xl font-black text-[#8C0B1A] tracking-wider uppercase">{documentType}</p>
         </div>
         <p className="text-xs text-gray-500">Control No.: <span className="font-semibold">{requestId ?? '—'}</span></p>
       </div>
@@ -111,3 +111,4 @@ export default function BarangayClearanceTemplate({
     </div>
   );
 }
+

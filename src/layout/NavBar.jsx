@@ -77,7 +77,7 @@ export default function NavBar() {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex gap-4 items-center flex-shrink-0">
             <Link to="/login" className="font-poppins px-5 py-3 rounded font-semibold text-lg text-white transition-all hover:bg-white/10">LOGIN</Link>
-            <Link to="/signup" className="font-poppins text-white bg-[#005F02] px-6 py-3 rounded-md font-semibold text-lg hover:bg-[#004A01] transition-colors shadow-lg">SIGN UP</Link>
+            <Link to="/signup" className="font-poppins text-white bg-[#8C0B1A] px-6 py-3 rounded-md font-semibold text-lg hover:bg-[#7A0915] transition-colors shadow-lg">SIGN UP</Link>
           </div>
 
           {/* Hamburger Button (mobile only) */}
@@ -142,7 +142,7 @@ export default function NavBar() {
           <Link
             to="/signup"
             onClick={() => setMenuOpen(false)}
-            className="font-poppins text-center text-white bg-[#005F02] px-5 py-3 rounded-md font-semibold text-lg hover:bg-[#004A01] transition-colors"
+            className="font-poppins text-center text-white bg-[#8C0B1A] px-5 py-3 rounded-md font-semibold text-lg hover:bg-[#7A0915] transition-colors"
           >
             SIGN UP
           </Link>
@@ -151,3 +151,5 @@ export default function NavBar() {
     </>
   );
 }
+
+

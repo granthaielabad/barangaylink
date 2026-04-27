@@ -12,7 +12,7 @@ export default function ProtectedRoute() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -23,3 +23,4 @@ export default function ProtectedRoute() {
 
   return <Outlet />;
 }
+

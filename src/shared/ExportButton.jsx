@@ -75,7 +75,7 @@ export default function ExportButton({
       <button
         type="button"
         onClick={toggle}
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2E7D32] hover:bg-[#256427] transition-colors duration-150 text-white text-sm font-semibold shadow-sm select-none"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#8C0B1A] hover:bg-[#730915] transition-colors duration-150 text-white text-sm font-semibold shadow-sm select-none"
         aria-haspopup="true"
         aria-expanded={open}
       >
@@ -104,7 +104,7 @@ export default function ExportButton({
                 onClick={() => handleSelect(format)}
                 className="flex items-center gap-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors group relative after:absolute after:bottom-0 after:left-1 after:right-1 after:border-b after:border-gray-200"
               >
-                <Icon className="w-4 h-4 text-gray-400 group-hover:text-[#2E7D32]  transition-colors shrink-0" />
+                <Icon className="w-4 h-4 text-gray-400 group-hover:text-[#8C0B1A]  transition-colors shrink-0" />
                 <span className="font-medium">{optLabel}</span>
               </button>
             ))}
@@ -114,3 +114,5 @@ export default function ExportButton({
     </div>
   );
 }
+
+

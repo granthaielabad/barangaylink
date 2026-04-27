@@ -26,7 +26,7 @@ const MAX_SIZE_B   = MAX_SIZE_MB * 1024 * 1024;
 const ACCEPT_TYPES = 'image/jpeg,image/png,image/webp,application/pdf';
 
 const inputClass =
-  'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#005F02]/30 focus:border-[#005F02]';
+  'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A]';
 
 export default function ValidIdForm({ value = {}, onChange, status = 'active', onStatusChange }) {
   const fileInputRef = useRef(null);
@@ -55,7 +55,7 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
     <div className="space-y-4">
       {/* Section heading */}
       <div className="flex items-center gap-2 mb-4">
-        <PiIdentificationCardLight className="w-5 h-5 text-[#005F02]" />
+        <PiIdentificationCardLight className="w-5 h-5 text-[#8C0B1A]" />
         <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">
           Valid ID Identification
         </h3>
@@ -111,11 +111,11 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
           onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
           onDragOver={(e) => e.preventDefault()}
           onDrop={onDrop}
-          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#005F02]/50 hover:bg-[#F1F7F2] transition-colors cursor-pointer py-7 px-4 text-center"
+          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#8C0B1A]/50 hover:bg-[#F1F7F2] transition-colors cursor-pointer py-7 px-4 text-center"
         >
           <HiOutlineArrowUpTray className="w-6 h-6 text-gray-400" />
           {fileName ? (
-            <p className="text-sm text-[#005F02] font-medium">{fileName}</p>
+            <p className="text-sm text-[#8C0B1A] font-medium">{fileName}</p>
           ) : (
             <>
               <p className="text-sm font-medium text-gray-700">
@@ -142,3 +142,5 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
     </div>
   );
 }
+
+

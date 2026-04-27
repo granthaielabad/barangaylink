@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import { ResidentTable, ResidentAddEdit } from '../components/residents';
+import BeneficiaryTable from '../components/Residents/BeneficiaryTable';
 import { SortFilter, OrderFilter, StatusFilter, Pagination, SearchBox, ArchiveModal, DeleteModal } from '../../../shared';
 import { useResidents, useMutateResident } from '../../../hooks/queries/residents/useResidents';
 import { useResidentFilters } from '../../../store/filterStore';
@@ -151,7 +152,7 @@ export default function Residents() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F3F7F3]">
+    <div className="min-h-screen flex bg-[#FFFBFC]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto relative">
@@ -184,7 +185,7 @@ export default function Residents() {
                 <button
                   type="button"
                   onClick={() => setAddModalOpen(true)}
-                  className="px-4 py-2.5 rounded-lg text-sm font-medium bg-[#005F02] text-white hover:bg-[#004A01] transition-colors whitespace-nowrap"
+                  className="px-4 py-2.5 rounded-lg text-sm font-medium bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors whitespace-nowrap"
                 >
                   Add New Resident
                 </button>
@@ -193,7 +194,7 @@ export default function Residents() {
 
             {isLoading ? (
               <div className="flex justify-center py-16">
-                <div className="animate-spin w-8 h-8 border-4 border-[#005F02] border-t-transparent rounded-full" />
+                <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
               </div>
             ) : (
               <ResidentTable
@@ -211,6 +212,10 @@ export default function Residents() {
               pageSize={pageSize}
               onPageChange={setPage}
             />
+          </div>
+
+          <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <BeneficiaryTable />
           </div>
         </section>
       </main>
@@ -245,3 +250,4 @@ export default function Residents() {
     </div>
   );
 }
+

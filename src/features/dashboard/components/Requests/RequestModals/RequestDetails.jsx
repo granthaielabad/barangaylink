@@ -11,7 +11,7 @@ export default function RequestDetails({ request, adminNotes, onAdminNotesChange
         <span className={`px-5 py-1 rounded-full text-xs font-semibold ${
           request.status?.toLowerCase() === 'pending' ? 'bg-[#F4E2B8] text-[#C2410C]' :
           request.status?.toLowerCase() === 'processing' ? 'bg-[#DDF3DD] text-[#1838B8]' :
-          'bg-[#BFE8BF] text-[#005F02]'
+          'bg-[#BFE8BF] text-[#8C0B1A]'
         }`}>
           {request.status}
         </span>
@@ -93,7 +93,7 @@ export default function RequestDetails({ request, adminNotes, onAdminNotesChange
           onChange={(e) => onAdminNotesChange(e.target.value)}
           placeholder="Add any internal notes about this request..."
           readOnly={isReadOnly}
-          className={`w-full border border-gray-200 rounded-lg p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#005F02]/20 transition-all min-h-[100px] resize-none ${
+          className={`w-full border border-gray-200 rounded-lg p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/20 transition-all min-h-[100px] resize-none ${
             isReadOnly ? 'bg-gray-50 text-gray-500' : 'bg-white text-gray-700 hover:border-gray-300'
           }`}
         />
@@ -101,3 +101,5 @@ export default function RequestDetails({ request, adminNotes, onAdminNotesChange
     </div>
   );
 }
+
+

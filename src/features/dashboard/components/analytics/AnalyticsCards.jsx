@@ -55,7 +55,7 @@ export default function AnalyticsCards({ filters, analyticsData }) {
             className="bg-white rounded-xl border border-gray-200 shadow-sm p-6"
           >
             <div className="flex items-start gap-3">
-              <div className="flex items-center justify-center text-[#005F02] shrink-0">
+              <div className="flex items-center justify-center text-[#8C0B1A] shrink-0">
                 <Icon className="w-10 h-10" strokeWidth={1.5} />
               </div>
               <div>
@@ -69,3 +69,4 @@ export default function AnalyticsCards({ filters, analyticsData }) {
     </div>
   );
 }
+
