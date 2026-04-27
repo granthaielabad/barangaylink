@@ -33,7 +33,7 @@ export default function Hero() {
                                     className="relative z-10 w-8 h-8 rounded-full border-2 border-white object-cover hover:bg-gray-400 hover:scale-110 transition-all duration-300"
                                     loading="lazy" /> </a>
 
-                            <a href="https://www.facebook.com/brgysanbartolome2014/" target="_blank">
+                            <a href="https://www.facebook.com/responsablengmamamayanSL/" target="_blank">
                                 <img src={FBLogo}
                                     alt="Facebook Logo"
                                     className="relative z-0 w-8 h-8 rounded-full border-2 border-white object-cover hover:bg-gray-400 hover:scale-110 transition-all duration-300"

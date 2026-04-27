@@ -1,17 +1,26 @@
-import multipleUsers from "../../../assets/icons/multiple-users.svg";
-import idCard from "../../../assets/icons/id-cards.svg";
+import { FaIdCard, FaUsers } from "react-icons/fa6";
 
 export default function Features() {
     const features = [
         {
             id: 1,
             title: "Registry of Barangay Inhabitants",
-            icon: <img src={multipleUsers} alt="Multiple Users Icon" className="w-24 h-24 sm:w-32 sm:h-32 lg:w-[175px] lg:h-[175px]" loading="lazy" />
+            icon: (
+                <FaUsers
+                    aria-label="Multiple Users Icon"
+                    className="text-[#8C0B1A] w-24 h-24 sm:w-32 sm:h-32 lg:w-[175px] lg:h-[175px]"
+                />
+            )
         },
         {
             id: 2,
             title: "Digital Barangay ID with QR Code",
-            icon: <img src={idCard} alt="ID Card Icon" className="w-24 h-24 sm:w-32 sm:h-32 lg:w-[175px] lg:h-[175px]" loading="lazy" />
+            icon: (
+                <FaIdCard
+                    aria-label="ID Card Icon"
+                    className="text-[#8C0B1A] w-24 h-24 sm:w-32 sm:h-32 lg:w-[175px] lg:h-[175px]"
+                />
+            )
         },
     ];
 
