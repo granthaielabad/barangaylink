@@ -127,7 +127,7 @@ export const SEX_OPTIONS = [
   { value: 'Female', label: 'Female' },
 ];
 
-export const BARANGAY = 'San Bartolome';
+export const BARANGAY = 'Sta. Lucia';
 
 export const NATIONALITIES = [
   'Afghan','Albanian','Algerian','American','Andorran','Angolan','Antiguan',

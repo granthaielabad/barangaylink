@@ -6,7 +6,7 @@ export default function SectoralStatusForm({ value = {}, onChange }) {
   const statuses = [
     { id: 'isPwd', label: 'Person with Disability (PWD)' },
     { id: 'isSoloParent', label: 'Solo Parent' },
-    { id: 'isIndigent', label: 'Indigent' },
+    { id: 'isIndigent', label: 'LGBTQ+' },
   ];
 
   return (

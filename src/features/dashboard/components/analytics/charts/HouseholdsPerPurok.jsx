@@ -10,7 +10,7 @@ const options = {
     },
     title: {
       display: true,
-      text: 'Households per Purok/Zone',
+      text: 'Households per Sitio',
       font: { size: 16, weight: '600' },
       color: '#111827',
     },
@@ -52,7 +52,7 @@ const getData = (filters, analyticsData) => {
     const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
     const yearOffset = year - new Date().getFullYear();
     const baseData   = [130, 155, 120, 140, 110, 157];
-    labels = ['Purok 1', 'Purok 2', 'Purok 3', 'Purok 4', 'Purok 5', 'Purok 6'];
+    labels = ['Sitio 1', 'Sitio 2', 'Sitio 3', 'Sitio 4', 'Sitio 5', 'Sitio 6'];
     data   = baseData.map((val) => Math.max(0, Math.round(val + yearOffset * 5)));
   }
 

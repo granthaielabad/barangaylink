@@ -32,7 +32,7 @@ export default function RequestDetails({ request, adminNotes, onAdminNotesChange
           <div className="col-span-1">
             <p className="text-[10px] text-gray-400 uppercase font-semibold tracking-wider mb-1">Address</p>
             <p className="text-sm font-semibold text-gray-900 leading-tight">
-              {request.address || '#71 Dahlia Avenue St. Brgy San Bartolome'}
+              {request.address || '#71 Dahlia Avenue St. Brgy Sta. Lucia'}
             </p>
           </div>
           <div>

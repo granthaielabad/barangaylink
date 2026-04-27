@@ -94,7 +94,7 @@ export default function Contact() {
                       <span className="font-semibold text-[#005F02]">
                         Office Address:
                       </span>{' '}
-                      123 Barangay San Bartolome, Quezon City
+                      123 Barangay Sta. Lucia, Quezon City
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
