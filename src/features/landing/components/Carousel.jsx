@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import slide1 from '../../../assets/images/slides-1.png';
+import slide1 from '../../../assets/images/slides-1.jpg';
 import slide2 from '../../../assets/images/slides-2.jpg';
+import slide3 from '../../../assets/images/slides-3.jpg';
+import { id } from 'zod/v4/locales';
 
 export default function Carousel({ images = [] }) {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -17,6 +19,11 @@ export default function Carousel({ images = [] }) {
             id: 2,
             src: slide2,
             alt: 'Barangay Building 2',
+        },
+        {
+            id: 3,
+            src: slide3,
+            alt: 'Barangay Building 3',
         }
     ];
 
@@ -72,7 +79,7 @@ export default function Carousel({ images = [] }) {
                             loading="lazy"
                         />
                         {/* Black Opacity Overlay */}
-                        <div className="absolute inset-0 bg-black/40"></div>
+                        <div className="absolute inset-0 bg-black/20"></div>
                     </div>
                 ))}
 
