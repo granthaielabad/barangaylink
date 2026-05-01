@@ -4,7 +4,7 @@ import { FiX, FiFileText } from 'react-icons/fi';
 import RequestDetails from './RequestDetails';
 import { PendingFooter, ProcessingFooter, CompletedFooter } from './RequestActionFooters';
 
-export default function ViewRequestModal({ isOpen, request, onClose, onAction }) {
+export default function ViewRequestModal({ isOpen, request, onClose, onAction, isReadOnly = false }) {
   const [adminNotes, setAdminNotes] = useState(request?.admin_notes ?? '');
   const modalRef = useRef(null);
 
@@ -19,11 +19,14 @@ export default function ViewRequestModal({ isOpen, request, onClose, onAction })
   const status = request.status?.toLowerCase();
 
   const handleAction = (type) => {
+    if (isReadOnly) return;
     onAction?.(request.id, type, adminNotes);
     onClose();
   };
 
   const renderFooter = () => {
+    if (isReadOnly) return <CompletedFooter onClose={onClose} />;
+    
     if (status === 'pending') {
       return (
         <PendingFooter
@@ -73,6 +76,7 @@ export default function ViewRequestModal({ isOpen, request, onClose, onAction })
           request={request}
           adminNotes={adminNotes}
           onAdminNotesChange={setAdminNotes}
+          isReadOnly={isReadOnly}
         />
 
         {/* Footer */}

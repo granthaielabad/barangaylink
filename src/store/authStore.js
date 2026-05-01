@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { queryClient } from '../core/queryClient';
 
 export const useAuthStore = create(
   devtools(
@@ -27,8 +28,10 @@ export const useAuthStore = create(
       /**
        * Called after logout or session expiry.
        */
-      clearAuth: () =>
-        set({ session: null, profile: null, isLoading: false }, false, 'clearAuth'),
+      clearAuth: () => {
+        queryClient.clear(); // Clear TanStack Query cache to prevent stale data cross-over
+        set({ session: null, profile: null, isLoading: false }, false, 'clearAuth');
+      },
 
       // ── Derived helpers (accessed as store getters) ──────────
       get role() {

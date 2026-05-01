@@ -5,6 +5,7 @@ import HouseholdForm from './HouseholdForm';
 const emptyForm = {
   houseNo:        '',
   street:         '',
+  purokId:        '',
   headResidentId: '',
   ownershipType:  '',
   dwellingType:   '',
@@ -17,6 +18,7 @@ function buildEditForm(raw) {
   return {
     houseNo:        raw.house_no         ?? '',
     street:         raw.street           ?? '',
+    purokId:        raw.purok_id         ?? '',
     headResidentId: raw.head_resident_id ?? '',
     ownershipType:  raw.ownership_type   ?? '',
     dwellingType:   raw.dwelling_type    ?? '',

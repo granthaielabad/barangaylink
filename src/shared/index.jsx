@@ -12,6 +12,7 @@ export { default as SearchBox } from './SearchBox';
 export { default as ArchiveModal } from './ArchiveModal';
 export { default as DeleteModal } from './DeleteModal';
 export { default as DeactiveModal } from './DeactiveModal';
+export { default as ActivateModal } from './ActivateModal';
 export { default as ActionDropdown } from './ActionDropdown';
 export { default as FormSelect } from './FormSelect';
 export { default as ExportButton } from './ExportButton';

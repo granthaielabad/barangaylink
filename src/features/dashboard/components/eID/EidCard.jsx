@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import { HiOutlineDotsHorizontal } from 'react-icons/hi';
-import { FiEdit2, FiTrash2, FiZoomIn, FiX, FiDownload, FiUser, FiEye, FiPrinter } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiZoomIn, FiX, FiDownload, FiUser, FiEye, FiPrinter, FiCheckCircle } from 'react-icons/fi';
 import { TbUserOff } from 'react-icons/tb';
 import PrintableEidCard from './PrintableEidCard';
 
@@ -86,7 +86,7 @@ const STATUS_CFG = {
 };
 
 // ── Main card ─────────────────────────────────────────────────────────────────
-export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnly = false }) {
+export default function EidCard({ eid, onEdit, onDeactivate, onActivate, onDelete, isViewOnly = false }) {
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -99,6 +99,8 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
 
   const openLightbox  = useCallback(() => setLightboxOpen(true),  []);
   const closeLightbox = useCallback(() => setLightboxOpen(false), []);
+
+  const isCardActive = status.toLowerCase() === 'active';
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const handlePrint = useCallback(() => {
@@ -199,10 +201,17 @@ export default function EidCard({ eid, onEdit, onDeactivate, onDelete, isViewOnl
                       className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
                       <FiEdit2 className="w-3.5 h-3.5" /> Edit Details
                     </button>
-                    <button type="button" onClick={() => { onDeactivate?.(eid); setMenuOpen(false); }}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
-                      <TbUserOff className="w-3.5 h-3.5" /> Deactivate eID
-                    </button>
+                    {isCardActive ? (
+                      <button type="button" onClick={() => { onDeactivate?.(eid); setMenuOpen(false); }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
+                        <TbUserOff className="w-3.5 h-3.5" /> Deactivate eID
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => { onActivate?.(eid); setMenuOpen(false); }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-700 hover:bg-gray-50">
+                        <FiCheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Activate eID
+                      </button>
+                    )}
                     <div className="my-1 border-t border-gray-100" />
                     <button type="button" onClick={() => { onDelete?.(eid); setMenuOpen(false); }}
                       className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50">

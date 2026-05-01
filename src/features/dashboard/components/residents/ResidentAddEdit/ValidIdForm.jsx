@@ -30,6 +30,7 @@ const inputClass =
 
 export default function ValidIdForm({ value = {}, onChange, status = 'active', onStatusChange }) {
   const fileInputRef = useRef(null);
+  const signatureInputRef = useRef(null);
 
   const update = (field, val) => onChange?.({ ...value, [field]: val });
 
@@ -49,7 +50,8 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
     handleFile(e.dataTransfer.files?.[0]);
   };
 
-  const fileName = value.validIdFile?.name ?? null;
+  const fileName      = value.validIdFile?.name ?? null;
+  const signatureName = value.signatureFile?.name ?? null;
 
   return (
     <div className="space-y-4">
@@ -139,8 +141,41 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
           onChange={onFileChange}
         />
       </div>
+
+      {/* Signature Row */}
+      <div className="pt-4 border-t border-gray-100">
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          Resident's Signature
+        </label>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => signatureInputRef.current?.click()}
+          onKeyDown={(e) => e.key === 'Enter' && signatureInputRef.current?.click()}
+          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#8C0B1A]/50 hover:bg-[#F1F7F2] transition-colors cursor-pointer py-4 px-4 text-center"
+        >
+          <HiOutlineArrowUpTray className="w-5 h-5 text-gray-400" />
+          {signatureName ? (
+            <p className="text-sm text-[#8C0B1A] font-medium">{signatureName}</p>
+          ) : (
+            <p className="text-sm font-medium text-gray-700">Upload Signature Image</p>
+          )}
+        </div>
+        <p className="mt-1.5 text-xs text-gray-400 italic">
+          Clear handwritten signature on a plain white background
+        </p>
+
+        <input
+          ref={signatureInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) update('signatureFile', file);
+          }}
+        />
+      </div>
     </div>
   );
 }
-
-

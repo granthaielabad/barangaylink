@@ -31,8 +31,14 @@ const emptyForm = {
 // address_line format built by buildPayload: "houseNo, street, purok, barangay"
 function parseAddressLine(addressLine) {
   if (!addressLine) return { houseNo: '', street: '', purok: '' };
-  const withoutBarangay = addressLine.replace(new RegExp(`,?\\s*${BARANGAY}\\s*$`), '').trim();
-  const parts = withoutBarangay.split(',').map((s) => s.trim()).filter(Boolean);
+  
+  // Create a clean string by removing the Barangay part
+  const cleanAddr = addressLine.replace(new RegExp(`,?\\s*${BARANGAY}\\s*$`, 'i'), '').trim();
+  
+  // Split by comma
+  const parts = cleanAddr.split(',').map((s) => s.trim());
+  
+  // Reconstruct components based on expected buildPayload order (houseNo, street, purok)
   return {
     houseNo: parts[0] ?? '',
     street:  parts[1] ?? '',
@@ -142,7 +148,7 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
       houseNo:     address.houseNo    || null,
       street:      address.street     || null,
       purok:       address.purok      || null,
-      purokId:     address.purokId    ? Number(address.purokId) : null,
+      purokId:     address.purokId    || null,
       barangay:    address.barangay   || null,
       yearsOfStay: address.yearsOfStay !== '' ? Number(address.yearsOfStay) : null,
       // Sectoral Status
@@ -159,6 +165,8 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
       validIdType:   validId.validIdType   || null,
       validIdNumber: validId.validIdNumber || null,
       validIdFile:   validId.validIdFile   ?? null,
+      // Signature
+      signatureFile: validId.signatureFile ?? null,
     });
 
     if (mode === 'add') setFormData(emptyForm);

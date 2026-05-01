@@ -82,6 +82,7 @@ export default function Household() {
   const buildPayload = (data) => ({
     house_no:         data.houseNo        || null,
     street:           data.street         || null,
+    purok_id:         data.purokId        || null,
     head_resident_id: data.headResidentId || null,
     ownership_type:   data.ownershipType  || null,
     dwelling_type:    data.dwellingType   || null,

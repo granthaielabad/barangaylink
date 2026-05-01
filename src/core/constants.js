@@ -129,6 +129,19 @@ export const SEX_OPTIONS = [
 
 export const BARANGAY = 'Sta. Lucia';
 
+export const STA_LUCIA_STREETS = [
+  'J.P. Rizal St.', 'Paguio St.', 'Galvez St.', 'Sta. Marcela St.', 'Castro St.', 
+  'Pamana St.', 'Rivera St.', 'Cursilista St.', 'Marco Polo St.', 'Diego Silang St.', 
+  'J. Luna St.', 'E. Jacinto St.', 'Gen. Malvar St.', 'F. Balagtas St.', 'Dela Cruz St.', 
+  'M. Aquino St.', 'M.H. Del Pilar St.', 'Panganiban St.', 'P. Bukaneg St.', 
+  'E. Aguinaldo St.', 'Lopez Jaena St.', 'J. Abad Santos St.', 'Humabon St.', 
+  'A. Bonifacio St.', 'Gomez St.', 'P. Burgos St.', 'Zamora St.', 'Naning Ponce St.', 
+  'J. Basa St.', 'A. Mabini St.', 'T. Alonzo St.', 'P. Paterno St.', 'Rajah Soliman St.', 
+  'F. Agoncillo St.', 'F. Calderon St.', 'J. Palma St.', 'Lapu Lapu St.',
+  'Plain Ville', 'Dona Field', 'Villa Hermano 4', 'Francisco Park', 'Lower Visayas Ave.',
+  'Upper Visayas', 'Valbuena Compd.', 'Natividad Subd.', 'Tarha Ville'
+];
+
 export const NATIONALITIES = [
   'Afghan','Albanian','Algerian','American','Andorran','Angolan','Antiguan',
   'Argentine','Armenian','Australian','Austrian','Azerbaijani','Bahamian',

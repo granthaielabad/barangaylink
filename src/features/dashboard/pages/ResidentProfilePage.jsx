@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FiUser, FiMapPin, FiHome, FiAlertCircle, FiLink, FiCreditCard, FiCalendar } from 'react-icons/fi';
+import { FiUser, FiMapPin, FiHome, FiAlertCircle, FiLink, FiCreditCard, FiCalendar, FiCheckCircle } from 'react-icons/fi';
 import { useMyResidentProfile, useMyHousehold, useLinkResidentAccount } from '../../../hooks/queries/resident/useResidentPortal';
 import SectionCard from '../components/ResidentPortal/SectionCard';
 import { BARANGAY } from '../../../core/constants';
@@ -54,7 +54,6 @@ function Skeleton() {
   );
 }
 
-// ─── Not Linked Notice ───────────────────────────────────────────────────────
 // ─── Link Account Form ────────────────────────────────────────────────────────
 function LinkAccountForm() {
   const [residentNo,   setResidentNo]   = useState('');
@@ -73,8 +72,6 @@ function LinkAccountForm() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-5">
-
-      {/* Info banner */}
       <div className="flex items-start gap-3 p-5 rounded-xl bg-amber-50 border border-amber-200">
         <FiAlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
         <div>
@@ -86,7 +83,6 @@ function LinkAccountForm() {
         </div>
       </div>
 
-      {/* Linking form card */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-9 h-9 rounded-lg bg-[#8C0B1A]/10 flex items-center justify-center">
@@ -101,7 +97,6 @@ function LinkAccountForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
-          {/* Resident Number */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5 mx-auto">
               Resident Number <span className="text-red-500">*</span>
@@ -119,12 +114,7 @@ function LinkAccountForm() {
                 required
               />
             </div>
-            <p className="text-xs text-gray-400 mt-1">
-              Found on your barangay documents or physical ID.
-            </p>
           </div>
-
-          {/* Last Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Last Name <span className="text-red-500">*</span>
@@ -138,8 +128,6 @@ function LinkAccountForm() {
               required
             />
           </div>
-
-          {/* Date of Birth */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Date of Birth <span className="text-red-500">*</span>
@@ -160,18 +148,12 @@ function LinkAccountForm() {
 
           <button
             type="submit"
-            disabled={isPending || !residentNo || !lastName || !dateOfBirth}
+            disabled={isPending}
             className="w-full py-2.5 rounded-lg bg-[#8C0B1A] text-white text-sm font-semibold hover:bg-[#7A0915] disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2"
           >
             {isPending ? 'Verifying…' : 'Link My Account'}
           </button>
         </form>
-
-        {/* Help note */}
-        <p className="text-xs text-gray-400 mt-6 pt-5 border-t border-gray-100">
-          Can't find your Resident Number? Visit the Barangay Office and present a valid ID.
-          Staff can look up your record and provide your number.
-        </p>
       </div>
     </div>
   );
@@ -198,8 +180,6 @@ export default function ResidentProfilePage() {
     ? resident.status.charAt(0).toUpperCase() + resident.status.slice(1)
     : 'Active';
 
-  // Address fields: prefer household columns if linked,
-  // otherwise parse back from the concatenated address_line string.
   const parseAddr = (line) => {
     if (!line) return { houseNo: '', street: '', purok: '' };
     const withoutBarangay = line.replace(new RegExp(`,?\\s*${BARANGAY}\\s*$`, 'i'), '').trim();
@@ -212,9 +192,8 @@ export default function ResidentProfilePage() {
   const purok   = resident.puroks?.name ?? parsed.purok;
 
   return (
-    <div className="space-y-5 mx-auto max-w-7xl">
-
-      {/* ── Profile Header Card ─────────────────────────────── */}
+    <div className="space-y-5 mx-auto max-w-7xl pb-10">
+      {/* Profile Header */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex items-center gap-5 border-t-4 border-t-[#8C0B1A]">
         <div className="w-24 h-24 rounded-sm bg-gray-200 border border-gray-300 flex items-center justify-center overflow-hidden shrink-0">
           {resident.photo_url ? (
@@ -225,9 +204,7 @@ export default function ResidentProfilePage() {
         </div>
         <div>
           <h3 className="text-xl font-bold text-gray-900">{fullNameLastFirst}</h3>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Resident No.: {resident.resident_no ?? '—'}
-          </p>
+          <p className="text-sm text-gray-500 mt-0.5">Resident No.: {resident.resident_no ?? '—'}</p>
           <span className={`inline-flex items-center mt-2 px-5 py-0.5 rounded-lg text-sm font-semibold border ${
             resident.status === 'active'
               ? 'bg-[#BFE8BF] text-emerald-700 border-emerald-200'
@@ -238,7 +215,7 @@ export default function ResidentProfilePage() {
         </div>
       </div>
 
-      {/* ── Personal Information ────────────────────────────── */}
+      {/* Personal Info */}
       <SectionCard icon={FiUser} title="Personal Information">
         <FieldRow
           fields={[
@@ -256,7 +233,7 @@ export default function ResidentProfilePage() {
         />
       </SectionCard>
 
-      {/* ── Address Information ─────────────────────────────── */}
+      {/* Address Info */}
       <SectionCard icon={FiMapPin} title="Address Information">
         <FieldRow
           fields={[
@@ -268,35 +245,52 @@ export default function ResidentProfilePage() {
         />
       </SectionCard>
 
-      {/* ── Household Information ───────────────────────────── */}
-      <SectionCard icon={FiHome} title="Household Information" className="border-b-4 border-b-[#8C0B1A]">
+      {/* Household Info */}
+      <SectionCard icon={FiHome} title="Household Information">
         {loadingHousehold ? (
           <div className="animate-pulse space-y-3">
             <div className="h-3 w-28 bg-gray-200 rounded" />
             <div className="h-3 w-36 bg-gray-100 rounded" />
           </div>
         ) : !household ? (
-          <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200">
-            <FiAlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-amber-800">Not yet available</p>
-              <p className="text-xs text-amber-700 mt-0.5">Your resident record is not currently linked to a household.</p>
-            </div>
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm text-gray-500">
+            <FiAlertCircle className="w-5 h-5 shrink-0 text-amber-500" />
+            <span>Not currently linked to a household record.</span>
           </div>
         ) : (
           <FieldRow
             fields={[
               { label: 'Household No.',      value: val(household.household_no) },
-              { label: 'Ownership Type',     value: household.ownership_type ? household.ownership_type.charAt(0).toUpperCase() + household.ownership_type.slice(1) : '—' },
-              { label: 'Household Members',  value: household.members?.length ? `${household.members.length}` : '—' },
-              { label: 'Household Status',   value: household.status
-                  ? household.status.charAt(0).toUpperCase() + household.status.slice(1)
-                  : 'Active' },
+              { label: 'Ownership Type',     value: val(household.ownership_type) },
+              { label: 'Household Status',   value: val(household.status) },
             ]}
           />
         )}
       </SectionCard>
 
+      {/* Resident Signature */}
+      <SectionCard icon={FiCreditCard} title="Resident Signature" className="border-b-4 border-b-[#8C0B1A]">
+        {resident.signature_url ? (
+          <div className="flex flex-col items-center justify-center py-6 bg-gray-50 rounded-xl border border-gray-100">
+             <div className="relative group">
+                <img 
+                  src={resident.signature_url} 
+                  alt="Handwritten Signature" 
+                  className="max-h-[140px] object-contain mix-blend-multiply"
+                />
+                <div className="absolute -top-2 -right-2 bg-emerald-100 text-emerald-600 rounded-full p-1 border border-emerald-200">
+                   <FiCheckCircle className="w-4 h-4" />
+                </div>
+             </div>
+            <p className="text-[10px] text-gray-400 mt-4 uppercase tracking-widest font-bold">Official Signature on Registry</p>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 p-5 rounded-xl bg-gray-50 border border-gray-200 text-gray-400 italic text-sm">
+            <FiAlertCircle className="w-5 h-5 shrink-0" />
+            <span>No digital signature has been recorded for this resident yet.</span>
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }

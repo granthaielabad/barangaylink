@@ -18,7 +18,6 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
     onSubmit({
       document_type: cert.document_type,
       purpose:       purpose.trim(),
-      fee_amount:    typeof cert.fee === 'number' ? cert.fee : 0,
     });
   };
 
@@ -104,21 +103,6 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
               />
             </div>
 
-            {/* Fee */}
-            <div className="bg-[#E8F0F8] border border-[#B8D8F8] rounded-lg px-5 py-4 flex items-center justify-between">
-              <div>
-                <p className="text-[#1838B8] font-semibold text-sm">Processing Fee</p>
-                <p className="text-[#1858D0] text-[11px]">
-                  {typeof cert.fee === 'number' && cert.fee > 0
-                    ? 'Payment reference will be generated upon submission'
-                    : 'This document is free of charge'}
-                </p>
-              </div>
-              <p className="text-2xl font-bold text-blue-700">
-                {typeof cert.fee === 'number' ? `₱${cert.fee}` : cert.fee}
-              </p>
-            </div>
-
             <div className="flex items-center gap-2 text-[12px] text-gray-500 pb-2">
               <FiClock className="w-4 h-4" />
               <span>Processing Time: {cert.processingTime}</span>
@@ -143,4 +127,3 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
     document.body
   );
 }
-

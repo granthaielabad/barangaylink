@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import { EidOverview, EidCard, EidAddEditModal, ReviewApplicationModal } from '../components/eID';
-import { SearchBox, SortFilter, OrderFilter, Pagination, DeactiveModal, DeleteModal } from '../../../shared';
+import { SearchBox, SortFilter, OrderFilter, Pagination, DeactiveModal, DeleteModal, ActivateModal } from '../../../shared';
 import { useEids, useEidStats, useMutateEid, useEidApplicationStats } from '../../../hooks/queries/eid/useEids';
 import { useEidFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
@@ -17,6 +17,7 @@ export default function Eid() {
   const [sidebarOpen,         setSidebarOpen]         = useState(false);
   const [selectedEid,         setSelectedEid]         = useState(null);
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
+  const [activateModalOpen,   setActivateModalOpen]   = useState(false);
   const [deleteModalOpen,     setDeleteModalOpen]     = useState(false);
   const [eidFormModalOpen,    setEidFormModalOpen]    = useState(false);
   const [eidFormMode,         setEidFormMode]         = useState('create');
@@ -39,7 +40,7 @@ export default function Eid() {
   const { data, isLoading }  = useEids();
   const { data: stats }      = useEidStats();
   const { data: appStats }   = useEidApplicationStats();
-  const { issue, suspend, remove } = useMutateEid();
+  const { issue, suspend, reactivate, remove } = useMutateEid();
 
   const pendingCount     = appStats?.pending      ?? 0;
   const underReviewCount = appStats?.under_review ?? 0;
@@ -65,6 +66,7 @@ export default function Eid() {
       expiresAt:   e.expires_at     ?? null,
       qrToken:     e.qr_token       ?? null,
       photoUrl:    r?.photo_url     ?? null,
+      signatureUrl: r?.signature_url ?? null,
       sex:         r?.sex           ? r.sex.charAt(0).toUpperCase() : '—',
       dateOfBirth: r?.date_of_birth ?? null,
       bloodType:   r?.blood_type    ?? null,
@@ -89,6 +91,12 @@ export default function Eid() {
   const handleConfirmDeactivate = () => {
     if (selectedEid) suspend.mutate(selectedEid._raw?.id ?? selectedEid.id);
     setDeactivateModalOpen(false);
+    setSelectedEid(null);
+  };
+
+  const handleConfirmActivate = () => {
+    if (selectedEid) reactivate.mutate(selectedEid._raw?.id ?? selectedEid.id);
+    setActivateModalOpen(false);
     setSelectedEid(null);
   };
 
@@ -165,6 +173,7 @@ export default function Eid() {
                     eid={eid}
                     onEdit={(e)       => { setSelectedEid(e); setEidFormMode('edit'); setEidFormModalOpen(true); }}
                     onDeactivate={(e) => { setSelectedEid(e); setDeactivateModalOpen(true); }}
+                    onActivate={(e)   => { setSelectedEid(e); setActivateModalOpen(true); }}
                     onDelete={(e)     => { setSelectedEid(e); setDeleteModalOpen(true); }}
                   />
                 ))}
@@ -218,6 +227,14 @@ export default function Eid() {
         message="This action will suspend the eID. It can be reactivated later."
         onConfirm={handleConfirmDeactivate}
         onCancel={() => { setDeactivateModalOpen(false); setSelectedEid(null); }}
+      />
+
+      <ActivateModal
+        isOpen={activateModalOpen}
+        title="eID"
+        message="This action will reactivate the eID and mark it as active."
+        onConfirm={handleConfirmActivate}
+        onCancel={() => { setActivateModalOpen(false); setSelectedEid(null); }}
       />
 
       <DeleteModal

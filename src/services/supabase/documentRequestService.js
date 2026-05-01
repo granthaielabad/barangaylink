@@ -1,22 +1,60 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Service layer for document_requests table.
-// RLS enforces: residents see only their own, staff/superadmin see all.
+// Service layer for external document_requests via external_requests_view.
+// Read-only monitoring of the other group's feature.
 // ─────────────────────────────────────────────────────────────────────────────
 import { supabase } from './client';
 
+// The view public.external_requests_view flattens request_tbl + residents
 const SELECT_FIELDS = `
-  id, control_number, document_type, purpose, status,
-  fee_amount, payment_status, payment_method,
-  admin_notes, remarks, document_url,
-  requested_at, processed_at, released_at,
-  processed_by,
-  residents (
-    id, resident_no, first_name, middle_name, last_name, suffix,
-    date_of_birth, civil_status, address_line, contact_number,
-    email, id_number, photo_url,
-    puroks ( id, name )
-  )
+  id,
+  document_type,
+  purpose,
+  status,
+  admin_notes,
+  requested_at,
+  updated_at,
+  requester_id,
+  resident_id,
+  resident_no,
+  first_name,
+  middle_name,
+  last_name,
+  suffix,
+  date_of_birth,
+  civil_status,
+  address_line,
+  contact_number,
+  email,
+  id_number,
+  photo_url,
+  purok_name
 `;
+
+/**
+ * Adapter to map flat view fields back to our expected nested residents shape
+ */
+function mapResident(req) {
+  if (!req) return null;
+  return {
+    ...req,
+    residents: {
+      id:             req.resident_id,
+      resident_no:    req.resident_no,
+      first_name:     req.first_name,
+      middle_name:    req.middle_name,
+      last_name:      req.last_name,
+      suffix:         req.suffix,
+      date_of_birth:  req.date_of_birth,
+      civil_status:   req.civil_status,
+      address_line:   req.address_line,
+      contact_number: req.contact_number,
+      email:          req.email,
+      id_number:      req.id_number,
+      photo_url:      req.photo_url,
+      puroks:         { name: req.purok_name }
+    }
+  };
+}
 
 // ── Admin: paginated list with filters ────────────────────────────────────────
 export async function getDocumentRequests({
@@ -26,24 +64,38 @@ export async function getDocumentRequests({
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
 
-  let query = supabase
-    .from('document_requests')
-    .select(SELECT_FIELDS, { count: 'exact' })
+  let query = supabase.schema('public')
+    .from('external_requests_view')
+    .select('*', { count: 'exact' })
     .range(from, to)
     .order(sortBy, { ascending: order === 'asc' });
 
-  if (status !== 'all') query = query.eq('status', status);
+  if (status !== 'all') {
+    // Map our filter status to their DB enum if different
+    const statusMap = { 
+      'released': 'completed',
+      'approved': 'approved',
+      'processing': 'processing',
+      'ready': 'ready for pickup'
+    };
+    query = query.eq('status', statusMap[status] || status);
+  }
+
   if (search.trim()) {
-    // Search against resident name via PostgREST — filter on resident fields
     query = query.or(
-      `control_number.ilike.%${search}%,document_type.ilike.%${search}%`
+      `document_type.ilike.%${search}%,purpose.ilike.%${search}%,first_name.ilike.%${search}%,last_name.ilike.%${search}%`
     );
   }
 
   const { data, error, count } = await query;
-  if (error) throw error;
+  
+  if (error) {
+    console.warn('Could not fetch external document requests:', error.message);
+    return { data: [], total: 0, totalPages: 0 };
+  }
+
   return {
-    data: data ?? [],
+    data: (data ?? []).map(mapResident),
     total: count ?? 0,
     totalPages: Math.ceil((count ?? 0) / pageSize),
   };
@@ -51,128 +103,54 @@ export async function getDocumentRequests({
 
 // ── Admin: stats counts ───────────────────────────────────────────────────────
 export async function getDocumentRequestStats() {
-  const { data, error } = await supabase
-    .from('document_requests')
+  const { data, error } = await supabase.schema('public')
+    .from('external_requests_view')
     .select('status');
-  if (error) throw error;
+  
+  if (error) {
+    console.warn('Could not fetch external document request stats:', error.message);
+    return { total: 0, pending: 0, processing: 0, ready: 0, released: 0, rejected: 0, approved: 0 };
+  }
+
   const counts = { total: 0, pending: 0, processing: 0, ready: 0, released: 0, rejected: 0 };
   (data ?? []).forEach((r) => {
     counts.total++;
-    if (r.status in counts) counts[r.status]++;
+    const s = r.status?.toLowerCase();
+    if (s === 'pending') counts.pending++;
+    else if (s === 'processing') counts.processing++;
+    else if (s === 'ready for pickup') counts.ready++;
+    else if (s === 'approved' || s === 'completed') counts.released++;
+    else if (s === 'rejected') counts.rejected++;
   });
-  // 'approved' is an alias the frontend uses — map to released for display
   counts.approved = counts.released;
   return counts;
-}
-
-// ── Admin: update status (pending→processing→ready→released | rejected) ───────
-export async function updateDocumentRequestStatus(id, status, adminNotes = null) {
-  const updates = { status };
-  if (adminNotes !== null) updates.admin_notes = adminNotes;
-  // processed_by / processed_at / released_at stamped by DB trigger
-
-  const { data, error } = await supabase
-    .from('document_requests')
-    .update(updates)
-    .eq('id', id)
-    .select(SELECT_FIELDS)
-    .single();
-  if (error) throw error;
-  return data;
-}
-
-// ── Admin: store generated document URL (after PDF generation) ────────────────
-export async function setDocumentUrl(id, documentUrl, orNumber = null) {
-  const updates = { document_url: documentUrl, status: 'ready' };
-  if (orNumber) updates.or_number = orNumber;
-  const { data, error } = await supabase
-    .from('document_requests')
-    .update(updates)
-    .eq('id', id)
-    .select(SELECT_FIELDS)
-    .single();
-  if (error) throw error;
-  return data;
-}
-
-// ── Resident: submit a new document request ───────────────────────────────────
-export async function submitDocumentRequest({ document_type, purpose, fee_amount }) {
-  // Get resident_id from profile
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data: resident, error: resErr } = await supabase
-    .from('residents')
-    .select('id')
-    .eq('profile_id', user?.id)
-    .maybeSingle();
-  if (resErr) throw resErr;
-  if (!resident) throw new Error('Resident record not found. Please contact the Barangay Office.');
-
-  const { data, error } = await supabase
-    .from('document_requests')
-    .insert({
-      resident_id:   resident.id,
-      document_type,
-      purpose,
-      fee_amount:    fee_amount ?? 0,
-      // control_number, fee_amount, payment_status auto-set by DB triggers
-    })
-    .select(SELECT_FIELDS)
-    .single();
-  if (error) throw error;
-  return data;
 }
 
 // ── Resident: get own request history ────────────────────────────────────────
 export async function getMyDocumentRequests() {
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: resident, error: resErr } = await supabase
-    .from('residents')
-    .select('id')
-    .eq('profile_id', user?.id)
-    .maybeSingle();
-  if (resErr) throw resErr;
-  if (!resident) return [];
+  if (!user) return [];
 
-  const { data, error } = await supabase
-    .from('document_requests')
-    .select(SELECT_FIELDS)
-    .eq('resident_id', resident.id)
+  const { data, error } = await supabase.schema('public')
+    .from('external_requests_view')
+    .select('*')
+    .eq('requester_id', user.id)
     .order('requested_at', { ascending: false });
-  if (error) throw error;
-  return data ?? [];
+  
+  if (error) {
+    console.warn('Could not fetch user\'s document requests from external view:', error.message);
+    return [];
+  }
+  return (data ?? []).map(mapResident);
 }
 
-// ── Resident: record payment method selection ─────────────────────────────────
-export async function updatePaymentMethod(id, paymentMethod) {
-  const { data, error } = await supabase
-    .from('document_requests')
-    .update({ payment_method: paymentMethod, payment_status: 'paid' })
-    .eq('id', id)
-    .select('id, payment_status, payment_method')
-    .single();
-  if (error) throw error;
-  return data;
+// ── REMOVED ACTIONS (READ-ONLY) ──────────────────────────────────────────────
+export async function updateDocumentRequestStatus() {
+  throw new Error('Our system is currently in read-only mode for Document Requests.');
 }
-
-// ── Resident: create PayMongo payment link ────────────────────────────────────
-export async function createPaymentLink(documentRequestId) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) throw new Error('Not authenticated');
-
-  const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnon = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  const res = await fetch(`${supabaseUrl}/functions/v1/create-payment-link`, {
-    method: 'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-      'apikey':        supabaseAnon,
-    },
-    body: JSON.stringify({ document_request_id: documentRequestId }),
-  });
-
-  const data = await res.json();
-  if (!res.ok || !data?.success) throw new Error(data?.error ?? 'Failed to create payment link.');
-  return data; // { checkout_url, link_id }
+export async function submitDocumentRequest() {
+  throw new Error('Please use the external Document Portal to submit new requests.');
+}
+export async function setDocumentUrl() {
+  throw new Error('Document management is handled by the external Document System.');
 }

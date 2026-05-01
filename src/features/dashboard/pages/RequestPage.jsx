@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { FiFileText, FiExternalLink } from 'react-icons/fi';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import RequestStats from '../components/Requests/RequestStats';
@@ -13,7 +14,6 @@ import { signOut } from '../../../services/supabase/authService';
 import {
   useDocumentRequests,
   useDocumentRequestStats,
-  useMutateDocumentRequest,
 } from '../../../hooks/queries/documentRequests/useDocumentRequests';
 import { REQUEST_STATUS_FILTER_OPTIONS, SORT_FIELDS } from '../../../core/constants';
 
@@ -26,7 +26,6 @@ function toTableRow(req) {
     ? [r.first_name, r.middle_name, r.last_name, r.suffix].filter(Boolean).join(' ')
     : '—';
 
-  // Normalise status label: 'released' shows as 'Approved' to match frontend design
   const statusLabel =
     req.status === 'released'   ? 'Approved'   :
     req.status === 'processing' ? 'Processing' :
@@ -34,13 +33,7 @@ function toTableRow(req) {
     req.status === 'ready'      ? 'Ready'      :
     req.status === 'rejected'   ? 'Rejected'   : req.status;
 
-  const feeLabel =
-    req.payment_status === 'free' ? 'Free' :
-    req.payment_status === 'paid' ? `₱${req.fee_amount} - Paid` :
-    `₱${req.fee_amount} - Unpaid`;
-
   return {
-    // Fields ViewRequestModal reads
     id:          req.control_number ?? req.id,
     _rawId:      req.id,
     name:        fullName,
@@ -49,7 +42,6 @@ function toTableRow(req) {
                    ? new Date(req.requested_at).toLocaleDateString('en-US')
                    : '—',
     status:      statusLabel,
-    fee:         feeLabel,
     purpose:     req.purpose,
     address:     r?.address_line ?? '—',
     civilStatus: r?.civil_status ?? '—',
@@ -59,7 +51,6 @@ function toTableRow(req) {
     residentId:  r?.id_number ?? r?.resident_no ?? '—',
     admin_notes: req.admin_notes ?? '',
     estimatedDate: '3-5 business days',
-    // Keep raw for mutations
     _raw: req,
   };
 }
@@ -78,21 +69,18 @@ export default function RequestPage() {
   const { profile } = useAuth();
   const clearAuth = useAuthStore((s) => s.clearAuth);
 
-  // ── Data ────────────────────────────────────────────────────────────────────
   const { data, isLoading } = useDocumentRequests({
     page, pageSize: PAGE_SIZE, search,
-    status: status === 'approved' ? 'released' : status, // UI says Approved, DB says released
+    status: status === 'approved' ? 'released' : status,
     sortBy, order,
   });
   const { data: stats = { total: 0, pending: 0, processing: 0, approved: 0 } } =
     useDocumentRequestStats();
-  const { process, approve, reject } = useMutateDocumentRequest();
 
   const requests   = (data?.data ?? []).map(toTableRow);
   const totalPages  = data?.totalPages ?? 1;
   const totalEntries = data?.total ?? 0;
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
   const handleLogout = async () => {
     try { await signOut(); clearAuth(); navigate('/login', { replace: true }); }
     catch (err) { toast.error(err.message ?? 'Logout failed.'); }
@@ -103,22 +91,13 @@ export default function RequestPage() {
     setIsViewModalOpen(true);
   };
 
-  // type: 'process' | 'approve' | 'reject'
-  const handleRequestAction = (id, type, adminNotes) => {
-    // id here is the display id (control_number); we need the raw UUID
-    const raw = requests.find((r) => r.id === id)?._rawId ?? id;
-    if (type === 'process') process.mutate({ id: raw, adminNotes });
-    if (type === 'approve') approve.mutate({ id: raw, adminNotes });
-    if (type === 'reject')  reject.mutate({ id: raw, adminNotes });
-  };
-
   return (
     <div className="min-h-screen flex bg-[#FFFBFC]">
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <main className="flex-1 overflow-auto">
         <DashboardHeader
-          title="Certificate Request"
+          title="Certificate Requests (Read-Only)"
           userName={profile?.full_name ?? ''}
           userRole={profile?.role
             ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
@@ -128,9 +107,29 @@ export default function RequestPage() {
         />
 
         <section className="px-5 py-7">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+             <div>
+                <h1 className="text-[25px] font-bold text-gray-900">Document Requests</h1>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                  Monitoring requests from the external Document System. 
+                </p>
+             </div>
+
+             <a 
+              href="https://barangayease.web.app/admin" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-6 py-3 bg-[#8C0B1A] text-white font-bold rounded-xl shadow-lg hover:bg-[#7A0915] transition-all"
+            >
+              <FiFileText className="w-5 h-5" />
+              Manage in External System
+              <FiExternalLink className="w-4 h-4 opacity-70" />
+            </a>
+          </div>
+
           <RequestStats stats={stats} />
 
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
               <div className="flex flex-wrap items-center gap-3">
                 <SearchBox
@@ -181,14 +180,13 @@ export default function RequestPage() {
           key={selectedRequest?._rawId}
           isOpen={isViewModalOpen}
           request={selectedRequest}
+          isReadOnly={true}
           onClose={() => {
             setIsViewModalOpen(false);
             setSelectedRequest(null);
           }}
-          onAction={handleRequestAction}
         />
       )}
     </div>
   );
 }
-

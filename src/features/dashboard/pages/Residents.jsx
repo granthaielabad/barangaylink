@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import { ResidentTable, ResidentAddEdit } from '../components/residents';
-import BeneficiaryTable from '../components/Residents/BeneficiaryTable';
+import BeneficiaryTable from '../components/residents/BeneficiaryTable';
 import { SortFilter, OrderFilter, StatusFilter, Pagination, SearchBox, ArchiveModal, DeleteModal } from '../../../shared';
 import { useResidents, useMutateResident } from '../../../hooks/queries/residents/useResidents';
 import { useResidentFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
-import { uploadValidIdPhoto } from '../../../services/supabase/residentService';
+import { uploadValidIdPhoto, uploadResidentSignature } from '../../../services/supabase/residentService';
 import { RESIDENT_STATUS_FILTER_OPTIONS, BARANGAY, SORT_FIELDS } from '../../../core/constants';
 import toast from 'react-hot-toast';
 
@@ -26,9 +26,6 @@ export default function Residents() {
   const { profile } = useAuth();
   const clearAuth = useAuthStore((s) => s.clearAuth);
 
-  // ── Filter store — select each primitive individually ─────────
-  // Never destructure useXxxFilters() with no selector; it subscribes
-  // to the entire store object and causes an infinite render loop.
   const search   = useResidentFilters((s) => s.search);
   const sortBy   = useResidentFilters((s) => s.sortBy);
   const order    = useResidentFilters((s) => s.order);
@@ -41,20 +38,15 @@ export default function Residents() {
   const setStatus = useResidentFilters((s) => s.setStatus);
   const setPage   = useResidentFilters((s) => s.setPage);
 
-  // ── Server data ───────────────────────────────────────────────
-  const { data, isLoading, isFetching } = useResidents();
+  const { data, isLoading } = useResidents();
   const { create, update, archive, remove } = useMutateResident();
 
   const residents = data?.data ?? [];
   const totalPages = data?.totalPages ?? 1;
   const totalEntries = data?.total ?? 0;
 
-  // ── Adapter: map DB fields → table display shape ──────────────
   const tableResidents = residents.map((r) => {
-    // Use persistent resident_no from DB (assigned by trigger, format XXXX-XXX-XX)
     const residentNo = r.resident_no ?? '—';
-
-    // Birthdate: DB returns YYYY-MM-DD → display as MM-DD-YYYY
     let birthdate = '—';
     if (r.date_of_birth) {
       const [y, m, d] = r.date_of_birth.split('-');
@@ -79,7 +71,6 @@ export default function Residents() {
     };
   });
 
-  // ── Handlers ──────────────────────────────────────────────────
   const handleLogout = async () => {
     try { await signOut(); clearAuth(); navigate('/login', { replace: true }); }
     catch (err) { toast.error(err.message ?? 'Logout failed.'); }
@@ -101,15 +92,11 @@ export default function Residents() {
     religion:       data.religion      || null,
     occupation:     data.occupation    || null,
     voter_status:   data.voterStatus   ?? false,
-    // Sectoral Status
     is_pwd:         data.isPwd         ?? false,
     is_solo_parent: data.isSoloParent  ?? false,
     is_indigent:    data.isIndigent    ?? false,
-    // Address — barangay is always Sta. Lucia, locked in form
     address_line: [data.houseNo, data.street, data.purok, BARANGAY].filter(Boolean).join(', ') || null,
-    // Only preserve purok_id if the purok text field still has a value
     purok_id:     (data.purok && data.purokId) ? Number(data.purokId) : null,
-    // Identification
     philhealth_no:  data.philhealthNo  || null,
     sss_no:         data.sssNo         || null,
     tin_no:         data.tinNo         || null,
@@ -119,24 +106,42 @@ export default function Residents() {
   });
 
   const handleAddResident = async (data) => {
-    const result = await create.mutateAsync(buildPayload(data));
-    if (data.validIdFile && result?.id) {
-      try { await uploadValidIdPhoto(result.id, data.validIdFile); }
-      catch (err) { toast.error(`Resident saved but valid ID upload failed: ${err.message}`); }
+    try {
+      const result = await create.mutateAsync(buildPayload(data));
+      if (result?.id) {
+        const promises = [];
+        if (data.validIdFile) promises.push(uploadValidIdPhoto(result.id, data.validIdFile));
+        if (data.signatureFile) promises.push(uploadResidentSignature(result.id, data.signatureFile));
+        
+        if (promises.length > 0) {
+          await Promise.all(promises);
+        }
+      }
+      setAddModalOpen(false);
+    } catch (err) {
+      toast.error(`Failed to save resident: ${err.message}`);
     }
-    setAddModalOpen(false);
   };
 
   const handleUpdateResident = async (data) => {
     if (!selectedResident) return;
     const residentId = selectedResident._raw?.id ?? selectedResident.id;
-    await update.mutateAsync({ id: residentId, payload: buildPayload(data) });
-    if (data.validIdFile) {
-      try { await uploadValidIdPhoto(residentId, data.validIdFile); }
-      catch (err) { toast.error(`Resident updated but valid ID upload failed: ${err.message}`); }
+    try {
+      await update.mutateAsync({ id: residentId, payload: buildPayload(data) });
+      
+      const promises = [];
+      if (data.validIdFile) promises.push(uploadValidIdPhoto(residentId, data.validIdFile));
+      if (data.signatureFile) promises.push(uploadResidentSignature(residentId, data.signatureFile));
+      
+      if (promises.length > 0) {
+        await Promise.all(promises);
+      }
+      
+      setEditModalOpen(false);
+      setSelectedResident(null);
+    } catch (err) {
+      toast.error(`Failed to update resident: ${err.message}`);
     }
-    setEditModalOpen(false);
-    setSelectedResident(null);
   };
 
   const handleConfirmArchive = () => {
@@ -250,4 +255,3 @@ export default function Residents() {
     </div>
   );
 }
-
