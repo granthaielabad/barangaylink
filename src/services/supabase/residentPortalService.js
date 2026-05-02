@@ -25,7 +25,7 @@ export async function getMyResidentProfile() {
       contact_number, email,
       voter_status, philhealth_no, sss_no, tin_no, id_number,
       address_line, years_of_stay,
-      photo_url, signature_url, status, created_at,
+      photo_url, signature_url, status, created_at, updated_at,
       blood_type,
       puroks ( id, name ),
       households:households!residents_household_id_fkey ( id, house_no, street )

@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { FiUser, FiMapPin, FiHome, FiAlertCircle, FiLink, FiCreditCard, FiCalendar, FiCheckCircle } from 'react-icons/fi';
+import {
+  FiUser, FiMapPin, FiHome, FiAlertCircle, FiLink,
+  FiCalendar, FiCheck, FiShield,
+} from 'react-icons/fi';
 import { useMyResidentProfile, useMyHousehold, useLinkResidentAccount } from '../../../hooks/queries/resident/useResidentPortal';
 import SectionCard from '../components/ResidentPortal/SectionCard';
 import { BARANGAY } from '../../../core/constants';
@@ -18,6 +21,50 @@ function age(dob) {
 }
 
 function val(v) { return v || '—'; }
+
+/** Full date label e.g. "May 2, 2026" for signature attestations */
+function fmtSignedLong(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+/** Lightweight anti-tamper visual — does not cryptographic verify */
+function SignatureSecurityWatermark({ className = '' }) {
+  return (
+    <div aria-hidden className={`pointer-events-none absolute inset-0 overflow-hidden select-none ${className}`}>
+      <div
+        className="absolute inset-0 opacity-[0.03]"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            -32deg,
+            transparent,
+            transparent 32px,
+            rgba(140, 11, 26, 0.55) 32px,
+            rgba(140, 11, 26, 0.55) 33px
+          )`,
+        }}
+      />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span
+          className="font-black uppercase tracking-[0.25em] text-[#8C0B1A] rotate-[-16deg]
+            whitespace-nowrap opacity-[0.06] text-lg sm:text-xl"
+        >
+          BarangayLink
+        </span>
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center translate-y-[30%]">
+        <span
+          className="font-semibold uppercase tracking-[0.2em] text-[#8C0B1A] rotate-[-16deg]
+            whitespace-nowrap opacity-[0.045] text-[9px]"
+        >
+          Official · Copy prohibited
+        </span>
+      </div>
+    </div>
+  );
+}
 
 // ─── Field Row ───────────────────────────────────────────────────────────────
 function FieldRow({ fields }) {
@@ -268,21 +315,52 @@ export default function ResidentProfilePage() {
         )}
       </SectionCard>
 
-      {/* Resident Signature */}
-      <SectionCard icon={FiCreditCard} title="Resident Signature" className="border-b-4 border-b-[#8C0B1A]">
+      {/* Resident Signature — verified registry display + security watermark */}
+      <SectionCard
+        icon={FiShield}
+        title="Verified Resident Signature"
+        className="border-b-4 border-b-[#8C0B1A]"
+      >
         {resident.signature_url ? (
-          <div className="flex flex-col items-center justify-center py-6 bg-gray-50 rounded-xl border border-gray-100">
-             <div className="relative group">
-                <img 
-                  src={resident.signature_url} 
-                  alt="Handwritten Signature" 
-                  className="max-h-[140px] object-contain mix-blend-multiply"
-                />
-                <div className="absolute -top-2 -right-2 bg-emerald-100 text-emerald-600 rounded-full p-1 border border-emerald-200">
-                   <FiCheckCircle className="w-4 h-4" />
+          <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden max-w-xl mx-auto">
+            <div className="p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+                <div className="relative isolate mx-auto sm:mx-0 w-full max-w-[200px] sm:w-[200px] shrink-0 rounded-lg bg-gray-50/80 px-4 py-3 border border-gray-100 overflow-hidden min-h-[92px] flex items-center justify-center">
+                  <SignatureSecurityWatermark />
+                  <img
+                    src={resident.signature_url}
+                    alt="Resident signature on file"
+                    draggable={false}
+                    className="relative z-[2] max-h-[88px] w-full object-contain object-center mix-blend-multiply select-none"
+                  />
                 </div>
-             </div>
-            <p className="text-[10px] text-gray-400 mt-4 uppercase tracking-widest font-bold">Official Signature on Registry</p>
+
+                <div className="flex-1 flex flex-col justify-center gap-2 text-center sm:text-left min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 leading-tight">
+                    Resident Signature on File
+                  </p>
+                  <span
+                    className="inline-flex items-center gap-1.5 self-center sm:self-start rounded-full border border-emerald-200
+                      bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-900"
+                  >
+                    <FiCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" strokeWidth={2.5} aria-hidden />
+                    Verified Digital Signature <span aria-hidden className="text-emerald-700">✓</span>
+                  </span>
+                  {fmtSignedLong(resident.updated_at) ? (
+                    <p className="text-xs text-gray-600">
+                      Signed on {fmtSignedLong(resident.updated_at)}.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-gray-500 italic leading-snug">
+                      Sign date unavailable; signature verified on registry.
+                    </p>
+                  )}
+                  <p className="text-[10px] text-gray-400 leading-snug sm:max-w-xs">
+                    Watermark discourages misuse; not a cryptographic seal.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="flex items-center gap-3 p-5 rounded-xl bg-gray-50 border border-gray-200 text-gray-400 italic text-sm">

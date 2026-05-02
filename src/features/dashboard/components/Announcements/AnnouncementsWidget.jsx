@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { useCommunityAnnouncements } from '../../../../hooks/queries/announcements/useAnnouncements';
 import { FiAlertCircle, FiInfo, FiMessageSquare } from 'react-icons/fi';
+import AnnouncementsViewAllModal, { PREVIEW_LIMIT } from './AnnouncementsViewAllModal';
 
 export default function AnnouncementsWidget() {
+  const [viewAllOpen, setViewAllOpen] = useState(false);
   const { data: announcements = [], isLoading, error } = useCommunityAnnouncements();
   const formatDate = (value) =>
     new Date(value).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -31,7 +34,7 @@ export default function AnnouncementsWidget() {
   const officialAnnouncements = announcements.filter(
     a => a.audience === 'officials' || !a.audience
   );
-  const latestAnnouncements = officialAnnouncements;
+  const previewAnnouncements = officialAnnouncements.slice(0, PREVIEW_LIMIT);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 border-r-6 border-r-[#8C0B1A] shadow-sm flex flex-col h-full min-h-[360px] overflow-hidden p-6">
@@ -40,14 +43,14 @@ export default function AnnouncementsWidget() {
       </div>
 
       <div className="pt-4">
-        {latestAnnouncements.length === 0 ? (
+        {officialAnnouncements.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <FiInfo className="w-8 h-8 text-gray-300 mb-2" />
             <p className="text-sm text-gray-400">No active announcements.</p>
           </div>
         ) : (
-          <div className="space-y-2 min-h-[400px] max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
-            {latestAnnouncements.map((ann) => (
+          <div className="space-y-2 min-h-[280px] max-h-[340px] overflow-y-auto pr-1 custom-scrollbar">
+            {previewAnnouncements.map((ann) => (
               <div 
                 key={ann.id} 
                 className={`rounded-lg border bg-white px-3 py-2.5 transition-colors ${
@@ -96,13 +99,23 @@ export default function AnnouncementsWidget() {
         )}
       </div>
       
-      {latestAnnouncements.length > 4 && (
+      {officialAnnouncements.length > PREVIEW_LIMIT && (
         <div className="pt-3 border-t border-gray-50 bg-gray-50/50 text-center">
-          <button className="text-xs font-semibold text-emerald-600 hover:text-emerald-700">
-            View All Announcements
+          <button
+            type="button"
+            onClick={() => setViewAllOpen(true)}
+            className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
+          >
+            View all announcements ({officialAnnouncements.length})
           </button>
         </div>
       )}
+
+      <AnnouncementsViewAllModal
+        isOpen={viewAllOpen}
+        onClose={() => setViewAllOpen(false)}
+        announcements={officialAnnouncements}
+      />
     </div>
   );
 }

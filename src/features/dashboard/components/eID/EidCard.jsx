@@ -86,7 +86,7 @@ const STATUS_CFG = {
 };
 
 // ── Main card ─────────────────────────────────────────────────────────────────
-export default function EidCard({ eid, onEdit, onDeactivate, onActivate, onDelete, isViewOnly = false }) {
+export default function EidCard({ eid, onEdit, onDeactivate, onActivate, onDelete, isViewOnly = false, className = '' }) {
   const [menuOpen,     setMenuOpen]     = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -166,7 +166,8 @@ export default function EidCard({ eid, onEdit, onDeactivate, onActivate, onDelet
   return (
     <>
       {/* Card — max-width constrains it to physical ID proportions */}
-      <div ref={cardRef} className="w-full max-w-[520px] rounded-xl overflow-hidden shadow-md border border-gray-200"
+      <div ref={cardRef}
+        className={`w-full max-w-[520px] rounded-xl overflow-hidden shadow-md border border-gray-200 ${className}`.trim()}
         style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
 
         {/* Green top bar + admin controls overlaid */}
@@ -224,11 +225,10 @@ export default function EidCard({ eid, onEdit, onDeactivate, onActivate, onDelet
           )}
         </div>
 
-        {/* Card body */}
-        <div className="bg-white p-4 flex gap-4">
-
+        {/* Card body: photo | (primary fields + QR row, then full-width metadata) */}
+        <div className="bg-white p-4 flex gap-4 items-start">
           {/* Photo */}
-          <div className="shrink-0 w-24 flex flex-col justify-between">
+          <div className="shrink-0 w-24">
             <div className="w-24 h-28 rounded bg-gray-200 border border-gray-300 overflow-hidden">
               {photoUrl ? (
                 <img src={photoUrl} alt={`Photo of ${name}`} className="w-full h-full object-cover" draggable={false} />
@@ -240,21 +240,35 @@ export default function EidCard({ eid, onEdit, onDeactivate, onActivate, onDelet
             </div>
           </div>
 
-          {/* Details */}
-          <div className="flex-1 min-w-0 space-y-1.5">
-            <div>
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider">ID Number</p>
-              <p className="text-sm font-black text-gray-900 font-mono">{idNumber}</p>
+          <div className="flex-1 min-w-0 flex flex-col gap-3">
+            <div className="flex gap-3 items-start justify-between">
+              <div className="min-w-0 flex-1 space-y-2">
+                <div>
+                  <p className="text-[9px] text-gray-400 uppercase tracking-wider">ID Number</p>
+                  <p className="text-sm font-black text-gray-900 font-mono break-all">{idNumber}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-gray-400 uppercase tracking-wider">Name</p>
+                  <p className="text-sm font-bold text-gray-900 break-words">{name}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-gray-400 uppercase tracking-wider">Address</p>
+                  <p className="text-xs text-gray-700 leading-snug line-clamp-3">{address}</p>
+                </div>
+              </div>
+              <div className="shrink-0 pt-0.5">
+                <button type="button" onClick={openLightbox}
+                  className="relative group cursor-zoom-in focus:outline-none rounded border border-gray-100 bg-white"
+                  style={{ width: 72, height: 72 }} aria-label="Expand QR Code">
+                  <QrCanvas token={qrToken} size={72} />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded">
+                    <FiZoomIn className="w-4 h-4 text-white" />
+                  </span>
+                </button>
+              </div>
             </div>
-            <div>
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider">Name</p>
-              <p className="text-sm font-bold text-gray-900">{name}</p>
-            </div>
-            <div>
-              <p className="text-[9px] text-gray-400 uppercase tracking-wider">Address</p>
-              <p className="text-xs text-gray-700 truncate">{address}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-0.5">
+
+            <div className="border-t border-gray-100 pt-3 grid grid-cols-2 min-[460px]:grid-cols-3 gap-x-4 gap-y-2.5">
               {[
                 ['Date of Birth', fmt(dateOfBirth)],
                 ['Blood Type',    bloodType || '—'],
@@ -262,24 +276,12 @@ export default function EidCard({ eid, onEdit, onDeactivate, onActivate, onDelet
                 ['Date Issued',   fmt(issuedAt)],
                 ['Valid Until',   fmt(expiresAt)],
               ].map(([label, value]) => (
-                <div key={label}>
-                  <p className="text-[8px] text-gray-400 uppercase tracking-wider leading-none">{label}</p>
-                  <p className="text-xs font-semibold text-gray-800 leading-tight">{value}</p>
+                <div key={label} className="min-w-0">
+                  <p className="text-[8px] text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
+                  <p className="text-xs font-semibold text-gray-800 leading-snug break-words">{value}</p>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* QR */}
-          <div className="shrink-0 flex flex-col items-end justify-start">
-            <button type="button" onClick={openLightbox}
-              className="relative group cursor-zoom-in focus:outline-none"
-              style={{ width: 72, height: 72 }} aria-label="Expand QR Code">
-              <QrCanvas token={qrToken} size={72} />
-              <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded">
-                <FiZoomIn className="w-4 h-4 text-white" />
-              </span>
-            </button>
           </div>
         </div>
 

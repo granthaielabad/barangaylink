@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
+import {
+  useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo,
+} from 'react';
 import { createPortal } from 'react-dom';
 import {
   FiX, FiFileText, FiUser, FiMapPin, FiCreditCard, FiBell,
   FiCheck, FiCheckCircle, FiZoomIn, FiInfo, FiSearch, FiLoader,
-  FiChevronDown, FiChevronUp,
 } from 'react-icons/fi';
 import {
   useEidApplications,
   useMutateEidApplication,
 } from '../../../../../hooks/queries/eid/useEids';
+import { SortFilter, SearchBox } from '../../../../../shared';
 import toast from 'react-hot-toast';
 
 function fmt(dateStr) {
@@ -45,6 +47,141 @@ const STATUS_TABS = [
   { value: 'pending',      label: 'Pending'      },
   { value: 'approved',     label: 'Approved'     },
 ];
+
+const DATE_RANGE_PRESETS = [
+  { value: 'today',      label: 'Today'        },
+  { value: 'last_7',     label: 'Last 7 Days'  },
+  { value: 'this_month', label: 'This Month'   },
+];
+
+const SORT_TABS = [
+  { value: 'desc', label: 'Newest First' },
+  { value: 'asc',  label: 'Oldest First' },
+];
+
+/** submitted_at boundaries (ISO strings) for the review queue API. */
+function computeApplicationDateBounds(preset) {
+  const now = new Date();
+
+  const todayBounds = () => {
+    const s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const e = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    return { dateFrom: s.toISOString(), dateTo: e.toISOString() };
+  };
+
+  switch (preset) {
+    case 'today':
+      return todayBounds();
+    case 'last_7': {
+      const s = new Date(now);
+      s.setDate(s.getDate() - 6);
+      s.setHours(0, 0, 0, 0);
+      const e = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+      return { dateFrom: s.toISOString(), dateTo: e.toISOString() };
+    }
+    case 'this_month': {
+      const s = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+      const e = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      return { dateFrom: s.toISOString(), dateTo: e.toISOString() };
+    }
+    default:
+      return { dateFrom: null, dateTo: null };
+  }
+}
+
+/** Sliding-pill segmented control — used only for application status tabs. */
+function SegmentedPillTabs({ tabs, value, onChange, ariaLabel }) {
+  const barRef   = useRef(null);
+  const btnRefs  = useRef({});
+  const [pill, setPill] = useState({ ready: false, x: 0, y: 0, w: 0, h: 0 });
+
+  const measure = useCallback(() => {
+    const bar = barRef.current;
+    const btn = btnRefs.current[value];
+    if (!bar || !btn) return;
+    const br = bar.getBoundingClientRect();
+    const bt = btn.getBoundingClientRect();
+    setPill({
+      ready: true,
+      x:     bt.left - br.left,
+      y:     bt.top - br.top,
+      w:     bt.width,
+      h:     bt.height,
+    });
+  }, [value]);
+
+  useLayoutEffect(() => {
+    measure();
+  }, [measure]);
+
+  useEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return undefined;
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(bar);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [measure]);
+
+  return (
+    <div
+      ref={barRef}
+      role="tablist"
+      aria-label={ariaLabel}
+      className="relative inline-flex flex-wrap items-center gap-8 p-1 rounded-xl bg-gray-50 border border-gray-100"
+    >
+      <div
+        aria-hidden
+        className={
+          `pointer-events-none absolute left-0 top-0 rounded-lg bg-white border border-gray-200/90 shadow-[0_1px_3px_rgba(0,0,0,0.06)] z-0 ` +
+          'transition-[transform,width,height,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ' +
+          (pill.ready ? 'opacity-100' : 'opacity-0')
+        }
+        style={{
+          transform: `translate(${pill.x}px, ${pill.y}px)`,
+          width:      pill.w,
+          height:     pill.h,
+        }}
+      />
+      {tabs.map(({ value: v, label }) => {
+        const active = value === v;
+        return (
+          <button
+            key={v}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            tabIndex={active ? 0 : -1}
+            ref={(el) => { btnRefs.current[v] = el; }}
+            onClick={() => onChange(v)}
+            className={
+              'relative z-10 px-3.5 py-2 sm:px-4 rounded-lg text-xs font-bold whitespace-nowrap ' +
+              'transition-[color] duration-200 ease-out outline-none focus-visible:ring-2 focus-visible:ring-[#8C0B1A]/25 focus-visible:ring-offset-1 ' +
+              'active:scale-[0.97] motion-safe:transition-transform ' +
+              (active ? 'text-gray-900' : 'text-gray-500 hover:text-gray-800')
+            }
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ApplicationStatusTabs({ value, onChange }) {
+  return (
+    <SegmentedPillTabs
+      tabs={STATUS_TABS}
+      value={value}
+      onChange={onChange}
+      ariaLabel="Filter applications by status"
+    />
+  );
+}
 
 function Checklist({ items }) {
   return (
@@ -351,8 +488,21 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
   // Default to 'under_review' — that's the first actionable inbox
   const [statusFilter,    setStatusFilter]    = useState('under_review');
   const [sortOrder,       setSortOrder]       = useState('desc');
+  const [datePreset,      setDatePreset]      = useState('last_7');
 
-  const { data, isLoading } = useEidApplications({ page: 1, pageSize: 50, status: statusFilter, sortOrder });
+  const { dateFrom, dateTo } = useMemo(
+    () => computeApplicationDateBounds(datePreset),
+    [datePreset],
+  );
+
+  const { data, isLoading } = useEidApplications({
+    page:      1,
+    pageSize:  50,
+    status:    statusFilter,
+    sortOrder,
+    dateFrom,
+    dateTo,
+  });
   const { updateStatus, approve } = useMutateEidApplication();
 
   const applications = (data?.data ?? []).filter(
@@ -442,17 +592,21 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
     }
   };
 
-  const toggleSortOrder = () => setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'));
+  const listAnimateKey = `${statusFilter}-${sortOrder}-${datePreset}`;
 
   if (!isOpen) return null;
 
   return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose} />
-      <div className={`relative bg-[#F8FAF8] w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-300 ${view === 'review' ? 'h-[95vh]' : 'max-h-[85vh]'}`}>
+      <div
+        className={`relative bg-[#F8FAF8] w-full max-w-3xl rounded-2xl border border-gray-200 shadow-2xl flex flex-col min-h-0 overflow-visible transition-[height] duration-300 ease-out ${
+          view === 'review' ? 'h-[min(900px,92vh)]' : 'h-[min(780px,85vh)]'
+        }`}
+      >
 
         {/* Header */}
-        <div className="px-8 py-5 border-b border-emerald-100 flex items-center justify-between shrink-0 bg-white">
+        <div className="px-8 py-5 border-b border-emerald-100 flex items-center justify-between shrink-0 bg-white rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#F1FDF3] rounded-lg flex items-center justify-center text-[#8C0B1A]">
               <FiFileText className="w-6 h-6" />
@@ -467,63 +621,71 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
         {/* ── LIST VIEW ── */}
         {view === 'list' && (
           <div className="flex flex-col flex-1 min-h-0">
-            <div className="px-8 py-6 bg-white border-b border-gray-100 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={toggleSortOrder}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition-all"
-                >
-                  Sort by Date
-                  {sortOrder === 'desc'
-                    ? <FiChevronDown className="text-gray-400 w-4 h-4" />
-                    : <FiChevronUp   className="text-gray-400 w-4 h-4" />
-                  }
-                </button>
-                <div className="h-8 w-px bg-gray-200 mx-1" />
-                <div className="flex items-center gap-1 p-1 bg-gray-50 rounded-xl border border-gray-100">
-                  {STATUS_TABS.map(({ value, label }) => (
-                    <button
-                      key={value}
-                      onClick={() => setStatusFilter(value)}
-                      className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                        statusFilter === value
-                          ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                          : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
+            <div className="px-8 py-4 bg-white border-b border-gray-100 flex flex-col gap-4 lg:flex-row lg:flex-wrap lg:items-start lg:justify-between shrink-0">
+              <div className="flex flex-col gap-4 min-w-0 flex-1">
+                {/* Shared dropdowns — date range + sort (compact row) */}
+                <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 pointer-events-none">Date Range</span>
+                    <SortFilter
+                      value={datePreset}
+                      onChange={setDatePreset}
+                      options={DATE_RANGE_PRESETS}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 pointer-events-none">Sort By</span>
+                    <SortFilter value={sortOrder} onChange={setSortOrder} options={SORT_TABS} />
+                  </div>
+                </div>
+
+                {/* Status — tab-style segmented control only */}
+                <div className="flex flex-col gap-2">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Status</p>
+                  <ApplicationStatusTabs value={statusFilter} onChange={setStatusFilter} />
                 </div>
               </div>
-              <div className="relative w-full md:w-64">
-                <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/10 focus:border-[#8C0B1A] transition-all"
-                />
+              <div className="w-full lg:w-auto mt-5 lg:min-w-[240px] lg:max-w-sm shrink-0 [&_.relative]:max-w-none">
+                <SearchBox value={search} onChange={setSearch} placeholder="Search" />
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-8 py-6">
+            <div className="flex-1 overflow-y-auto px-8 py-6 min-h-0">
               {isLoading ? (
-                <div className="flex justify-center py-20"><FiLoader className="w-10 h-10 text-[#8C0B1A] animate-spin" /></div>
-              ) : applications.length === 0 ? (
-                <div className="text-center py-20 text-gray-400 flex flex-col items-center gap-3">
-                  <FiInfo className="w-12 h-12 opacity-20" />
-                  <p className="font-medium text-sm">
-                    {search
-                      ? 'No matching applications.'
-                      : `No ${statusFilter === 'all' ? '' : statusFilter.replace('_', ' ')} applications.`
-                    }
-                  </p>
+                <div className="flex justify-center py-20">
+                  <FiLoader className="w-10 h-10 text-[#8C0B1A] animate-spin" aria-label="Loading" />
                 </div>
-              ) : applications.map((app) => (
-                <ApplicantCard key={app.id} app={app} onReview={handleReview} />
-              ))}
+              ) : (
+                <div
+                  key={listAnimateKey}
+                  className="animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none motion-reduce:opacity-100 motion-reduce:translate-y-0"
+                >
+                  {applications.length === 0 ? (
+                    <div className="text-center py-20 text-gray-400 flex flex-col items-center gap-3 animate-in fade-in duration-300">
+                      <FiInfo className="w-12 h-12 opacity-20" />
+                      <p className="font-medium text-sm">
+                        {search
+                          ? 'No matching applications.'
+                          : `No ${statusFilter === 'all' ? '' : statusFilter.replace('_', ' ')} applications.`
+                        }
+                      </p>
+                    </div>
+                  ) : (
+                    applications.map((app, i) => (
+                      <div
+                        key={app.id}
+                        className={
+                          'animate-in fade-in slide-in-from-bottom-1 fill-mode-backwards motion-reduce:animate-none ' +
+                          'motion-reduce:opacity-100 motion-reduce:translate-y-0'
+                        }
+                        style={{ animationDelay: `${Math.min(i, 8) * 35}ms` }}
+                      >
+                        <ApplicantCard app={app} onReview={handleReview} />
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="px-8 py-5 border-t border-gray-100 bg-white flex justify-end shrink-0">

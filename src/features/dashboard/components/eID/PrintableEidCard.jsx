@@ -172,7 +172,7 @@ const PrintableEidCard = forwardRef(({ eid }, ref) => {
 
             <div className="text-center">
               <div className="h-12 flex flex-col items-center justify-center">
-                <p className="text-[11px] font-black text-gray-900 uppercase leading-none">Hon. Maria S. Dela Cruz</p>
+                <p className="text-[11px] font-black text-gray-900 mt-10 uppercase leading-none">Hon. Maria S. Dela Cruz</p>
               </div>
               <div className="border-b border-gray-900 pb-1 mb-1"></div>
               <p className="text-[9px] font-bold text-gray-700 uppercase tracking-tighter">Punong Barangay</p>
