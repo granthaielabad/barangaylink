@@ -124,7 +124,14 @@ export async function verifyQrToken({ token, method = 'qr_scan' }) {
 
 // ── eID Applications (admin side) ────────────────────────────────────────────
 
-export async function getEidApplications({ page = 1, pageSize = 10, status = 'all', sortOrder = 'desc' } = {}) {
+export async function getEidApplications({
+  page        = 1,
+  pageSize    = 10,
+  status      = 'all',
+  sortOrder   = 'desc',
+  dateFrom    = null,
+  dateTo      = null,
+} = {}) {
   const from = (page - 1) * pageSize;
   const to   = from + pageSize - 1;
 
@@ -148,6 +155,8 @@ export async function getEidApplications({ page = 1, pageSize = 10, status = 'al
     .order('submitted_at', { ascending: sortOrder === 'asc' });
 
   if (status !== 'all') query = query.eq('status', status);
+  if (dateFrom) query = query.gte('submitted_at', dateFrom);
+  if (dateTo) query = query.lte('submitted_at', dateTo);
 
   const { data, error, count } = await query;
   if (error) throw error;

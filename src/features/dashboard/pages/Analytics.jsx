@@ -2,7 +2,7 @@ import { useState, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BsBarChartLine, BsPersonVcard } from 'react-icons/bs';
 import { PiUsersThree } from 'react-icons/pi';
-import { FaWheelchair, FaFemale } from 'react-icons/fa';
+import { FaWheelchair } from 'react-icons/fa';
 import { FaChildReaching } from 'react-icons/fa6';
 import { HiOutlineHomeModern } from 'react-icons/hi2';
 import DashboardHeader from '../components/DashboardHeader';
@@ -66,7 +66,6 @@ export default function Analytics() {
     { label: 'Senior Citizens', value: analyticsData?.insights?.seniors ?? 0, icon: PiUsersThree },
     { label: 'PWDs', value: analyticsData?.insights?.pwds ?? 0, icon: FaWheelchair },
     { label: 'Children', value: analyticsData?.insights?.children ?? 0, icon: FaChildReaching },
-    { label: 'Pregnant', value: analyticsData?.insights?.pregnant ?? 0, icon: FaFemale },
   ], [analyticsData]);
 
   const trendSummaryCards = useMemo(() => {
@@ -76,13 +75,16 @@ export default function Analytics() {
     const lastYearCount = growth[growth.length - 1]?.count ?? 0;
     const growthPercent = (((lastYearCount - firstYearCount) / firstYearCount) * 100).toFixed(1);
 
+    const puroks = analyticsData?.householdsPerPurok ?? [];
+    const topPurok = puroks.length ? [...puroks].sort((a, b) => b.count - a.count)[0] : null;
+
     return [
       {
         title: 'Population Growth',
         icon: BsBarChartLine,
         description: 'The population growth trend based on registry entries.',
         metric: `${growthPercent > 0 ? '+' : ''}${growthPercent}%`,
-        period: growth.length > 0 ? `from ${growth[0].year} to ${growth[growth.length-1].year}` : 'No data available',
+        period: growth.length > 0 ? `from ${growth[0].year} to ${growth[growth.length - 1].year}` : 'No data available',
       },
       {
         title: 'ID Issuance',
@@ -95,9 +97,10 @@ export default function Analytics() {
         title: 'Household Concentration',
         icon: HiOutlineHomeModern,
         description: 'Sitio concentration based on active household records.',
-        note: analyticsData?.householdsPerPurok?.length 
-          ? `Top Sitio: ${[...analyticsData.householdsPerPurok].sort((a,b) => b.count - a.count)[0]?.name}`
-          : 'Focus areas in barangay programs.',
+        metric: topPurok?.name ?? null,
+        period: topPurok
+          ? `Top sitio · ${Number(topPurok.count).toLocaleString()} households`
+          : 'No household-per-sitio data yet.',
       },
     ];
   }, [analyticsData]);
@@ -153,7 +156,11 @@ export default function Analytics() {
                           <div className="min-w-0">
                             <h3 className="text-lg font-semibold text-gray-900">{item.title}</h3>
                             <p className="text-sm text-gray-700 mt-1.5 leading-relaxed">{item.description}</p>
-                            {item.metric && <p className="text-4xl leading-none font-bold text-[#8C0B1A] mt-4">{item.metric}</p>}
+                            {item.metric != null && item.metric !== '' && (
+                              <p className="text-4xl leading-tight font-bold text-[#8C0B1A] mt-4 break-words">
+                                {item.metric}
+                              </p>
+                            )}
                             {item.period && <p className="text-sm text-gray-800 mt-2">{item.period}</p>}
                             {item.note && <p className="text-sm text-gray-800 mt-4">{item.note}</p>}
                           </div>
@@ -198,7 +205,7 @@ export default function Analytics() {
 
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900 mb-2.5">Beneficiary Insights</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {beneficiaryInsightsCards.map((card) => {
                       const Icon = card.icon;
                       return (

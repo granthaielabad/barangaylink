@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Chart } from 'chart.js/auto';
+import { compareSitioNames } from '../../../../../utils/sitioOrder';
 
 const options = {
   responsive: true,
@@ -40,30 +41,54 @@ const options = {
   },
 };
 
+const TOP_FILL = 'rgba(140, 11, 26, 0.88)';
+const TOP_BORDER = '#8C0B1A';
+const DEFAULT_FILL = 'rgba(134, 239, 172, 0.72)';
+const DEFAULT_BORDER = '#22c55e';
+
+function barStylesForCounts(counts) {
+  if (!counts.length) {
+    return { backgroundColor: DEFAULT_FILL, borderColor: DEFAULT_BORDER, borderWidth: 1 };
+  }
+  const maxVal = Math.max(...counts.map((n) => Number(n) || 0));
+  const backgroundColor = counts.map((n) =>
+    Number(n) === maxVal && maxVal > 0 ? TOP_FILL : DEFAULT_FILL
+  );
+  const borderColor = counts.map((n) =>
+    Number(n) === maxVal && maxVal > 0 ? TOP_BORDER : DEFAULT_BORDER
+  );
+  const borderWidth = counts.map((n) => (Number(n) === maxVal && maxVal > 0 ? 2 : 1));
+  return { backgroundColor, borderColor, borderWidth };
+}
+
 // Real data: analyticsData.householdsPerPurok = [{ name, count }, ...]
 // Falls back to original mock data when analyticsData is not yet loaded.
 const getData = (filters, analyticsData) => {
-  let labels, data;
+  let labels;
+  let data;
 
   if (analyticsData?.householdsPerPurok?.length) {
-    labels = analyticsData.householdsPerPurok.map((p) => p.name);
-    data   = analyticsData.householdsPerPurok.map((p) => p.count);
+    const ordered = [...analyticsData.householdsPerPurok].sort((a, b) =>
+      compareSitioNames(a.name, b.name)
+    );
+    labels = ordered.map((p) => p.name);
+    data   = ordered.map((p) => p.count);
   } else {
     const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
     const yearOffset = year - new Date().getFullYear();
-    const baseData   = [130, 155, 120, 140, 110, 157];
-    labels = ['Sitio 1', 'Sitio 2', 'Sitio 3', 'Sitio 4', 'Sitio 5', 'Sitio 6'];
+    const baseData   = [130, 155, 120, 140, 110, 157, 128];
+    labels = ['Sitio 1', 'Sitio 2', 'Sitio 3', 'Sitio 4', 'Sitio 5', 'Sitio 6', 'Sitio 7'];
     data   = baseData.map((val) => Math.max(0, Math.round(val + yearOffset * 5)));
   }
+
+  const barStyle = barStylesForCounts(data);
 
   return {
     labels,
     datasets: [
       {
         data,
-        backgroundColor: '#86efac',
-        borderColor: '#22c55e',
-        borderWidth: 1,
+        ...barStyle,
       },
     ],
   };

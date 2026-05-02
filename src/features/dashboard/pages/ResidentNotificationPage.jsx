@@ -2,7 +2,7 @@ import NotificationListContent from '../components/Notifications/NotificationLis
 
 const ResidentNotificationPage = () => {
   return (
-    <div className="max-w-full mx-6">
+    <div className="w-full max-w-8xl mx-auto min-w-0">
       <NotificationListContent />
     </div>
   );

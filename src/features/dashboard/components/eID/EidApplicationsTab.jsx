@@ -6,7 +6,6 @@ import {
   useEidApplications,
   useMutateEidApplication,
 } from '../../../../hooks/queries/eid/useEids';
-import toast from 'react-hot-toast';
 
 const PAGE_SIZE = 10;
 

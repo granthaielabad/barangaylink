@@ -106,8 +106,15 @@ export function useMutateEid() {
 }
 
 // ── eID Applications ──────────────────────────────────────────────────────────
-export function useEidApplications({ page = 1, pageSize = 10, status = 'all', sortOrder = 'desc' } = {}) {
-  const params = { page, pageSize, status, sortOrder };
+export function useEidApplications({
+  page      = 1,
+  pageSize  = 10,
+  status    = 'all',
+  sortOrder = 'desc',
+  dateFrom  = null,
+  dateTo    = null,
+} = {}) {
+  const params = { page, pageSize, status, sortOrder, dateFrom, dateTo };
   return useQuery({
     queryKey:        appKeys.list(params),
     queryFn:         () => getEidApplications(params),

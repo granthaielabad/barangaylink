@@ -166,11 +166,12 @@ export default function Eid() {
                 <div className="animate-spin w-8 h-8 border-4 border-[#8C0B1A] border-t-transparent rounded-full" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center">
+              <div className="flex flex-wrap justify-center gap-6">
                 {cardEids.map((eid) => (
                   <EidCard
                     key={eid.id}
                     eid={eid}
+                    className="w-full sm:w-auto flex-[1_1_100%] sm:flex-[1_1_480px]"
                     onEdit={(e)       => { setSelectedEid(e); setEidFormMode('edit'); setEidFormModalOpen(true); }}
                     onDeactivate={(e) => { setSelectedEid(e); setDeactivateModalOpen(true); }}
                     onActivate={(e)   => { setSelectedEid(e); setActivateModalOpen(true); }}
@@ -178,7 +179,7 @@ export default function Eid() {
                   />
                 ))}
                 {cardEids.length === 0 && (
-                  <p className="col-span-2 w-full text-center text-gray-400 py-12 text-sm">No eIDs found.</p>
+                  <p className="w-full text-center text-gray-400 py-12 text-sm">No eIDs found.</p>
                 )}
               </div>
             )}

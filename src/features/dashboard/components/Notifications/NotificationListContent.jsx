@@ -38,22 +38,25 @@ const NotificationListContent = () => {
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 lg:p-10 mb-8">
-      <h1 className="text-[25px] font-bold mb-10 text-gray-900">Notifications</h1>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 lg:p-10 mb-6 sm:mb-8 w-full min-w-0">
+      <h1 className="text-xl sm:text-[25px] font-bold mb-6 sm:mb-10 text-gray-900">Notifications</h1>
 
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
-        <SearchBox
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search"
-        />
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="w-full min-w-0 lg:flex-1 lg:max-w-xl">
+          <SearchBox
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search"
+          />
+        </div>
 
         <button
+          type="button"
           onClick={handleMarkAllAsRead}
           disabled={markAllRead.isPending}
-          className="flex items-center gap-2 text-white bg-[#8C0B1A] font-semibold text-lg transition-colors px-4 py-2 hover:bg-[#7A0915] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex w-full lg:w-auto shrink-0 items-center justify-center gap-2 text-white bg-[#8C0B1A] font-semibold text-base sm:text-lg transition-colors px-4 py-2.5 hover:bg-[#7A0915] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <FiCheckSquare className="w-6 h-6" />
+          <FiCheckSquare className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
           Mark all as read
         </button>
       </div>

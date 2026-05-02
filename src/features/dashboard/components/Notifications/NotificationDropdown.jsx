@@ -31,7 +31,7 @@ const NotificationDropdown = ({ onClose }) => {
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 mt-2 w-[400px] bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-5 duration-200"
+      className="absolute right-0 mt-2 w-[min(100vw-2rem,400px)] max-w-[calc(100vw-1rem)] bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-5 duration-200"
     >
       <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <h3 className="font-semibold text-gray-800">Notification</h3>

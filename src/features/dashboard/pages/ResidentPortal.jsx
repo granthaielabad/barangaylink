@@ -152,7 +152,7 @@ export default function ResidentPortal() {
         />
 
         {/* Child routes rendered here */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto px-4 py-5 sm:p-6 w-full min-w-0">
           <Outlet />
         </main>
       </div>

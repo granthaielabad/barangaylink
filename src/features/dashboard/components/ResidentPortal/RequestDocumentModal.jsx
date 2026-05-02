@@ -41,15 +41,15 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
       role="dialog" aria-modal="true"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative bg-white w-full max-w-2xl rounded-xl shadow-xl overflow-hidden flex flex-col">
+      <div className="relative bg-white w-full max-w-2xl max-h-[min(92vh,880px)] rounded-xl shadow-xl overflow-hidden flex flex-col min-h-0">
 
         {/* Header */}
-        <div className="flex bg-[#F1FBF1] items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C0B1A]">
+        <div className="flex bg-[#F1FBF1] items-start sm:items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 pr-8 sm:pr-0">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C0B1A] shrink-0">
               {cert.icon}
             </div>
-            <h2 className="text-[24px] font-semibold text-gray-900">{cert.title}</h2>
+            <h2 className="text-lg sm:text-xl md:text-[24px] font-semibold text-gray-900 leading-snug break-words">{cert.title}</h2>
           </div>
           <button type="button" onClick={onClose}
             className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
@@ -58,13 +58,13 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+          <div className="p-4 sm:p-6 space-y-4 overflow-y-auto min-h-0 flex-1">
 
             {/* Resident Info */}
-            <div className="bg-[#F0FDF4] border border-[#B9F8CF] rounded-lg p-4">
+            <div className="bg-[#F0FDF4] border border-[#B9F8CF] rounded-lg p-3 sm:p-4">
               <p className="font-semibold text-sm text-[#0D542B] mb-3">Resident Information Verified</p>
-              <div className="grid grid-cols-2 gap-y-3 text-[13px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-[13px]">
                 <div>
                   <p className="text-gray-500 uppercase text-[10px] font-bold tracking-wider">Full Name</p>
                   <p className="font-semibold text-gray-900">{fullName}</p>
@@ -110,14 +110,14 @@ export default function RequestDocumentModal({ cert, resident, eidNumber, onClos
           </div>
 
           {/* Footer */}
-          <div className="bg-[#F1FBF1] px-6 py-4 flex justify-end gap-3 border-t border-[#D1E9D1]">
+          <div className="bg-[#F1FBF1] px-4 sm:px-6 py-3 sm:py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 border-t border-[#D1E9D1] shrink-0">
             <button type="button" onClick={onClose}
-              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#E5E7EB] text-gray-700 hover:bg-gray-300 transition-colors">
+              className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#E5E7EB] text-gray-700 hover:bg-gray-300 transition-colors">
               Cancel
             </button>
             <button type="submit"
               disabled={isPending || !purpose.trim()}
-              className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+              className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
               {isPending ? 'Submitting...' : 'Submit Request'}
             </button>
           </div>

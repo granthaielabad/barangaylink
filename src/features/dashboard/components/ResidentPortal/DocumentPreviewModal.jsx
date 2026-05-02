@@ -58,15 +58,17 @@ export default function DocumentPreviewModal({ req, resident, onClose }) {
       role="dialog" aria-modal="true"
       onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="absolute inset-0 bg-black/40" />
-      <div className="relative bg-[#F9FAFB] w-full max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div className="relative bg-[#F9FAFB] w-full max-w-4xl rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[min(92vh,900px)] min-h-0">
 
         {/* Header */}
-        <div className="flex items-center bg-[#F1FBF1] justify-between px-6 py-4 border-b border-gray-300 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C0B1A]">
+        <div className="flex items-start sm:items-center bg-[#F1FBF1] justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-300 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 pr-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8C0B1A] shrink-0">
               {req.icon}
             </div>
-            <h2 className="text-[24px] font-semibold text-gray-900">{req.title} Preview</h2>
+            <h2 className="text-lg sm:text-[22px] lg:text-[24px] font-semibold text-gray-900 leading-snug break-words">
+              {req.title} Preview
+            </h2>
           </div>
           <button type="button" onClick={onClose}
             className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
@@ -89,14 +91,14 @@ export default function DocumentPreviewModal({ req, resident, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="bg-[#F1FBF1] px-6 py-4 flex justify-end gap-3 border-t border-[#D1E9D1] shrink-0">
+        <div className="bg-[#F1FBF1] px-4 sm:px-6 py-3 sm:py-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 border-t border-[#D1E9D1] shrink-0">
           <button type="button" onClick={onClose}
-            className="px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#E5E7EB] text-gray-700 hover:bg-gray-300 transition-colors">
+            className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-sm font-semibold bg-[#E5E7EB] text-gray-700 hover:bg-gray-300 transition-colors">
             Close
           </button>
           <button type="button" onClick={handleDownload}
-            className="px-6 py-2.5 flex items-center gap-2 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors">
-            <FiDownload className="w-4 h-4" /> Download / Print
+            className="w-full sm:w-auto px-6 py-2.5 flex items-center justify-center gap-2 rounded-lg text-sm font-semibold bg-[#8C0B1A] text-white hover:bg-[#7A0915] transition-colors">
+            <FiDownload className="w-4 h-4 shrink-0" /> Download / Print
           </button>
         </div>
       </div>
