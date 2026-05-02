@@ -58,23 +58,27 @@ export default function ResidentAnnouncementsPage() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-      <h1 className="mb-10 font-semibold text-[25px]">Announcements</h1>
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6 w-full max-w-8xl mx-auto min-w-0">
+      <h1 className="mb-6 sm:mb-10 font-semibold text-xl sm:text-[25px] text-gray-900">Announcements</h1>
 
       {/* ── Search & Filters (Matching Admin Style) ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+      <div className="flex flex-col gap-4 mb-6 sm:mb-8 w-full min-w-0">
+        <div className="w-full min-w-0">
           <SearchBox
             value={search}
             onChange={(v) => setSearch(v)}
             placeholder="Search announcements..."
           />
-          <div className="flex items-center gap-2">
+        </div>
+        <div className="flex flex-wrap items-stretch gap-2 w-full">
+          <div className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:flex-initial sm:basis-auto sm:min-w-[10rem] [&>div]:block [&>div]:w-full [&_button]:w-full sm:[&_button]:w-auto">
             <StatusFilter 
               value={category} 
               onChange={setCategory} 
               options={categoryOptions} 
             />
+          </div>
+          <div className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:flex-initial sm:basis-auto sm:min-w-[8rem] [&>div]:block [&>div]:w-full [&_button]:w-full sm:[&_button]:w-auto">
             <SortFilter 
               value={sortBy} 
               onChange={setSortBy} 
@@ -84,6 +88,8 @@ export default function ResidentAnnouncementsPage() {
                 { label: 'Category', value: 'category' }
               ]} 
             />
+          </div>
+          <div className="min-w-0 flex-1 basis-full sm:flex-initial sm:basis-auto sm:min-w-[9rem] [&>div]:block [&>div]:w-full">
             <OrderFilter 
               value={order} 
               onChange={setOrder} 
@@ -108,34 +114,36 @@ export default function ResidentAnnouncementsPage() {
       ) : (
         <div className="grid gap-6">
           {sorted.map((ann) => (
-            <div key={ann.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-2">
+            <div key={ann.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow min-w-0">
+              <div className="p-4 sm:p-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase rounded-md border border-emerald-100">
                       {ann.category}
                     </span>
                     {ann.priority === 'urgent' && (
                       <span className="flex items-center gap-1 px-2.5 py-1 bg-red-50 text-red-700 text-[10px] font-bold uppercase rounded-md border border-red-100">
-                        <FiAlertCircle className="w-3 h-3" />
+                        <FiAlertCircle className="w-3 h-3 shrink-0" />
                         Urgent
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-[12px] text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <FiCalendar className="w-3.5 h-3.5" />
-                      {new Date(ann.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-x-4 sm:gap-y-1 text-[11px] sm:text-[12px] text-gray-400 sm:items-center sm:justify-end sm:text-right shrink-0 min-w-0">
+                    <span className="flex items-center gap-1.5">
+                      <FiCalendar className="w-3.5 h-3.5 shrink-0" />
+                      <span className="leading-snug">{new Date(ann.created_at).toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
                     </span>
-                    <span className="flex items-center gap-1">
-                      <FiUser className="w-3.5 h-3.5" />
-                      {ann.announcer_name}
-                    </span>
+                    {ann.announcer_name ? (
+                      <span className="flex items-start sm:justify-end gap-1.5 min-w-0">
+                        <FiUser className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <span className="leading-snug break-words">{ann.announcer_name}</span>
+                      </span>
+                    ) : null}
                   </div>
                 </div>
                 
-                <h2 className="text-xl font-bold text-gray-900 mb-3">{ann.title}</h2>
-                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-base">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 break-words">{ann.title}</h2>
+                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap text-sm sm:text-base break-words">
                   {ann.content}
                 </p>
               </div>

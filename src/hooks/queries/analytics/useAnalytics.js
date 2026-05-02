@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../../services/supabase/client';
+import { compareSitioNames } from '../../../utils/sitioOrder';
 
 async function fetchAnalyticsData(year) {
   const targetYear = year ?? new Date().getFullYear();
@@ -82,7 +83,7 @@ async function fetchAnalyticsData(year) {
 
   const householdsPerPurok = Object.entries(sitioCounts)
     .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
+    .sort((a, b) => compareSitioNames(a.name, b.name));
 
   const householdOwnership = {
     labels: ['Owned', 'Rented', 'Shared', 'Informal Settler'],

@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { Chart } from 'chart.js/auto';
+import { compareSitioNames } from '../../../../../utils/sitioOrder';
 
 const options = {
   responsive: true,
@@ -67,13 +68,16 @@ const getData = (filters, analyticsData) => {
   let data;
 
   if (analyticsData?.householdsPerPurok?.length) {
-    labels = analyticsData.householdsPerPurok.map((p) => p.name);
-    data   = analyticsData.householdsPerPurok.map((p) => p.count);
+    const ordered = [...analyticsData.householdsPerPurok].sort((a, b) =>
+      compareSitioNames(a.name, b.name)
+    );
+    labels = ordered.map((p) => p.name);
+    data   = ordered.map((p) => p.count);
   } else {
     const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
     const yearOffset = year - new Date().getFullYear();
-    const baseData   = [130, 155, 120, 140, 110, 157];
-    labels = ['Sitio 1', 'Sitio 2', 'Sitio 3', 'Sitio 4', 'Sitio 5', 'Sitio 6'];
+    const baseData   = [130, 155, 120, 140, 110, 157, 128];
+    labels = ['Sitio 1', 'Sitio 2', 'Sitio 3', 'Sitio 4', 'Sitio 5', 'Sitio 6', 'Sitio 7'];
     data   = baseData.map((val) => Math.max(0, Math.round(val + yearOffset * 5)));
   }
 
