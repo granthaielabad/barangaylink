@@ -9,7 +9,7 @@ const DEFAULT_SELECT = `
   resident_id,
   residents (
     id, first_name, middle_name, last_name, suffix,
-    photo_url, contact_number, date_of_birth, sex, blood_type, civil_status,
+    photo_url, signature_url, contact_number, date_of_birth, sex, blood_type, civil_status,
     address_line,
     puroks ( id, name )
   )
@@ -48,25 +48,18 @@ export async function getEidByResidentId(residentId) {
   return data;
 }
 
-export async function issueEid(residentId, photoUrl = null) {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) throw new Error('Not authenticated');
-
-  const supabaseUrl  = import.meta.env.VITE_SUPABASE_URL;
-  const supabaseAnon = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-  const res = await fetch(`${supabaseUrl}/functions/v1/issue-eid`, {
-    method: 'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'Authorization': `Bearer ${session.access_token}`,
-      'apikey':        supabaseAnon,
+export async function issueEid(residentId, photoUrl = null, applicationId = null) {
+  const { data, error } = await supabase.functions.invoke('issue-eid', {
+    body: { 
+      resident_id: residentId, 
+      photo_url: photoUrl ?? null,
+      application_id: applicationId
     },
-    body: JSON.stringify({ resident_id: residentId, photo_url: photoUrl ?? null }),
   });
 
-  const data = await res.json();
-  if (!res.ok || !data?.success) throw new Error(data?.error ?? 'Failed to issue eID');
+  if (error) throw error;
+  if (!data?.success) throw new Error(data?.error ?? 'Failed to issue eID');
+  
   return data.eid;
 }
 
@@ -139,7 +132,7 @@ export async function getEidApplications({ page = 1, pageSize = 10, status = 'al
     .from('eid_applications')
     .select(`
       id, resident_id, type, status, submitted_at, reviewed_at, remarks, current_step,
-      reference_number, valid_id_type, valid_id_url,
+      reference_number, valid_id_type, valid_id_url, signature_url,
       first_name, last_name, middle_name, suffix,
       date_of_birth, sex, address_line, contact_number, email,
       photo_url, id_number,
@@ -196,13 +189,12 @@ export async function updateEidApplicationStatus(id, status, remarks = null, cur
 /**
  * Approve an application: Issue the eID via Edge Function first, 
  * then mark status as approved once issuance is successful.
- * This avoids a race condition where the UI refetches before the eID is created.
  */
 export async function approveEidApplication(applicationId, residentId, photoUrl) {
   if (!residentId) throw new Error('resident_id is required to issue an eID');
   
-  // 1. Issue the eID via Edge Function first
-  const eid = await issueEid(residentId, photoUrl ?? null);
+  // 1. Issue the eID via Edge Function first, passing application ID
+  const eid = await issueEid(residentId, photoUrl ?? null, applicationId);
   
   // 2. Only mark application approved IF issuance succeeded
   await updateEidApplicationStatus(applicationId, 'approved');

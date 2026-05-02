@@ -8,8 +8,6 @@ import {
   setDocumentUrl,
   submitDocumentRequest,
   getMyDocumentRequests,
-  updatePaymentMethod,
-  createPaymentLink,
 } from '../../../services/supabase/documentRequestService';
 import toast from 'react-hot-toast';
 
@@ -114,26 +112,5 @@ export function useSubmitDocumentRequest() {
       toast.success('Document request submitted successfully!');
     },
     onError: (err) => toast.error(err.message ?? 'Failed to submit request.'),
-  });
-}
-
-// ── RESIDENT: confirm payment ─────────────────────────────────────────────────
-export function useUpdatePaymentMethod() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, paymentMethod }) => updatePaymentMethod(id, paymentMethod),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: docReqKeys.mine() });
-      toast.success('Payment confirmed. Your request is now being processed.');
-    },
-    onError: (err) => toast.error(err.message ?? 'Failed to confirm payment.'),
-  });
-}
-
-// ── RESIDENT: create PayMongo payment link ────────────────────────────────────
-export function useCreatePaymentLink() {
-  return useMutation({
-    mutationFn: (documentRequestId) => createPaymentLink(documentRequestId),
-    onError: (err) => toast.error(err.message ?? 'Failed to initiate payment.'),
   });
 }

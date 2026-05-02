@@ -39,7 +39,7 @@ Deno.serve(async (req: Request) => {
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) throw new Error("Unauthorized");
+    if (userError || !user) throw new Error("Unauthorized: " + (userError?.message || "Invalid token"));
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -54,7 +54,9 @@ Deno.serve(async (req: Request) => {
 
     const body = await req.json();
     const resident_id: string = body?.resident_id;
+    const application_id: string | null = body?.application_id ?? null;
     const photo_url: string | null = body?.photo_url ?? null;
+    
     if (!resident_id) throw new Error("resident_id is required");
 
     const { data: resident, error: residentError } = await supabase
@@ -63,6 +65,22 @@ Deno.serve(async (req: Request) => {
       .eq("id", resident_id)
       .single();
     if (residentError || !resident) throw new Error("Resident not found");
+
+    // ── Handle Application Data (Signature) ──────────────────────────────────
+    let signatureUrl: string | null = null;
+    if (application_id) {
+      const { data: application } = await supabase
+        .from("eid_applications")
+        .select("signature_url")
+        .eq("id", application_id)
+        .single();
+      
+      if (application?.signature_url) {
+        signatureUrl = application.signature_url;
+        // Update resident record with signature from application
+        await supabase.from("residents").update({ signature_url: signatureUrl }).eq("id", resident_id);
+      }
+    }
 
     const { data: existingEid } = await supabase
       .from("electronic_ids")
@@ -88,8 +106,6 @@ Deno.serve(async (req: Request) => {
             .getPublicUrl(path);
           uploadedPhotoUrl = publicUrl;
           await supabase.from("residents").update({ photo_url: publicUrl }).eq("id", resident_id);
-        } else {
-          console.error("Storage upload error:", uploadError.message);
         }
       } catch (photoErr) {
         console.error("Photo upload failed:", photoErr);
@@ -102,18 +118,25 @@ Deno.serve(async (req: Request) => {
     const eidNumber = `BRY-${year}-${sequence}`;
     const qrToken   = btoa(JSON.stringify({ eid: eidNumber, rid: resident_id, iat: Math.floor(Date.now() / 1000) }));
     const expiresAt = new Date();
-    expiresAt.setFullYear(expiresAt.getFullYear() + 3);
+    expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
     const { data: eid, error: insertError } = await supabase
       .from("electronic_ids")
-      .insert({ resident_id, eid_number: eidNumber, qr_token: qrToken, expires_at: expiresAt.toISOString(), issued_by: user.id, status: "active" })
+      .insert({ 
+        resident_id, 
+        eid_number: eidNumber, 
+        qr_token: qrToken, 
+        expires_at: expiresAt.toISOString(), 
+        issued_by: user.id, 
+        status: "active" 
+      })
       .select()
       .single();
 
     if (insertError) throw insertError;
 
     return new Response(
-      JSON.stringify({ success: true, eid, photo_url: uploadedPhotoUrl }),
+      JSON.stringify({ success: true, eid, photo_url: uploadedPhotoUrl, signature_url: signatureUrl }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
     );
 

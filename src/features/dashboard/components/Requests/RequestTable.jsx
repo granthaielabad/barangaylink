@@ -22,7 +22,6 @@ export default function RequestTable({ requests = [], onViewRequest }) {
             <th className="py-4 px-4 font-semibold">Certificate Type</th>
             <th className="py-4 px-4 font-semibold">Date Requested</th>
             <th className="py-4 px-4 font-semibold text-center">Status</th>
-            <th className="py-4 px-4 font-semibold">Fee</th>
             <th className="py-4 px-4 font-semibold text-center last:rounded-tr-lg">Actions</th>
           </tr>
         </thead>
@@ -43,7 +42,6 @@ export default function RequestTable({ requests = [], onViewRequest }) {
                   {req.status}
                 </span>
               </td>
-              <td className="py-4 px-4 text-gray-800 font-semibold text-sm">{req.fee}</td>
               <td className="py-4 px-4 text-center relative">
                 <button
                   type="button"

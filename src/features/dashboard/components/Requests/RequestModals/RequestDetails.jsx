@@ -1,7 +1,7 @@
 import { FiFileText } from 'react-icons/fi';
 
-export default function RequestDetails({ request, adminNotes, onAdminNotesChange }) {
-  const isReadOnly = request.status?.toLowerCase() === 'approved' || request.status?.toLowerCase() === 'rejected';
+export default function RequestDetails({ request, adminNotes, onAdminNotesChange, isReadOnly: forceReadOnly = false }) {
+  const isReadOnly = forceReadOnly || request.status?.toLowerCase() === 'approved' || request.status?.toLowerCase() === 'rejected' || request.status?.toLowerCase() === 'completed';
 
   return (
     <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
@@ -69,17 +69,6 @@ export default function RequestDetails({ request, adminNotes, onAdminNotesChange
           <div className="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-600">
             {request.estimatedDate || '—'}
           </div>
-        </div>
-      </div>
-
-      {/* Processing Fee Box */}
-      <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl p-5 flex items-center justify-between">
-        <div>
-          <p className="text-[#1D4ED8] font-semibold text-sm">Processing Fee</p>
-          <p className="text-[#3B82F6] text-[11px] mt-0.5">Payment reference will be generated upon submission</p>
-        </div>
-        <div className="text-[#1D4ED8] text-2xl font-black">
-          {request.fee?.includes('Free') ? 'Free' : '₱50'}
         </div>
       </div>
 

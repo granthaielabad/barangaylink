@@ -624,7 +624,7 @@ function RenewModal({ eid, onClose, onSubmit, isPending }) {
             <div>
               <p className="text-xs font-semibold text-blue-800">Renewal Information</p>
               <p className="text-xs text-blue-700 mt-0.5">
-                Your eID renewal will extend your validity for another 3 years from the renewal date.
+                Your eID renewal will extend your validity for another 1 year from the renewal date.
                 Please verify and update your information below.
               </p>
             </div>
@@ -864,8 +864,8 @@ export default function ResidentEIdPage() {
   const isLoading = loadingEid || loadingApp;
 
   const hasActiveEid   = !!eid && eid.status === 'active';
-  const hasInactiveEid = !!eid && eid.status !== 'active';
-  const hasPending     = !eid && !!application;
+  const isDeleted      = !eid && application?.status === 'approved';
+  const hasPending     = !eid && !!application && !isDeleted;
 
   if (isLoading) {
     return (
@@ -875,9 +875,9 @@ export default function ResidentEIdPage() {
     );
   }
 
-  // ── STATE 2: Application submitted / in-progress / rejected ─────────────────
-  if (hasPending) {
-    const isRejected = application.status === 'rejected';
+  // ── STATE 2: Application submitted / in-progress / rejected / deleted ───────
+  if (hasPending || isDeleted) {
+    const isRejected = application?.status === 'rejected';
     return (
       <div className="space-y-5 max-w-7xl mx-auto">
 
@@ -891,6 +891,18 @@ export default function ResidentEIdPage() {
               <p className="font-semibold text-red-700 text-[20px]">Application Rejected</p>
               <p className="text-base text-red-600 mt-0.5 leading-relaxed">
                 Your eID application was not approved. Please contact the Barangay Office for assistance or submit a new application.
+              </p>
+            </div>
+          </div>
+        ) : isDeleted ? (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+              <FiAlertCircle className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <p className="font-semibold text-red-700 text-[20px]">eID Removed</p>
+              <p className="text-base text-red-600 mt-0.5 leading-relaxed">
+                Your Electronic ID has been removed. Please submit a new application.
               </p>
             </div>
           </div>
@@ -908,8 +920,8 @@ export default function ResidentEIdPage() {
           </div>
         )}
 
-        {/* Application details + progress — only shown when NOT rejected */}
-        {!isRejected && (
+        {/* Application details + progress — only shown when NOT rejected/deleted */}
+        {(!isRejected && !isDeleted) && (
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-9 h-9 rounded-full bg-[#8C0B1A]/10 flex items-center justify-center">
@@ -945,7 +957,7 @@ export default function ResidentEIdPage() {
           <p className="text-sm text-gray-500">
             For inquiries about your application, please contact the barangay office.
           </p>
-          {isRejected && (
+          {(isRejected || isDeleted) && (
             <button type="button" onClick={() => setApplyOpen(true)}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#8C0B1A] text-white text-sm font-semibold hover:bg-[#7A0915] transition-colors">
               <FiPlus className="w-4 h-4" /> Submit New Application
@@ -1086,4 +1098,3 @@ export default function ResidentEIdPage() {
     </div>
   );
 }
-

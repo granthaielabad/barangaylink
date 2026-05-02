@@ -8,7 +8,7 @@ const DEFAULT_SELECT = `
   contact_number, email, voter_status,
   address_line, years_of_stay, purok_id,
   philhealth_no, sss_no, tin_no, id_number,
-  valid_id_type, valid_id_url,
+  valid_id_type, valid_id_url, signature_url,
   age_group, blood_type,
   is_pwd, is_solo_parent, is_indigent,
   status, photo_url, household_id, created_at, updated_at,
@@ -18,15 +18,6 @@ const DEFAULT_SELECT = `
 
 /**
  * Fetch a paginated, filtered, sorted list of residents.
- *
- * @param {object} params
- * @param {number}  params.page      - 1-based page number
- * @param {number}  params.pageSize  - rows per page (default 8)
- * @param {string}  params.search    - full-text search on name fields
- * @param {string}  params.status    - filter by status ('all' = no filter)
- * @param {string}  params.sortBy    - 'last_name', 'created_at', 'status'
- * @param {string}  params.order     - 'asc' | 'desc'
- * @param {number}  params.purokId   - optional purok filter (staff auto-applied via RLS)
  */
 export async function getResidents({
   page = 1,
@@ -55,7 +46,6 @@ export async function getResidents({
   }
 
   if (search.trim()) {
-    // PostgreSQL full-text OR partial match across name columns
     query = query.or(
       `first_name.ilike.%${search}%,last_name.ilike.%${search}%,middle_name.ilike.%${search}%`
     );
@@ -74,7 +64,21 @@ export async function getResidents({
 }
 
 /**
- * Fetch a single resident by ID (full detail view).
+ * Fetch all unpaginated residents (useful for beneficiary profiling and bulk exports).
+ */
+export async function getAllResidents() {
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select(DEFAULT_SELECT)
+    .neq('status', 'archived')
+    .order('last_name', { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Fetch a single resident by ID.
  */
 export async function getResidentById(id) {
   const { data, error } = await supabase
@@ -119,46 +123,27 @@ export async function updateResident(id, payload) {
   return data;
 }
 
-/**
- * Soft-delete: set status to 'archived'.
- * Staff cannot hard-delete residents (no RLS DELETE policy).
- */
 export async function archiveResident(id) {
   return updateResident(id, { status: 'archived' });
 }
 
-/**
- * Set resident status to 'deactivated'.
- */
 export async function deactivateResident(id) {
   return updateResident(id, { status: 'deactivated' });
 }
 
-/**
- * Reactivate a deactivated or archived resident.
- */
 export async function activateResident(id) {
   return updateResident(id, { status: 'active' });
 }
 
-/**
- * Hard delete — Superadmin only (enforced by RLS).
- */
 export async function deleteResident(id) {
   const { error } = await supabase.from(TABLE).delete().eq('id', id);
   if (error) throw error;
 }
 
 /**
- * Upload a resident profile photo to Supabase Storage and
- * write the public URL back to residents.photo_url.
- *
- * @param {string} residentId  - UUID of the resident
- * @param {string} dataUrl     - base64 DataURL from FileReader (image/png or image/jpeg)
- * @returns {string}           - public URL of the uploaded photo
+ * Upload a resident profile photo.
  */
 export async function uploadResidentPhoto(residentId, dataUrl) {
-  // 1. Convert base64 DataURL → Blob
   const [meta, base64] = dataUrl.split(',');
   const mimeType = meta.match(/:(.*?);/)?.[1] ?? 'image/jpeg';
   const binary = atob(base64);
@@ -166,23 +151,19 @@ export async function uploadResidentPhoto(residentId, dataUrl) {
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   const blob = new Blob([bytes], { type: mimeType });
 
-  // 2. Deterministic path — one file per resident, overwrites on re-upload
   const ext = mimeType === 'image/png' ? 'png' : 'jpg';
   const path = `${residentId}.${ext}`;
 
-  // 3. Upload to storage (upsert so re-upload works)
   const { error: uploadError } = await supabase.storage
     .from('resident-photos')
     .upload(path, blob, { upsert: true, contentType: mimeType });
 
   if (uploadError) throw uploadError;
 
-  // 4. Get public URL
   const { data: { publicUrl } } = supabase.storage
     .from('resident-photos')
     .getPublicUrl(path);
 
-  // 5. Write URL back to the resident record
   const { error: updateError } = await supabase
     .from('residents')
     .update({ photo_url: publicUrl })
@@ -194,9 +175,7 @@ export async function uploadResidentPhoto(residentId, dataUrl) {
 }
 
 /**
- * Upload a valid ID photo to the valid-id-photos bucket (private).
- * Writes the URL back to residents.valid_id_url.
- * Accepts a File object from an <input type="file">.
+ * Upload a valid ID photo.
  */
 export async function uploadValidIdPhoto(residentId, file) {
   const ext  = file.name.split('.').pop().toLowerCase();
@@ -208,14 +187,12 @@ export async function uploadValidIdPhoto(residentId, file) {
 
   if (uploadError) throw uploadError;
 
-  // Private bucket — use signed URL so only authenticated staff can view
   const { data: signedData, error: signedError } = await supabase.storage
     .from('valid-id-photos')
-    .createSignedUrl(path, 60 * 60 * 24 * 365); // 1-year expiry
+    .createSignedUrl(path, 60 * 60 * 24 * 365); 
 
   if (signedError) throw signedError;
 
-  // Store the path (not URL) so we can re-generate signed URLs later
   const { error: updateError } = await supabase
     .from('residents')
     .update({ valid_id_url: path })
@@ -224,4 +201,45 @@ export async function uploadValidIdPhoto(residentId, file) {
   if (updateError) throw updateError;
 
   return signedData.signedUrl;
+}
+
+/**
+ * Upload a handwritten signature image.
+ */
+export async function uploadResidentSignature(residentId, fileOrBase64) {
+  let blob = fileOrBase64;
+  let mimeType = 'image/png';
+
+  if (typeof fileOrBase64 === 'string' && fileOrBase64.startsWith('data:')) {
+    const [meta, base64] = fileOrBase64.split(',');
+    mimeType = meta.match(/:(.*?);/)?.[1] ?? 'image/png';
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    blob = new Blob([bytes], { type: mimeType });
+  } else {
+    mimeType = fileOrBase64.type;
+  }
+
+  const ext = mimeType.split('/')[1] || 'png';
+  const path = `${residentId}/signature.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('resident-signatures')
+    .upload(path, blob, { upsert: true, contentType: mimeType });
+
+  if (uploadError) throw uploadError;
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('resident-signatures')
+    .getPublicUrl(path);
+
+  const { error: updateError } = await supabase
+    .from('residents')
+    .update({ signature_url: publicUrl })
+    .eq('id', residentId);
+
+  if (updateError) throw updateError;
+
+  return publicUrl;
 }

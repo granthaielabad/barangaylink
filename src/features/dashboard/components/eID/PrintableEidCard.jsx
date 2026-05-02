@@ -38,7 +38,7 @@ function fmt(dateStr) {
 
 // ── Printable eID Card Component ──────────────────────────────────────────────
 const PrintableEidCard = forwardRef(({ eid }, ref) => {
-  const { idNumber = '', name = '', address = '', qrToken = '', photoUrl = '',
+  const { idNumber = '', name = '', address = '', qrToken = '', photoUrl = '', signatureUrl = '',
           dateOfBirth = null, bloodType = '', civilStatus = '', issuedAt = null, expiresAt = null } = eid || {};
 
   return (
@@ -156,7 +156,15 @@ const PrintableEidCard = forwardRef(({ eid }, ref) => {
           <div className="grid grid-cols-2 gap-10 mt-6 px-4">
             <div className="text-center group">
               <div className="h-12 flex items-center justify-center">
-                {/* Signature Placeholder */}
+                {signatureUrl ? (
+                  <img 
+                    src={signatureUrl} 
+                    alt="Resident Signature" 
+                    className="max-h-full object-contain mix-blend-multiply" 
+                  />
+                ) : (
+                  <div className="h-6 w-32 bg-gray-50/50 rounded animate-pulse" />
+                )}
               </div>
               <div className="border-b border-gray-900 pb-1 mb-1"></div>
               <p className="text-[9px] font-black text-gray-900 uppercase tracking-tighter">Resident Signature</p>

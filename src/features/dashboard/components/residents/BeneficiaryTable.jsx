@@ -1,155 +1,188 @@
 import { useMemo, useState } from 'react';
 import { ExportButton, Pagination, SortFilter } from '../../../../shared';
 import { PiFileCsvLight } from 'react-icons/pi';
+import { BARANGAY } from '../../../../core/constants';
+import { useAllResidents } from '../../../../hooks/queries/residents/useResidents';
+import { useSitios } from '../../../../hooks/queries/dashboard/useSitios';
 
 const PAGE_SIZE = 8;
 
 const CATEGORY_OPTIONS = [
-  { value: 'all', label: 'Category' },
-  { value: 'senior', label: 'Senior' },
+  { value: 'all', label: 'All Categories' },
+  { value: 'senior', label: 'Senior Citizen' },
   { value: 'pwd', label: 'PWD' },
-  { value: 'children', label: 'Children' },
-  { value: 'pregnant', label: 'Pregnant' },
-];
-
-const PUROK_OPTIONS = [
-  { value: 'all', label: 'Purok/Zone' },
-  { value: 'purok-1', label: 'Purok 1' },
-  { value: 'purok-2', label: 'Purok 2' },
-  { value: 'purok-3', label: 'Purok 3' },
-  { value: 'purok-4', label: 'Purok 4' },
+  { value: 'children', label: 'Children (0-12)' },
+  { value: 'lgbtq', label: 'LGBTQ+' },
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'all', label: 'Status' },
+  { value: 'all', label: 'All Status' },
   { value: 'active', label: 'Active' },
-  { value: 'verification-needed', label: 'Verification Needed' },
+  { value: 'archived', label: 'Archived' },
 ];
 
 const EXPORT_OPTIONS = [{ label: 'CSV', icon: PiFileCsvLight, format: 'csv' }];
 
-const DEFAULT_BENEFICIARIES = [
-  { id: 1, name: 'JM Melca C. Nueva', householdId: '0152', category: 'Senior', purok: 'purok-1', programEligible: 'Yes', status: 'Active' },
-  { id: 2, name: 'Raine Heart Nacion', householdId: '0973', category: 'PWD', purok: 'purok-2', programEligible: 'Pending', status: 'Verification Needed' },
-  { id: 3, name: 'Grant Haeil Abad', householdId: '1157', category: 'Children', purok: 'purok-3', programEligible: 'Yes', status: 'Active' },
-  { id: 4, name: 'Ariana Roxanne Malegro', householdId: '0835', category: 'Pregnant', purok: 'purok-1', programEligible: 'Yes', status: 'Active' },
-  { id: 5, name: 'Murphy De Guzman', householdId: '0856', category: 'PWD', purok: 'purok-2', programEligible: 'Yes', status: 'Active' },
-  { id: 6, name: 'Sophia Nicole Cecillano', householdId: '1240', category: 'Pregnant', purok: 'purok-4', programEligible: 'Pending', status: 'Verification Needed' },
-  { id: 7, name: 'Anna Dela Cruz', householdId: '0772', category: 'Senior', purok: 'purok-3', programEligible: 'Pending', status: 'Verification Needed' },
-  { id: 8, name: 'Carlo Jeus S. Cacho', householdId: '0106', category: 'Children', purok: 'purok-1', programEligible: 'Yes', status: 'Active' },
-  { id: 9, name: 'Nina B. Del Mundo', householdId: '0922', category: 'Senior', purok: 'purok-4', programEligible: 'Yes', status: 'Active' },
-  { id: 10, name: 'Felix M. Alcaraz', householdId: '0319', category: 'PWD', purok: 'purok-1', programEligible: 'Pending', status: 'Verification Needed' },
-  { id: 11, name: 'Joanna C. Rey', householdId: '0414', category: 'Pregnant', purok: 'purok-2', programEligible: 'Yes', status: 'Active' },
-  { id: 12, name: 'Luis P. Hernandez', householdId: '1012', category: 'Children', purok: 'purok-3', programEligible: 'Yes', status: 'Active' },
-];
+function calculateAge(dob) {
+  if (!dob) return 0;
+  return Math.floor((Date.now() - new Date(dob).getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+}
 
-const toStatusValue = (status) => status.toLowerCase().replace(/\s+/g, '-');
-const toCategoryValue = (category) => category.toLowerCase();
-
-export default function BeneficiaryTable({ beneficiaries = DEFAULT_BENEFICIARIES }) {
+export default function BeneficiaryTable() {
   const [category, setCategory] = useState('all');
-  const [purok, setPurok] = useState('all');
+  const [sitio, setSitio] = useState('all');
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
 
-  const filteredBeneficiaries = useMemo(
-    () =>
-      beneficiaries.filter((beneficiary) => {
-        const categoryMatch = category === 'all' || toCategoryValue(beneficiary.category) === category;
-        const purokMatch = purok === 'all' || beneficiary.purok === purok;
-        const statusMatch = status === 'all' || toStatusValue(beneficiary.status) === status;
-        return categoryMatch && purokMatch && statusMatch;
-      }),
-    [beneficiaries, category, purok, status]
-  );
+  const { data: residents = [] } = useAllResidents();
+  const { data: sitiosData = [] } = useSitios();
+
+  const SITIO_OPTIONS = useMemo(() => {
+    return [{ value: 'all', label: 'All Sitios' }, ...sitiosData.map(s => ({ value: s.label, label: s.label }))];
+  }, [sitiosData]);
+
+  // ── Data Processing Logic ──────────────────────────────────────────────────
+  const processedBeneficiaries = useMemo(() => {
+    return residents.map(r => {
+      const age = calculateAge(r.date_of_birth);
+      
+      let primaryCat = 'N/A';
+      if (age >= 60) primaryCat = 'Senior Citizen';
+      else if (r.is_pwd) primaryCat = 'PWD';
+      else if (age < 13) primaryCat = 'Children (0-12)';
+      else if (r.is_indigent) primaryCat = 'LGBTQ+';
+
+      const sitioName = r.puroks?.name ?? (r.address_line?.split(',')[2]?.trim() || 'Unspecified');
+
+      return {
+        id: r.id,
+        name: `${r.last_name}, ${r.first_name}`,
+        householdId: r.households?.household_no ?? 'No Link',
+        category: primaryCat,
+        categoryKey: primaryCat === 'Senior Citizen' ? 'senior' : 
+                    primaryCat === 'PWD' ? 'pwd' : 
+                    primaryCat === 'Children (0-12)' ? 'children' : 
+                    primaryCat === 'LGBTQ+' ? 'lgbtq' : 'none',
+        sitio: sitioName,
+        programEligible: r.status === 'active' ? 'Yes' : 'Pending',
+        status: r.status ? r.status.charAt(0).toUpperCase() + r.status.slice(1) : 'Active'
+      };
+    }).filter(b => b.category !== 'N/A');
+  }, [residents]);
+
+  const filteredBeneficiaries = useMemo(() => {
+    return processedBeneficiaries.filter((b) => {
+      const categoryMatch = category === 'all' || b.categoryKey === category;
+      const sitioMatch = sitio === 'all' || b.sitio === sitio;
+      const statusMatch = status === 'all' || b.status.toLowerCase() === status;
+      return categoryMatch && sitioMatch && statusMatch;
+    });
+  }, [processedBeneficiaries, category, sitio, status]);
 
   const totalEntries = filteredBeneficiaries.length;
   const totalPages = Math.max(1, Math.ceil(totalEntries / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const start = (safePage - 1) * PAGE_SIZE;
-  const rows = filteredBeneficiaries.slice(start, start + PAGE_SIZE);
+  const rows = filteredBeneficiaries.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const handleFilterChange = (setter) => (value) => {
     setter(value);
     setPage(1);
   };
 
-  return (
-    <div>
-      <h2 className="mb-5 font-semibold text-[25px]">Eligible Beneficiaries List</h2>
+  const handleExport = () => {
+    if (filteredBeneficiaries.length === 0) return;
+    const headers = ['Resident Name', 'Household ID', 'Sitio', 'Primary Category', 'Program Eligible', 'Status'];
+    const csvRows = filteredBeneficiaries.map(b => [
+      `"${b.name}"`,
+      `"${b.householdId}"`,
+      `"${b.sitio}"`,
+      `"${b.category}"`,
+      `"${b.programEligible}"`,
+      `"${b.status}"`
+    ]);
+    
+    const csvContent = [headers, ...csvRows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Beneficiary_List_${BARANGAY.replace(/\s+/g, '_')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
-        <div className="flex flex-wrap items-center w-full lg:w-auto">
-          <div className="w-full sm:w-[140px]">
-            <SortFilter
-              value={category}
-              options={CATEGORY_OPTIONS}
-              onChange={handleFilterChange(setCategory)}
-            />
-          </div>
-          <div className="w-full sm:w-[160px]">
-            <SortFilter
-              value={purok}
-              options={PUROK_OPTIONS}
-              onChange={handleFilterChange(setPurok)}
-            />
-          </div>
-          <div className="w-full sm:w-[180px]">
-            <SortFilter
-              value={status}
-              options={STATUS_OPTIONS}
-              onChange={handleFilterChange(setStatus)}
-            />
-          </div>
-        </div>
-        <div className="w-full sm:w-auto lg:ml-auto">
-          <ExportButton label="Export CSV" options={EXPORT_OPTIONS} onExport={() => {}} />
-        </div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Beneficiary Profiling Engine</h2>
+        <p className="text-sm text-gray-500 mt-1">
+          Automated eligibility list for Barangay Aid & Health Programs (Seniors, PWDs, Youth).
+        </p>
       </div>
 
-      <div className="overflow-x-auto w-full rounded-lg border border-gray-200">
-        <table className="w-full min-w-[820px] text-base">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <SortFilter
+            value={category}
+            options={CATEGORY_OPTIONS}
+            onChange={handleFilterChange(setCategory)}
+          />
+          <SortFilter
+            value={sitio}
+            options={SITIO_OPTIONS}
+            onChange={handleFilterChange(setSitio)}
+          />
+          <SortFilter
+            value={status}
+            options={STATUS_OPTIONS}
+            onChange={handleFilterChange(setStatus)}
+          />
+        </div>
+        <ExportButton label="Export Beneficiaries" options={EXPORT_OPTIONS} onExport={handleExport} />
+      </div>
+
+      <div className="overflow-x-auto w-full rounded-xl border border-gray-200">
+        <table className="w-full text-base">
           <thead>
-            <tr className="text-left text-sm bg-[#F1F7F2] text-gray-700 border-b border-gray-200">
-              <th className="py-3 px-4 font-semibold whitespace-nowrap">Name</th>
-              <th className="py-3 px-4 font-semibold whitespace-nowrap">Household ID</th>
-              <th className="py-3 px-4 font-semibold whitespace-nowrap">Category</th>
-              <th className="py-3 px-4 font-semibold whitespace-nowrap">Program Eligible</th>
-              <th className="py-3 px-4 font-semibold whitespace-nowrap">Status</th>
-              <th className="py-3 px-4 font-semibold text-center whitespace-nowrap">Action</th>
+            <tr className="text-left text-sm bg-gray-50 text-gray-700 border-b border-gray-200">
+              <th className="py-4 px-6 font-bold">Resident Name</th>
+              <th className="py-4 px-6 font-bold">Household</th>
+              <th className="py-4 px-6 font-bold">Sitio</th>
+              <th className="py-4 px-6 font-bold">Primary Category</th>
+              <th className="py-4 px-6 font-bold">Program Eligible</th>
+              <th className="py-4 px-6 font-bold text-center">Action</th>
             </tr>
           </thead>
-          <tbody>
-            {rows.map((beneficiary, idx) => (
-              <tr
-                key={beneficiary.id}
-                className={`border-b border-gray-100 last:border-b-0 ${idx % 2 === 1 ? 'bg-gray-50' : 'bg-white'}`}
-              >
-                <td className="py-3 px-4 text-gray-800 align-middle">{beneficiary.name}</td>
-                <td className="py-3 px-4 text-gray-800 align-middle">{beneficiary.householdId}</td>
-                <td className="py-3 px-4 text-gray-800 align-middle">{beneficiary.category}</td>
-                <td className={`py-3 px-4 font-medium align-middle ${beneficiary.programEligible === 'Yes' ? 'text-emerald-700' : 'text-amber-600'}`}>
-                  {beneficiary.programEligible}
+          <tbody className="divide-y divide-gray-100">
+            {rows.map((b) => (
+              <tr key={b.id} className="hover:bg-gray-50 transition-colors">
+                <td className="py-4 px-6 text-gray-900 font-medium">{b.name}</td>
+                <td className="py-4 px-6 text-gray-500 font-mono text-sm">{b.householdId}</td>
+                <td className="py-4 px-6 text-gray-600">{b.sitio}</td>
+                <td className="py-4 px-6">
+                  <span className="px-2.5 py-1 rounded-md bg-[#8C0B1A]/5 text-[#8C0B1A] text-xs font-bold uppercase tracking-wider">
+                    {b.category}
+                  </span>
                 </td>
-                <td className={`py-3 px-4 font-medium align-middle ${beneficiary.status === 'Active' ? 'text-emerald-700' : 'text-amber-600'}`}>
-                  {beneficiary.status}
+                <td className="py-4 px-6">
+                  <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${b.programEligible === 'Yes' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-600'}`}>
+                    {b.programEligible}
+                  </span>
                 </td>
-                <td className="py-3 px-4 align-middle text-center">
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center px-4 py-1.5 rounded-lg text-sm font-semibold bg-[#00880E] text-white hover:bg-[#006f0b] transition-colors"
-                  >
-                    View
-                  </button>
+                <td className="py-4 px-6 text-center">
+                  <button className="text-sm font-bold text-[#8C0B1A] hover:underline">View File</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {rows.length === 0 && (
+          <div className="py-12 text-center text-gray-400 italic">No residents meet the criteria for the selected beneficiary filters.</div>
+        )}
       </div>
 
       <Pagination
-        currentPage={safePage}
+        currentPage={page}
         totalPages={totalPages}
         totalEntries={totalEntries}
         pageSize={PAGE_SIZE}

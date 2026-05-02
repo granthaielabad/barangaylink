@@ -3,13 +3,15 @@ import { supabase } from '../../../services/supabase/client';
 
 async function fetchAnalyticsData(year) {
   const targetYear = year ?? new Date().getFullYear();
-  const now = new Date(); // ← was missing, caused ReferenceError
+  const now = new Date();
 
   const [
     residentsRes, householdsRes, eidsRes,
     sexRes, ageGroupRes, demographicRes,
     eidStatusRes, eidMonthlyRes,
     growthRes, monthlyRes, archivedMonthlyRes,
+    sectoralRes, requestsRes,
+    householdsBySitioRes
   ] = await Promise.all([
     // ── Totals ──────────────────────────────────────────────────
     supabase.from('residents').select('id', { count: 'exact', head: true }).neq('status', 'archived'),
@@ -18,38 +20,95 @@ async function fetchAnalyticsData(year) {
 
     // ── Demographics ─────────────────────────────────────────────
     supabase.from('residents').select('sex').neq('status', 'archived'),
-    supabase.rpc('get_population_by_age_group'),        // 14-bracket detail
-    supabase.rpc('get_demographic_summary'),            // Philippine 4-category summary
+    supabase.rpc('get_population_by_age_group'),
+    supabase.rpc('get_demographic_summary'),
 
-    // ── eID status breakdown ─────────────────────────────────────
+    // ── eID breakdown ─────────────────────────────────────
     supabase.from('electronic_ids').select('status'),
 
-    // ── eID issuances by month (last 6 months) ───────────────────
+    // ── eID issuances (last 6 months) ───────────────────
     supabase.from('electronic_ids').select('issued_at')
       .gte('issued_at', new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString()),
 
-    // ── Population growth: new residents per year (last 5 years) ─
+    // ── Growth ──────────────────────────────────────────
     supabase.rpc('get_population_growth', { p_years: 5 }),
 
-    // ── New residents per month for selected year ─────────────────
+    // ── Monthly ──────────────────────────────────────────
     supabase.rpc('get_residents_by_month', { p_year: targetYear }),
 
-    // ── Archived residents per month for selected year ────────────
+    // ── Archived ──────────────────────────────────────────
     supabase.from('residents')
       .select('updated_at')
       .eq('status', 'archived')
       .gte('updated_at', `${targetYear}-01-01`)
       .lt('updated_at', `${targetYear + 1}-01-01`),
+
+    // ── Sectoral / Insights ──────────────────────────────
+    supabase.from('residents')
+      .select('is_pwd, is_solo_parent, is_indigent, date_of_birth')
+      .neq('status', 'archived'),
+
+    // ── External Requests ─────────────────────────────────
+    supabase.schema('public').from('request_tbl').select('id', { count: 'exact', head: true }),
+
+    // ── Households by Sitio & Ownership ──────────────────────────────
+    supabase.from('households')
+      .select('purok_id, puroks(name), ownership_type')
+      .neq('status', 'archived'),
   ]);
 
-  // Check all responses for errors
-  for (const res of [
+  const allRes = [
     residentsRes, householdsRes, eidsRes, sexRes,
     ageGroupRes, demographicRes,
     eidStatusRes, eidMonthlyRes, growthRes, monthlyRes, archivedMonthlyRes,
-  ]) {
+    sectoralRes, requestsRes, householdsBySitioRes
+  ];
+  for (const res of allRes) {
     if (res.error) throw res.error;
   }
+
+  // ── Households Processing ──────────────────────────
+  const sitioCounts = {};
+  const ownershipCounts = { owned: 0, rented: 0, shared: 0, informal: 0 };
+  
+  (householdsBySitioRes.data ?? []).forEach(h => {
+    const name = h.puroks?.name || 'Unknown';
+    sitioCounts[name] = (sitioCounts[name] ?? 0) + 1;
+    
+    if (h.ownership_type && h.ownership_type in ownershipCounts) {
+      ownershipCounts[h.ownership_type]++;
+    }
+  });
+
+  const householdsPerPurok = Object.entries(sitioCounts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
+  const householdOwnership = {
+    labels: ['Owned', 'Rented', 'Shared', 'Informal Settler'],
+    data: [
+      ownershipCounts.owned,
+      ownershipCounts.rented,
+      ownershipCounts.shared,
+      ownershipCounts.informal
+    ]
+  };
+
+  // ── Sectoral / Insights Processing ──────────────────────────
+  const sectoral = { soloParent: 0, pwd: 0, lgbtq: 0 };
+  const insights = { seniors: 0, pwds: 0, children: 0, pregnant: 0 };
+  
+  (sectoralRes.data ?? []).forEach(r => {
+    if (r.is_solo_parent) sectoral.soloParent++;
+    if (r.is_pwd) sectoral.pwd++;
+    if (r.is_indigent) sectoral.lgbtq++; // Maps to LGBTQ+ in UI
+    
+    // Calculate Age for insights
+    const age = Math.floor((Date.now() - new Date(r.date_of_birth).getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+    if (age >= 60) insights.seniors++;
+    if (r.is_pwd) insights.pwds++;
+    if (age < 13) insights.children++;
+  });
 
   // ── Gender ────────────────────────────────────────────────────
   const sexTally = { M: 0, F: 0 };
@@ -63,29 +122,24 @@ async function fetchAnalyticsData(year) {
     female: parseFloat(((sexTally.F / totalSex) * 100).toFixed(2)),
   };
 
-  // ── Age groups — life-stage brackets for bar chart ───────────
+  // ── Age groups ───────────────────────────────────────────────
   const ageGroupRows = ageGroupRes.data ?? [];
   const ageGroupMap  = Object.fromEntries(ageGroupRows.map((r) => [r.age_group, Number(r.count)]));
-  const ALL_BRACKETS = [
-    'Toddlers', 'Children', 'Teenagers',
-    'Young Adults', 'Middle-aged Adults', 'Senior Citizens',
-  ];
+  const ALL_BRACKETS = ['Toddlers', 'Children', 'Teenagers', 'Young Adults', 'Middle-aged Adults', 'Senior Citizens'];
   const ageGroups = ALL_BRACKETS.map((bracket) => ({
     bracket,
     count: ageGroupMap[bracket] ?? 0,
   }));
 
-  // ── Demographic summary — 6 life-stage categories ────────────
-  const demoMap = Object.fromEntries(
-    (demographicRes.data ?? []).map((r) => [r.category, Number(r.count)])
-  );
+  // ── Demographic summary ─────────────────────────────────────
+  const demoMap = Object.fromEntries((demographicRes.data ?? []).map((r) => [r.category, Number(r.count)]));
   const demographics = {
-    toddlers:         demoMap['Toddlers']           ?? 0,
-    children:         demoMap['Children']           ?? 0,
-    teenagers:        demoMap['Teenagers']          ?? 0,
-    youngAdults:      demoMap['Young Adults']       ?? 0,
+    toddlers: demoMap['Toddlers'] ?? 0,
+    children: demoMap['Children'] ?? 0,
+    teenagers: demoMap['Teenagers'] ?? 0,
+    youngAdults: demoMap['Young Adults'] ?? 0,
     middleAgedAdults: demoMap['Middle-aged Adults'] ?? 0,
-    seniorCitizens:   demoMap['Senior Citizens']    ?? 0,
+    seniorCitizens: demoMap['Senior Citizens'] ?? 0,
   };
 
   // ── eID status ────────────────────────────────────────────────
@@ -100,7 +154,7 @@ async function fetchAnalyticsData(year) {
     inactive: parseFloat(((eidTally.inactive / totalEid) * 100).toFixed(2)),
   };
 
-  // ── eID issuance by month (last 6) ───────────────────────────
+  // ── eID issuance by month ────────────────────────────────────
   const monthMap = {};
   (eidMonthlyRes.data ?? []).forEach((e) => {
     const key = new Date(e.issued_at).toLocaleDateString('en-US', { month: 'short' });
@@ -115,42 +169,35 @@ async function fetchAnalyticsData(year) {
     last6Data.push(monthMap[lbl] ?? 0);
   }
 
-  // ── Population growth ────────────────────────────────────────
-  const populationGrowth = (growthRes.data ?? []).map((r) => ({
-    year:  r.year,
-    count: Number(r.count),
-  }));
-
-  // ── New residents by month ───────────────────────────────────
-  const residentsByMonth = (monthlyRes.data ?? []).map((r) => ({
-    month: r.month,
-    count: Number(r.count),
-  }));
-
   // ── Archived residents by month ──────────────────────────────
-  const archiveMap = {};
+  const archivedMonthMap = {};
+  for (let i = 1; i <= 12; i++) archivedMonthMap[i] = 0;
   (archivedMonthlyRes.data ?? []).forEach((r) => {
-    const m = new Date(r.updated_at).getMonth() + 1;
-    archiveMap[m] = (archiveMap[m] ?? 0) + 1;
+    const d = new Date(r.updated_at);
+    const month = d.getMonth() + 1;
+    archivedMonthMap[month]++;
   });
-  const archivedByMonth = Object.entries(archiveMap).map(([month, count]) => ({
-    month: Number(month), count,
-  }));
+  const archivedByMonth = Object.entries(archivedMonthMap).map(([month, count]) => ({ month: Number(month), count }));
 
   return {
     totals: {
       residents:  residentsRes.count ?? 0,
       households: householdsRes.count ?? 0,
       eids:       eidsRes.count ?? 0,
+      requests:   requestsRes.count ?? 0,
     },
     gender,
-    ageGroups,       // 14-bracket array for detail bar chart
-    demographics,    // Philippine 4-category summary for demographic cards
+    ageGroups,
+    demographics,
     eidStatus,
-    eidRenewal:      { labels: last6Labels, data: last6Data },
-    populationGrowth,
-    residentsByMonth,
+    eidRenewal: { labels: last6Labels, data: last6Data },
+    populationGrowth: (growthRes.data ?? []).map(r => ({ year: r.year, count: Number(r.count) })),
+    residentsByMonth: (monthlyRes.data ?? []).map(r => ({ month: r.month, count: Number(r.count) })),
     archivedByMonth,
+    sectoral,
+    insights,
+    householdsPerPurok,
+    householdOwnership
   };
 }
 

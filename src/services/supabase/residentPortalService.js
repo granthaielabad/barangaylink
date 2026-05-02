@@ -25,7 +25,7 @@ export async function getMyResidentProfile() {
       contact_number, email,
       voter_status, philhealth_no, sss_no, tin_no, id_number,
       address_line, years_of_stay,
-      photo_url, status, created_at,
+      photo_url, signature_url, status, created_at,
       blood_type,
       puroks ( id, name ),
       households:households!residents_household_id_fkey ( id, house_no, street )
@@ -74,7 +74,7 @@ export async function submitEidApplication(payload) {
   if (!resident) throw new Error('Resident record not found.');
 
   // Extract non-DB fields before insert
-  const { _validIdType, _validIdFile, ...rest } = payload;
+  const { _validIdType, _validIdFile, _signature, ...rest } = payload;
 
   // Generate reference number: first 8 chars of a new UUID in uppercase
   const tempId = crypto.randomUUID();
@@ -90,10 +90,50 @@ export async function submitEidApplication(payload) {
       .upload(path, _validIdFile, { upsert: true, contentType: _validIdFile.type });
     
     if (uploadErr) throw new Error(`Failed to upload ID photo: ${uploadErr.message}`);
-    
-    // Get public URL
     const { data: { publicUrl } } = supabase.storage.from('valid-id-photos').getPublicUrl(path);
     validIdPublicUrl = publicUrl;
+  }
+
+  // Upload Signature if present (base64 data URL from drawing or file)
+  let signaturePublicUrl = null;
+  if (_signature) {
+    let signatureBlob;
+    let mimeType = 'image/png';
+    let ext = 'png';
+    
+    // Check if it's a data URL (from drawing)
+    if (typeof _signature === 'string' && _signature.startsWith('data:')) {
+      const arr = _signature.split(',');
+      const match = arr[0].match(/:(.*?);/);
+      if (match) mimeType = match[1];
+      ext = mimeType.split('/')[1] || 'png';
+      
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      signatureBlob = new Blob([u8arr], { type: mimeType });
+    } 
+    // Handle File object (if user uploaded a file instead of drawing)
+    else if (_signature instanceof File) {
+      signatureBlob = _signature;
+      mimeType = _signature.type;
+      ext = _signature.name?.split('.').pop().toLowerCase() || 'png';
+    }
+    else {
+      throw new Error('Invalid signature format. Expected base64 image or File.');
+    }
+
+    const path = `${resident.id}/signature-${Date.now()}.${ext}`;
+    const { error: signErr } = await supabase.storage
+      .from('resident-signatures')
+      .upload(path, signatureBlob, { upsert: true, contentType: mimeType });
+    
+    if (signErr) throw new Error(`Failed to upload signature: ${signErr.message}`);
+    const { data: { publicUrl } } = supabase.storage.from('resident-signatures').getPublicUrl(path);
+    signaturePublicUrl = publicUrl;
   }
 
   // Explicitly whitelist only columns that exist in eid_applications
@@ -114,6 +154,7 @@ export async function submitEidApplication(payload) {
     reference_number: refNo,
     valid_id_type:    _validIdType          ?? null,
     valid_id_url:     validIdPublicUrl      ?? null,
+    signature_url:    signaturePublicUrl    ?? null,
   };
 
   const { data, error } = await supabase
@@ -126,9 +167,10 @@ export async function submitEidApplication(payload) {
 
   // Update residents table with latest ID info for convenience
   const residentUpdates = {};
-  if (_validIdType)    residentUpdates.valid_id_type = _validIdType;
-  if (validIdPublicUrl) residentUpdates.valid_id_url  = validIdPublicUrl;
-  if (rest.id_number)   residentUpdates.id_number     = rest.id_number;
+  if (_validIdType)      residentUpdates.valid_id_type = _validIdType;
+  if (validIdPublicUrl)   residentUpdates.valid_id_url  = validIdPublicUrl;
+  if (signaturePublicUrl) residentUpdates.signature_url = signaturePublicUrl;
+  if (rest.id_number)     residentUpdates.id_number     = rest.id_number;
 
   if (Object.keys(residentUpdates).length > 0) {
     await supabase.from('residents').update(residentUpdates).eq('id', resident.id);
@@ -174,7 +216,7 @@ export async function getMyEid() {
       issued_at, expires_at, status,
       residents (
         id, first_name, middle_name, last_name, suffix,
-        photo_url, date_of_birth, sex, blood_type, civil_status,
+        photo_url, signature_url, date_of_birth, sex, blood_type, civil_status,
         address_line, puroks ( id, name )
       )
     `)

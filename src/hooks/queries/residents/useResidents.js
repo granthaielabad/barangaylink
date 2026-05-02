@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { residentKeys } from './queryKeys';
 import {
-  getResidents, getResidentById, createResident,
+  getResidents, getAllResidents, getResidentById, createResident,
   updateResident, archiveResident, deactivateResident,
   activateResident, deleteResident,
 } from '../../../services/supabase/residentService';
@@ -25,6 +25,14 @@ export function useResidents() {
     queryFn: () => getResidents(params),
     placeholderData: (prev) => prev,
     staleTime: 1000 * 30,
+  });
+}
+
+export function useAllResidents() {
+  return useQuery({
+    queryKey: [...residentKeys.lists(), 'all'],
+    queryFn: getAllResidents,
+    staleTime: 1000 * 60,
   });
 }
 

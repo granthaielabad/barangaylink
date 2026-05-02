@@ -129,6 +129,29 @@ export const SEX_OPTIONS = [
 
 export const BARANGAY = 'Sta. Lucia';
 
+export const STA_LUCIA_STREETS = [
+  'J.P. Rizal St.', 'Paguio St.', 'Galvez St.', 'Sta. Marcela St.', 'Castro St.', 
+  'Pamana St.', 'Rivera St.', 'Cursilista St.', 'Marco Polo St.', 'Diego Silang St.', 
+  'J. Luna St.', 'E. Jacinto St.', 'Gen. Malvar St.', 'F. Balagtas St.', 'Dela Cruz St.', 
+  'M. Aquino St.', 'M.H. Del Pilar St.', 'Panganiban St.', 'P. Bukaneg St.', 
+  'E. Aguinaldo St.', 'Lopez Jaena St.', 'J. Abad Santos St.', 'Humabon St.', 
+  'A. Bonifacio St.', 'Gomez St.', 'Burgos St.', 'Zamora St.', 'Naning Ponce St.', 
+  'J. Basa St.', 'A. Mabini St.', 'T. Alonzo St.', 'P. Paterno St.', 'Rajah Soliman St.', 
+  'F. Agoncillo St.', 'F. Calderon St.', 'J. Palma St.', 'Lapu Lapu St.',
+  'Plain Ville', 'Dona Field', 'Villa Hermano 4', 'Francisco Park', 'Lower Visayas Ave.',
+  'Upper Visayas', 'Valbuena Compd.', 'Natividad Subd.', 'Tarha Ville'
+];
+
+export const SITIO_STREET_MAP = {
+  'Sitio 1': ['J.P. Rizal St.', 'Paguio St.', 'Galvez St.', 'Sta. Marcela St.', 'Castro St.', 'Pamana St.', 'Rivera St.', 'Cursilista St.', 'Plain Ville', 'Dona Field'],
+  'Sitio 2': ['Marco Polo St.', 'J.P. Rizal St.', 'Diego Silang St.', 'J. Luna St.', 'E. Jacinto St.', 'Gen. Malvar St.', 'F. Balagtas St.', 'Dela Cruz St.', 'M. Aquino St.', 'M.H. Del Pilar St.', 'Panganiban St.', 'Villa Hermano 4'],
+  'Sitio 3': ['M. Aquino St.', 'J.P. Rizal St.', 'P. Bukaneg St.', 'E. Aguinaldo St.', 'Lopez Jaena St.', 'Francisco Park', 'Lower Visayas Ave.', 'Upper Visayas', 'Valbuena Compd.'],
+  'Sitio 4': ['J. Abad Santos St.', 'Humabon St.', 'A. Bonifacio St.', 'Gomez St.', 'Burgos St.', 'Zamora St.', 'Naning Ponce St.', 'J. Basa St.', 'J.P. Rizal St.', 'A. Mabini St.', 'Upper Visayas'],
+  'Sitio 5': ['J. Abad Santos St.', 'T. Alonzo St.', 'A. Bonifacio St.', 'Sta. Lucia Ave.', 'P. Paterno St.', 'Natividad Subd.', 'Rajah Soliman St.', 'A. Mabini St.'],
+  'Sitio 6': ['J. Abad Santos St.', 'P. Paterno St.', 'F. Agoncillo St.', 'T. Alonzo St.'],
+  'Sitio 7': ['F. Calderon St.', 'J. Palma St.', 'Lapu Lapu St.', 'Tarha Ville']
+};
+
 export const NATIONALITIES = [
   'Afghan','Albanian','Algerian','American','Andorran','Angolan','Antiguan',
   'Argentine','Armenian','Australian','Austrian','Azerbaijani','Bahamian',
