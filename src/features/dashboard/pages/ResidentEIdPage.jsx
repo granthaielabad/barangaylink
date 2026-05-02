@@ -624,7 +624,7 @@ function RenewModal({ eid, onClose, onSubmit, isPending }) {
             <div>
               <p className="text-xs font-semibold text-blue-800">Renewal Information</p>
               <p className="text-xs text-blue-700 mt-0.5">
-                Your eID renewal will extend your validity for another 3 years from the renewal date.
+                Your eID renewal will extend your validity for another 1 year from the renewal date.
                 Please verify and update your information below.
               </p>
             </div>

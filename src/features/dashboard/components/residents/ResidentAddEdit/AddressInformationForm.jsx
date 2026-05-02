@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { IoLocationOutline } from 'react-icons/io5';
-import { BARANGAY, STA_LUCIA_STREETS } from '../../../../../core/constants';
+import { BARANGAY, STA_LUCIA_STREETS, SITIO_STREET_MAP } from '../../../../../core/constants';
 import { FormSelect } from '../../../../../shared';
 import { useSitios } from '../../../../../hooks/queries/dashboard/useSitios';
 
@@ -12,6 +13,33 @@ const lockedInputClass =
 export default function AddressInformationForm({ value = {}, onChange }) {
   const update = (field, val) => onChange?.({ ...value, [field]: val });
   const { data: sitioOptions = [], isLoading: sitiosLoading } = useSitios();
+
+  const filteredStreets = useMemo(() => {
+    if (!value.purok || !SITIO_STREET_MAP[value.purok]) return STA_LUCIA_STREETS;
+    return SITIO_STREET_MAP[value.purok];
+  }, [value.purok]);
+
+  const handleStreetChange = (streetVal) => {
+    const newAddress = { ...value, street: streetVal };
+    
+    // Auto-select Sitio if street belongs to specific Sitio(s)
+    const possibleSitioNames = Object.entries(SITIO_STREET_MAP)
+      .filter(([_, streets]) => streets.includes(streetVal))
+      .map(([name]) => name);
+
+    if (possibleSitioNames.length > 0) {
+      // If current sitio is blank or not in the possible list, auto-select first match
+      if (!value.purok || !possibleSitioNames.includes(value.purok)) {
+        const targetName = possibleSitioNames[0];
+        const targetOpt = sitioOptions.find(opt => opt.label === targetName);
+        if (targetOpt) {
+          newAddress.purokId = targetOpt.value;
+          newAddress.purok = targetOpt.label;
+        }
+      }
+    }
+    onChange?.(newAddress);
+  };
 
   return (
     <div className="space-y-4">
@@ -31,9 +59,17 @@ export default function AddressInformationForm({ value = {}, onChange }) {
           <label className="text-sm font-medium text-gray-700 mb-1.5 sm:min-h-[40px] flex items-end">
             <span>Street, village, etc. <span className="text-red-500">*</span></span>
           </label>
-          <input type="text" list="sta-lucia-streets" value={value.street ?? ''} onChange={(e) => update('street', e.target.value)} className={inputClass} placeholder="e.g. J.P. Rizal St." required />
+          <input 
+            type="text" 
+            list="sta-lucia-streets" 
+            value={value.street ?? ''} 
+            onChange={(e) => handleStreetChange(e.target.value)} 
+            className={inputClass} 
+            placeholder="e.g. J.P. Rizal St." 
+            required 
+          />
           <datalist id="sta-lucia-streets">
-            {STA_LUCIA_STREETS.map(s => <option key={s} value={s} />)}
+            {filteredStreets.map(s => <option key={s} value={s} />)}
           </datalist>
         </div>
       </div>
@@ -49,7 +85,11 @@ export default function AddressInformationForm({ value = {}, onChange }) {
               onChange?.({
                 ...value,
                 purokId: val,
-                purok: selectedOpt ? selectedOpt.label : ''
+                purok: selectedOpt ? selectedOpt.label : '',
+                // Clear street if it's no longer valid for the new Sitio
+                street: (selectedOpt && value.street && SITIO_STREET_MAP[selectedOpt.label]?.includes(value.street)) 
+                  ? value.street 
+                  : value.street
               });
             }}
             options={sitioOptions}
@@ -64,3 +104,4 @@ export default function AddressInformationForm({ value = {}, onChange }) {
     </div>
   );
 }
+

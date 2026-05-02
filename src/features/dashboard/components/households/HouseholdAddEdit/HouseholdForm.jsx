@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { LuHouse } from 'react-icons/lu';
 import { FaRegTrashCan } from 'react-icons/fa6';
@@ -13,6 +13,7 @@ import {
   HOUSEHOLD_STATUS_FORM_OPTIONS,
   BARANGAY,
   STA_LUCIA_STREETS,
+  SITIO_STREET_MAP,
 } from '../../../../../core/constants';
 
 const inputClass =
@@ -29,6 +30,34 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
   const { data: sitioOptions = [], isLoading: sitiosLoading } = useSitios();
   const members = value.members ?? [];
 
+  // ── Linked Address Logic ──────────────────────────────────────────────────
+  const filteredStreets = useMemo(() => {
+    if (!value.purok || !SITIO_STREET_MAP[value.purok]) return STA_LUCIA_STREETS;
+    return SITIO_STREET_MAP[value.purok];
+  }, [value.purok]);
+
+  const handleStreetChange = (streetVal) => {
+    const newFields = { street: streetVal };
+    
+    // Auto-select Sitio if street belongs to specific Sitio(s)
+    const possibleSitioNames = Object.entries(SITIO_STREET_MAP)
+      .filter(([_, streets]) => streets.includes(streetVal))
+      .map(([name]) => name);
+
+    if (possibleSitioNames.length > 0) {
+      if (!value.purok || !possibleSitioNames.includes(value.purok)) {
+        const targetName = possibleSitioNames[0];
+        const targetOpt = sitioOptions.find(opt => opt.label === targetName);
+        if (targetOpt) {
+          newFields.purokId = targetOpt.value;
+          newFields.purok = targetOpt.label;
+        }
+      }
+    }
+    updateMany(newFields);
+  };
+
+  // ── Head Search Logic ─────────────────────────────────────────────────────
   const [headSearch, setHeadSearch] = useState('');
   const [showHeadDropdown, setShowHeadDropdown] = useState(false);
   const [headMenuStyles, setHeadMenuStyles] = useState(null);
@@ -47,9 +76,12 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
   useEffect(() => {
     if (value.headResidentId && residentOptions.length > 0) {
       const match = residentOptions.find((r) => r.value === value.headResidentId);
-      if (match && headSearch !== match.label) setHeadSearch(match.label);
+      if (match) setHeadSearch(match.label);
+    } else {
+      setHeadSearch('');
     }
-    if (!value.headResidentId && headSearch) setHeadSearch('');
+    // Only sync when the ID or options change, NOT on every keystroke
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value.headResidentId, residentOptions]);
 
   useEffect(() => {
@@ -91,6 +123,7 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
     setShowHeadDropdown(false);
   };
 
+  // ── Member Search Logic ───────────────────────────────────────────────────
   const [memberSearch, setMemberSearch] = useState('');
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
   const [memberMenuStyles, setMemberMenuStyles] = useState(null);
@@ -183,9 +216,17 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
           <label className="block text-sm font-medium text-gray-700 mb-2">Street <span className="text-red-500">*</span></label>
           <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
             <div className="bg-gray-100 px-4 py-3 flex items-center justify-center border-r text-[#8C0B1A] border-gray-300"><LuHouse className="w-6 h-6" /></div>
-            <input type="text" list="sta-lucia-streets" value={value.street ?? ''} onChange={(e) => update('street', e.target.value)} placeholder="e.g. J.P. Rizal St." className={addonInputClass} required />
-            <datalist id="sta-lucia-streets">
-              {STA_LUCIA_STREETS.map(s => <option key={s} value={s} />)}
+            <input 
+              type="text" 
+              list="sta-lucia-streets-hh" 
+              value={value.street ?? ''} 
+              onChange={(e) => handleStreetChange(e.target.value)} 
+              placeholder="e.g. J.P. Rizal St." 
+              className={addonInputClass} 
+              required 
+            />
+            <datalist id="sta-lucia-streets-hh">
+              {filteredStreets.map(s => <option key={s} value={s} />)}
             </datalist>
           </div>
         </div>
@@ -194,7 +235,13 @@ export default function HouseholdForm({ value = {}, onChange, householdNo = '' }
           <FormSelect
             placeholder={sitiosLoading ? 'Loading Sitios…' : 'Select Sitio'}
             value={value.purokId ?? ''}
-            onChange={(val) => update('purokId', val)}
+            onChange={(val) => {
+              const selectedOpt = sitioOptions.find(opt => opt.value === val);
+              updateMany({
+                purokId: val,
+                purok: selectedOpt ? selectedOpt.label : '',
+              });
+            }}
             options={sitioOptions}
             required
           />
