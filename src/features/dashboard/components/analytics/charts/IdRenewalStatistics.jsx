@@ -40,42 +40,13 @@ const options = {
   },
 };
 
-// Real data: analyticsData.eidRenewal = { labels: string[], data: number[] }
-// For daily/weekly dateRange, the DB doesn't have the granularity — keep original mocks.
 const getData = (filters, analyticsData) => {
-  const dateRange = filters?.dateRange || 'last30';
+  let labels = [];
+  let data = [];
 
-  // Use real monthly data for last30 (default) and any non-daily/weekly range
-  if (analyticsData?.eidRenewal && dateRange !== 'daily' && dateRange !== 'weekly') {
-    return {
-      labels: analyticsData.eidRenewal.labels,
-      datasets: [
-        {
-          data: analyticsData.eidRenewal.data,
-          borderColor: '#22c55e',
-          backgroundColor: 'rgba(34, 197, 94, 0.1)',
-          borderWidth: 2,
-          fill: true,
-          pointBackgroundColor: '#22c55e',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 6,
-        },
-      ],
-    };
-  }
-
-  // Mock fallback for daily / weekly (no DB columns for this granularity)
-  let labels, data;
-  if (dateRange === 'daily') {
-    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    data   = [12, 15, 18, 14, 16, 13, 10];
-  } else if (dateRange === 'weekly') {
-    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-    data   = [45, 52, 48, 55];
-  } else {
-    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    data   = [45, 38, 52, 58, 48, 58];
+  if (analyticsData?.eidRenewal) {
+    labels = analyticsData.eidRenewal.labels;
+    data = analyticsData.eidRenewal.data;
   }
 
   return {

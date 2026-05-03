@@ -24,20 +24,12 @@ const options = {
   },
 };
 
-// Real data: analyticsData.eidStatus = { active: number, inactive: number } (percentages)
-// Falls back to original mock formula when analyticsData is not yet loaded.
 const getData = (filters, analyticsData) => {
-  let active, inactive;
+  let active = 0, inactive = 0;
 
   if (analyticsData?.eidStatus) {
     active   = analyticsData.eidStatus.active;
     inactive = analyticsData.eidStatus.inactive;
-  } else {
-    const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
-    const yearOffset = year - new Date().getFullYear();
-    const baseActive = 92.28;
-    active   = Math.max(85, Math.min(98, baseActive + yearOffset * 0.2));
-    inactive = 100 - active;
   }
 
   return {

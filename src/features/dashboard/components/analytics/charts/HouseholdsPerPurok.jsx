@@ -61,11 +61,9 @@ function barStylesForCounts(counts) {
   return { backgroundColor, borderColor, borderWidth };
 }
 
-// Real data: analyticsData.householdsPerPurok = [{ name, count }, ...]
-// Falls back to original mock data when analyticsData is not yet loaded.
 const getData = (filters, analyticsData) => {
-  let labels;
-  let data;
+  let labels = [];
+  let data = [];
 
   if (analyticsData?.householdsPerPurok?.length) {
     const ordered = [...analyticsData.householdsPerPurok].sort((a, b) =>
@@ -73,12 +71,6 @@ const getData = (filters, analyticsData) => {
     );
     labels = ordered.map((p) => p.name);
     data   = ordered.map((p) => p.count);
-  } else {
-    const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
-    const yearOffset = year - new Date().getFullYear();
-    const baseData   = [130, 155, 120, 140, 110, 157, 128];
-    labels = ['Sitio 1', 'Sitio 2', 'Sitio 3', 'Sitio 4', 'Sitio 5', 'Sitio 6', 'Sitio 7'];
-    data   = baseData.map((val) => Math.max(0, Math.round(val + yearOffset * 5)));
   }
 
   const barStyle = barStylesForCounts(data);

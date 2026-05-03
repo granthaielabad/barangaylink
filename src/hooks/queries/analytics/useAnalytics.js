@@ -206,6 +206,6 @@ export function useAnalytics(year) {
   return useQuery({
     queryKey:  ['analytics', year],
     queryFn:   () => fetchAnalyticsData(year),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 0,
   });
 }

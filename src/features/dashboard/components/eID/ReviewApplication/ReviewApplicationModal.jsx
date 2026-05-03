@@ -398,10 +398,18 @@ function Step3Content({ app }) {
 }
 
 function Step4Content({ app, issuedEidNumber, setIssuedEidNumber }) {
+  useEffect(() => {
+    if (!issuedEidNumber) {
+      const year  = new Date().getFullYear();
+      const sequence  = Math.floor(10000 + Math.random() * 90000);
+      setIssuedEidNumber(`BRGY-${year}-${sequence}`);
+    }
+  }, [issuedEidNumber, setIssuedEidNumber]);
+
   const regenerate = () => {
     const year  = new Date().getFullYear();
     const sequence  = Math.floor(10000 + Math.random() * 90000);
-    setIssuedEidNumber(`BRY-${year}-${sequence}`);
+    setIssuedEidNumber(`BRGY-${year}-${sequence}`);
     toast.success('New eID number generated.');
   };
   return (
@@ -414,7 +422,7 @@ function Step4Content({ app, issuedEidNumber, setIssuedEidNumber }) {
         <FiCreditCard className="w-14 h-14 text-emerald-500 mb-4 mx-auto" />
         <h4 className="text-lg font-bold text-gray-900 mb-2">Generated eID Number</h4>
         <div className="bg-[#F1FDF3] border border-[#C6F6D5] py-3 px-8 rounded-lg inline-block mb-4">
-          <span className="text-3xl font-black text-[#22543D] tracking-widest font-mono">{issuedEidNumber || '2026-123-12'}</span>
+          <span className="text-3xl font-black text-[#22543D] tracking-widest font-mono">{issuedEidNumber || 'Generating...'}</span>
         </div>
         <p className="text-[11px] text-gray-400 max-w-xs mx-auto mb-6">This unique identifier will be permanently associated with {fullName(app)}</p>
         <button onClick={regenerate} className="px-6 py-2 border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors">Regenerate eID</button>
@@ -423,7 +431,7 @@ function Step4Content({ app, issuedEidNumber, setIssuedEidNumber }) {
         <p className="text-[11px] font-bold text-gray-500 uppercase mb-4">eID Details</p>
         <div className="grid grid-cols-2 gap-y-6 text-[13px]">
           <div><p className="text-[10px] text-gray-400 font-bold mb-1">Resident Name</p><p className="font-bold text-gray-900">{fullName(app)}</p></div>
-          <div><p className="text-[10px] text-gray-400 font-bold mb-1">eID Number</p><p className="font-bold text-gray-900">{issuedEidNumber || '2026-123-12'}</p></div>
+          <div><p className="text-[10px] text-gray-400 font-bold mb-1">eID Number</p><p className="font-bold text-gray-900">{issuedEidNumber || 'Generating...'}</p></div>
           <div><p className="text-[10px] text-gray-400 font-bold mb-1">Issue Date</p><p className="font-bold text-gray-900">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p></div>
           <div><p className="text-[10px] text-gray-400 font-bold mb-1">Status</p><p className="font-bold text-gray-900">Active</p></div>
         </div>

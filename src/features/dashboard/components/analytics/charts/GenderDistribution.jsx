@@ -24,20 +24,12 @@ const options = {
   },
 };
 
-// Real data: analyticsData.gender = { male: number, female: number }
-// Falls back to original mock formula when analyticsData is not yet loaded.
 const getData = (filters, analyticsData) => {
-  let male, female;
+  let male = 0, female = 0;
 
   if (analyticsData?.gender) {
     male   = analyticsData.gender.male;
     female = analyticsData.gender.female;
-  } else {
-    const year       = parseInt(filters?.year || new Date().getFullYear(), 10);
-    const yearOffset = year - new Date().getFullYear();
-    const baseMale   = 49.6;
-    male   = Math.max(45, Math.min(55, baseMale + yearOffset * 0.1));
-    female = 100 - male;
   }
 
   return {
