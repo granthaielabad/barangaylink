@@ -244,7 +244,7 @@ export async function getMyHousehold() {
     .from('households')
     .select(`
       id, household_no, house_no, street, ownership_type,
-      monthly_income, created_at,
+      monthly_income, created_at, status,
       puroks ( id, name )
     `)
     .eq('id', resident.household_id)

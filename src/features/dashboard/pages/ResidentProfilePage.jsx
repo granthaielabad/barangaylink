@@ -21,6 +21,10 @@ function age(dob) {
 }
 
 function val(v) { return v || '—'; }
+function cap(s) {
+  if (!s) return '—';
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
 
 /** Full date label e.g. "May 2, 2026" for signature attestations */
 function fmtSignedLong(dateStr) {
@@ -308,8 +312,8 @@ export default function ResidentProfilePage() {
           <FieldRow
             fields={[
               { label: 'Household No.',      value: val(household.household_no) },
-              { label: 'Ownership Type',     value: val(household.ownership_type) },
-              { label: 'Household Status',   value: val(household.status) },
+              { label: 'Ownership Type',     value: cap(household.ownership_type) },
+              { label: 'Household Status',   value: cap(household.status) },
             ]}
           />
         )}
