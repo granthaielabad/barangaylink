@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   FiUser, FiMapPin, FiHome, FiAlertCircle, FiLink,
-  FiCalendar, FiCheck, FiShield,
+  FiCalendar, FiCheck, FiShield, FiCreditCard,
 } from 'react-icons/fi';
 import { useMyResidentProfile, useMyHousehold, useLinkResidentAccount } from '../../../hooks/queries/resident/useResidentPortal';
 import SectionCard from '../components/ResidentPortal/SectionCard';

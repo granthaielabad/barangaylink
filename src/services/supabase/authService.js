@@ -4,7 +4,14 @@ import { supabase } from './client';
 export async function signIn({ email, password }) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  
   const profile = await getMyProfile(data.session.user.id);
+  
+  if (!profile.is_active) {
+    await supabase.auth.signOut();
+    throw new Error('Your account has been disabled. Please contact the administrator.');
+  }
+
   return { session: data.session, profile };
 }
 

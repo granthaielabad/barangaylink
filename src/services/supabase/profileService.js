@@ -94,23 +94,16 @@ export async function deactivateProfile(id) {
  */
 export async function deleteProfile(id) {
   // Attempt hard delete via Edge Function (requires admin key server-side)
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    const res = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-        },
-        body: JSON.stringify({ userId: id }),
-      }
-    );
-    if (res.ok) return;
-  } catch { /* fall through to soft delete */ }
+  const { data, error } = await supabase.functions.invoke('delete-user', {
+    body: { userId: id },
+  });
 
-  // Fallback: soft delete (deactivate)
-  return deactivateProfile(id);
+  if (error) {
+    // If Edge Function returns an error, throw it so the UI shows failure toast
+    throw new Error(error.message || 'Failed to delete user account');
+  }
+
+  if (data && !data.success) {
+    throw new Error(data.error || 'Failed to delete user account');
+  }
 }
