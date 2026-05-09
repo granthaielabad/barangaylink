@@ -599,6 +599,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                       setIdNumberError('');
                     }}
                     placeholder={VALID_ID_CONFIG[validIdType]?.placeholder || "Enter your ID number"}
+                    maxLength={VALID_ID_CONFIG[validIdType]?.maxLength}
                     required className={`${inputCls} ${idNumberError ? 'border-red-500 ring-1 ring-red-500' : ''}`} />
                   {idNumberError && <p className="text-[11px] text-red-600 mt-1">{idNumberError}</p>}
                 </div>

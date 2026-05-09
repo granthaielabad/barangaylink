@@ -77,6 +77,7 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
             value={value.validIdNumber ?? ''}
             onChange={(e) => update('validIdNumber', e.target.value)}
             placeholder={VALID_ID_CONFIG[value.validIdType]?.placeholder || "Enter ID number"}
+            maxLength={VALID_ID_CONFIG[value.validIdType]?.maxLength}
             className={`${inputClass} ${error ? 'border-red-500 ring-1 ring-red-500' : ''} ${isEdit ? 'bg-gray-50 cursor-not-allowed' : ''}`}
             readOnly={isEdit}
           />
