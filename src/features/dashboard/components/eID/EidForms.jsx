@@ -58,19 +58,70 @@ export default function EidForms({ value = {}, onChange, mode = 'create' }) {
   const fileInputRef = useRef(null);
   const signatureInputRef = useRef(null);
 
+  const validatePhotoImage = (dataUrl) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      let darkPixels = 0;
+      let lightPixels = 0;
+      const totalPixels = data.length / 4;
+      for (let i = 0; i < data.length; i += 4) {
+        const luminance = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+        if (luminance < 40) darkPixels++;
+        if (luminance > 240) lightPixels++;
+      }
+      const darkRatio = darkPixels / totalPixels;
+      const lightRatio = lightPixels / totalPixels;
+
+      if (darkRatio > 0.8) {
+        resolve({ ok: false, message: 'The image is too dark. Please provide a clearer photo.' });
+        return;
+      }
+      if (lightRatio > 0.8) {
+        resolve({ ok: false, message: 'The image is too bright/washed out. Please provide a clearer photo.' });
+        return;
+      }
+
+      const ratio = img.width / img.height;
+      if (ratio > 1.2 || ratio < 0.6) {
+        resolve({ ok: false, message: 'Profile photo should be in a vertical (portrait) or square orientation.' });
+        return;
+      }
+      resolve({ ok: true });
+    };
+    img.onerror = () => resolve({ ok: false, message: 'Unable to read the image file.' });
+    img.src = dataUrl;
+  });
+
   const handlePhotoChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      alert('File size must be under 2MB');
+      setPhotoError('File size must be under 2MB');
       return;
     }
     if (!['image/png', 'image/jpeg'].includes(file.type)) {
-      alert('Only PNG and JPG files are supported');
+      setPhotoError('Only PNG and JPG files are supported');
       return;
     }
     const reader = new FileReader();
-    reader.onload = (event) => update('photoUrl', event.target?.result);
+    reader.onload = async (event) => {
+      const dataUrl = event.target?.result;
+      const validation = await validatePhotoImage(dataUrl);
+      if (!validation.ok) {
+        setPhotoError(validation.message);
+        update('photoUrl', null);
+      } else {
+        setPhotoError('');
+        update('photoUrl', dataUrl);
+      }
+    };
     reader.readAsDataURL(file);
   };
 
@@ -103,6 +154,7 @@ export default function EidForms({ value = {}, onChange, mode = 'create' }) {
 
   const [signaturePreview, setSignaturePreview] = useState(null);
   const [signatureError, setSignatureError] = useState('');
+  const [photoError, setPhotoError] = useState('');
   const [duplicateEidWarning, setDuplicateEidWarning] = useState(null);
 
   const handleSelectResident = useCallback((resident) => {
@@ -288,7 +340,11 @@ export default function EidForms({ value = {}, onChange, mode = 'create' }) {
               className="hidden"
             />
           </div>
-          {mode === 'create' && value.residentId && !value.photoUrl ? (
+          {photoError ? (
+            <p className="mt-2 text-[10px] text-red-600 font-medium text-center leading-tight">
+              {photoError}
+            </p>
+          ) : mode === 'create' && value.residentId && !value.photoUrl ? (
             <p className="mt-2 text-xs text-red-500 font-medium text-center">
               Profile photo is required.
             </p>
