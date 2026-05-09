@@ -14,8 +14,7 @@ async function searchResidents(term) {
     .select(`
       id, first_name, middle_name, last_name, suffix,
       date_of_birth, sex, address_line, contact_number, email, photo_url,
-      puroks ( id, name ),
-      electronic_ids ( id, eid_number, status )
+      puroks ( id, name )
     `)
     .eq('status', 'active')
     .or(
@@ -26,8 +25,25 @@ async function searchResidents(term) {
 
   if (error) throw error;
 
-  return (data ?? []).map((r) => {
-    const existingEid = r.electronic_ids?.[0] ?? null;
+  const residents = data ?? [];
+
+  // Separate query to check which residents already have eIDs
+  const residentIds = residents.map((r) => r.id);
+  let eidMap = {};
+  
+  if (residentIds.length > 0) {
+    const { data: eids } = await supabase
+      .from('electronic_ids')
+      .select('id, resident_id, eid_number, status')
+      .in('resident_id', residentIds);
+    
+    for (const eid of (eids ?? [])) {
+      eidMap[eid.resident_id] = eid;
+    }
+  }
+
+  return residents.map((r) => {
+    const existingEid = eidMap[r.id] ?? null;
     return {
       id: r.id,
       firstName:     r.first_name,
@@ -56,7 +72,7 @@ export function useResidentSearch(term) {
     queryKey: ['residents', 'search', term],
     queryFn:  () => searchResidents(term),
     enabled:  !!term && term.trim().length >= 2,
-    staleTime: 1000 * 30,
+    staleTime: 0,
     placeholderData: [],
   });
 }

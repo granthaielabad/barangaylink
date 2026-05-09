@@ -4,7 +4,8 @@ import PersonalInformationForm from './PersonalInformationForm';
 import AddressInformationForm from './AddressInformationForm';
 import ValidIdForm from './ValidIdForm';
 import SectoralStatusForm from './SectoralStatusForm';
-import { BARANGAY } from '../../../../../core/constants';
+import { BARANGAY, VALID_ID_CONFIG } from '../../../../../core/constants';
+import toast from 'react-hot-toast';
 
 const emptyForm = {
   personal: {
@@ -107,6 +108,7 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
   );
 
   const [formData, setFormData] = useState(getInitialFormData);
+  const [idError, setIdError] = useState('');
   const panelRef = useRef(null);
 
   useEffect(() => { setFormData(getInitialFormData); }, [getInitialFormData]);
@@ -126,6 +128,17 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
   const handleSubmit = (e) => {
     e.preventDefault();
     const { personal, address, sectoral, identification, validId } = formData;
+
+    // ID Number Validation
+    if (validId.validIdType && validId.validIdNumber) {
+      const config = VALID_ID_CONFIG[validId.validIdType];
+      if (config?.pattern && !config.pattern.test(validId.validIdNumber)) {
+        setIdError(config.error);
+        toast.error(`Invalid ID format: ${config.label}`);
+        return;
+      }
+    }
+    setIdError('');
 
     onSubmit?.({
       // Personal
@@ -215,7 +228,11 @@ export default function ResidentAddEdit({ isOpen, onClose, onSubmit, initialData
             <ValidIdForm
               value={formData.validId}
               status={formData.identification.status}
-              onChange={(v) => setFormData((d) => ({ ...d, validId: v }))}
+              error={idError}
+              onChange={(v) => {
+                setFormData((d) => ({ ...d, validId: v }));
+                setIdError('');
+              }}
               onStatusChange={(val) =>
                 setFormData((d) => ({
                   ...d,

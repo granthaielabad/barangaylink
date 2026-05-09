@@ -13,6 +13,7 @@ import {
   useSubmitEidApplication,
   useSubmitEidRenewal,
 } from '../../../hooks/queries/resident/useResidentPortal';
+import { VALID_ID_CONFIG } from '../../../core/constants';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(dateStr) {
@@ -68,6 +69,12 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const [signatureError,   setSignatureError]   = useState('');
   const [signatureDirty,   setSignatureDirty]   = useState(false);
   const [canUndoSignature, setCanUndoSignature] = useState(false);
+  const [idNumberError,    setIdNumberError]    = useState('');
+  const [idFileError,      setIdFileError]      = useState('');
+  const [photoError,       setPhotoError]       = useState('');
+  const [contactNumber,    setContactNumber]    = useState('');
+  const [contactError,     setContactError]     = useState('');
+  const [email,            setEmail]            = useState('');
   const photoRef   = useRef(null);
   const validIdRef = useRef(null);
   const signatureRef = useRef(null);
@@ -77,18 +84,82 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const signatureHistoryRef = useRef([]);
 
   useEffect(() => {
+    if (resident) {
+      setContactNumber(resident.contact_number || '');
+      setEmail(resident.email || '');
+    }
+  }, [resident]);
+
+  useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  const validateImage = (dataUrl, type = 'photo') => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      let darkPixels = 0;
+      let lightPixels = 0;
+      const totalPixels = data.length / 4;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const luminance = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+        if (luminance < 40) darkPixels++;
+        if (luminance > 240) lightPixels++;
+      }
+
+      const darkRatio = darkPixels / totalPixels;
+      const lightRatio = lightPixels / totalPixels;
+
+      if (darkRatio > 0.8) {
+        resolve({ ok: false, message: 'The image is too dark. Please provide a clearer photo.' });
+        return;
+      }
+      if (lightRatio > 0.8) {
+        resolve({ ok: false, message: 'The image is too bright/washed out. Please provide a clearer photo.' });
+        return;
+      }
+
+      if (type === 'photo') {
+        const ratio = img.width / img.height;
+        if (ratio > 1.2 || ratio < 0.6) {
+          resolve({ ok: false, message: 'Profile photo should be in a vertical (portrait) or square orientation.' });
+          return;
+        }
+      }
+
+      resolve({ ok: true });
+    };
+    img.onerror = () => resolve({ ok: false, message: 'Unable to read the image file.' });
+    img.src = dataUrl;
+  });
+
   const handlePhoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { alert('File size must be under 2MB.'); return; }
-    if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPG are supported.'); return; }
+    if (file.size > 2 * 1024 * 1024) { setPhotoError('File size must be under 2MB.'); return; }
+    if (!['image/png', 'image/jpeg'].includes(file.type)) { setPhotoError('Only PNG and JPG are supported.'); return; }
+    
     const reader = new FileReader();
-    reader.onload = (ev) => setPhotoPreview(ev.target.result);
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      const validation = await validateImage(dataUrl, 'photo');
+      if (!validation.ok) {
+        setPhotoError(validation.message);
+        setPhotoPreview(null);
+      } else {
+        setPhotoPreview(dataUrl);
+        setPhotoError('');
+      }
+    };
     reader.readAsDataURL(file);
     e.target.value = '';
   };
@@ -96,11 +167,23 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const handleValidIdFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { alert('File size must be under 2MB.'); return; }
-    if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPG are supported.'); return; }
-    setValidIdFile(file);
+    if (file.size > 2 * 1024 * 1024) { setIdFileError('File size must be under 2MB.'); return; }
+    if (!['image/png', 'image/jpeg'].includes(file.type)) { setIdFileError('Only PNG and JPG are supported.'); return; }
+    
     const reader = new FileReader();
-    reader.onload = (ev) => setValidIdPreview(ev.target.result);
+    reader.onload = async (ev) => {
+      const dataUrl = ev.target.result;
+      const validation = await validateImage(dataUrl, 'id');
+      if (!validation.ok) {
+        setIdFileError(validation.message);
+        setValidIdPreview(null);
+        setValidIdFile(null);
+      } else {
+        setValidIdFile(file);
+        setValidIdPreview(dataUrl);
+        setIdFileError('');
+      }
+    };
     reader.readAsDataURL(file);
     e.target.value = '';
   };
@@ -323,6 +406,34 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
       setSignatureError('Please provide your signature before submitting.');
       return;
     }
+    if (photoError) return;
+    if (!photoPreview) {
+      setPhotoError('Please upload your profile photo.');
+      return;
+    }
+    if (contactError || (contactNumber && contactNumber.length > 0 && contactNumber.length < 11)) {
+      setContactError('Contact number must be 11 digits.');
+      return;
+    }
+    if (!validIdFile) {
+      setIdFileError('Please upload your valid ID photo.');
+      return;
+    }
+
+    // Valid ID validation
+    const config = VALID_ID_CONFIG[validIdType];
+    if (config?.pattern && !config.pattern.test(validIdNumber)) {
+      setIdNumberError(config.error);
+      return;
+    }
+    setIdNumberError('');
+
+    if (idFileError) return;
+    if (!validIdFile) {
+      setIdFileError('Please upload your valid ID photo.');
+      return;
+    }
+
     onSubmit({
       first_name:     resident?.first_name,
       middle_name:    resident?.middle_name,
@@ -331,11 +442,11 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
       date_of_birth:  resident?.date_of_birth,
       sex:            resident?.sex,
       address_line:   resident?.address_line,
-      contact_number: resident?.contact_number,
-      email:          resident?.email,
+      contact_number: contactNumber || null,
+      email:          email || null,
       id_number:      validIdNumber || null,
       photo_url:      photoPreview  || null,
-      _validIdType:   validIdType   || null,
+      _validIdType:   VALID_ID_CONFIG[validIdType]?.label || validIdType || null,
       _validIdFile:   validIdFile   || null,
       _signature:     drawnSignature || signaturePreview || null,
     });
@@ -384,6 +495,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                   <input ref={photoRef} type="file" accept="image/png,image/jpeg"
                     onChange={handlePhoto} className="hidden" />
                 </div>
+                {photoError && <p className="mt-1.5 text-[10px] text-red-600 font-medium text-center">{photoError}</p>}
                 <p className="mt-2 text-xs text-gray-400 text-center">We support PNGs and JPGs under 2MB</p>
               </div>
 
@@ -419,8 +531,42 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                 <LockedField label="Sex:" icon={FiUser} value={sex} />
               </div>
               <LockedField label="Address:" icon={FiMapPin} value={resident?.address_line} />
-              <LockedField label="Contact Number:" icon={FiPhone} value={resident?.contact_number} />
-              <LockedField label="Email Address:" icon={FiMail} value={resident?.email} />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Contact Number:</label>
+                  <div className={`flex items-center border rounded-lg overflow-hidden bg-white ${contactError ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-300'}`}>
+                    <div className={`px-4 py-2.5 border-r text-[#8C0B1A] ${contactError ? 'bg-red-50 border-red-500' : 'bg-gray-50 border-gray-300'}`}>
+                      <FiPhone className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="text"
+                      value={contactNumber}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        if (val.length <= 11) {
+                          setContactNumber(val);
+                          if (val.length === 11 || val.length === 0) setContactError('');
+                        }
+                      }}
+                      placeholder="09123456789"
+                      className="flex-1 px-4 py-2 bg-white text-gray-900 focus:outline-none"
+                    />
+                  </div>
+                  {contactError && <p className="mt-1.5 text-[11px] text-red-500 font-medium">{contactError}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address:</label>
+                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                    <div className="bg-gray-100 px-4 py-2.5 border-r border-gray-200 text-gray-400">
+                      <FiMail className="w-5 h-5" />
+                    </div>
+                    <span className="flex-1 px-4 py-2.5 bg-gray-50 text-gray-500 text-base cursor-not-allowed select-none">
+                      {email || '—'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* ── Valid ID Identification (editable) ── */}
@@ -432,21 +578,15 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Valid ID Type <span className="text-red-500">*</span>
                   </label>
-                  <select value={validIdType} onChange={(e) => setValidIdType(e.target.value)}
+                  <select value={validIdType} onChange={(e) => {
+                    setValidIdType(e.target.value);
+                    setIdNumberError('');
+                  }}
                     required className={inputCls}>
                     <option value="">Select ID Type</option>
-                    <option>PhilSys (National ID)</option>
-                    <option>Voter's ID</option>
-                    <option>Driver's License</option>
-                    <option>Passport</option>
-                    <option>SSS ID</option>
-                    <option>PhilHealth ID</option>
-                    <option>Postal ID</option>
-                    <option>UMID</option>
-                    <option>Senior Citizen ID</option>
-                    <option>PWD ID</option>
-                    <option>Barangay ID</option>
-                    <option>Other</option>
+                    {Object.entries(VALID_ID_CONFIG).map(([key, cfg]) => (
+                      <option key={key} value={key}>{cfg.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -454,9 +594,13 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                     ID Number <span className="text-red-500">*</span>
                   </label>
                   <input type="text" value={validIdNumber}
-                    onChange={(e) => setValidIdNumber(e.target.value)}
-                    placeholder="Enter your ID number"
-                    required className={inputCls} />
+                    onChange={(e) => {
+                      setValidIdNumber(e.target.value);
+                      setIdNumberError('');
+                    }}
+                    placeholder={VALID_ID_CONFIG[validIdType]?.placeholder || "Enter your ID number"}
+                    required className={`${inputCls} ${idNumberError ? 'border-red-500 ring-1 ring-red-500' : ''}`} />
+                  {idNumberError && <p className="text-[11px] text-red-600 mt-1">{idNumberError}</p>}
                 </div>
               </div>
 
@@ -466,7 +610,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                   Upload Valid ID Photo <span className="text-red-500">*</span>
                 </label>
                 <div onClick={() => validIdRef.current?.click()}
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 cursor-pointer hover:border-[#8C0B1A] transition-colors text-center">
+                  className={`border-2 border-dashed rounded-lg p-4 cursor-pointer hover:border-[#8C0B1A] transition-colors text-center ${idFileError ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}>
                   {validIdPreview ? (
                     <img src={validIdPreview} alt="Valid ID" className="h-24 mx-auto rounded object-contain" />
                   ) : (
@@ -479,6 +623,7 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                 </div>
                 <input ref={validIdRef} type="file" accept="image/png,image/jpeg"
                   onChange={handleValidIdFile} className="hidden" />
+                {idFileError && <p className="text-[11px] text-red-600 mt-1">{idFileError}</p>}
               </div>
             </div>
 

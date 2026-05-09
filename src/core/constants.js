@@ -244,3 +244,91 @@ export const BLOOD_TYPE_OPTIONS = [
   { value: 'O+',  label: 'O+' },
   { value: 'O-',  label: 'O-' },
 ];
+
+// Valid ID Configuration for Validation & Placeholders
+export const VALID_ID_CONFIG = {
+  'national_id': {
+    label: 'PhilSys (National ID)',
+    placeholder: '1234-5678-9012-3456',
+    pattern: /^\d{4}-\d{4}-\d{4}-\d{4}$|^\d{16}$/,
+    error: 'Format: 1234-5678-9012-3456 (16 digits)'
+  },
+  'voters_id': {
+    label: "Voter's ID",
+    placeholder: '1234-5678A-B1234CDE56789',
+    pattern: /^[A-Z0-9-]{10,30}$/i,
+    error: 'Invalid Voter\'s ID format'
+  },
+  'drivers_license': {
+    label: "Driver's License",
+    placeholder: 'L12-34-567890',
+    pattern: /^[A-Z]\d{2}-\d{2}-\d{6}$/i,
+    error: 'Format: LNN-NN-NNNNNN'
+  },
+  'passport': {
+    label: 'Passport',
+    placeholder: 'P1234567A',
+    pattern: /^[A-Z][0-9]{7}[A-Z]$|^[A-Z][0-9]{8}$/i,
+    error: 'Invalid Passport format'
+  },
+  'sss': {
+    label: 'SSS ID',
+    placeholder: '12-3456789-0',
+    pattern: /^\d{2}-\d{7}-\d{1}$|^\d{10}$/,
+    error: 'Format: 12-3456789-0'
+  },
+  'philhealth': {
+    label: 'PhilHealth ID',
+    placeholder: '12-345678901-2',
+    pattern: /^\d{2}-\d{9}-\d{1}$|^\d{12}$/,
+    error: 'Format: 12-345678901-2'
+  },
+  'umid': {
+    label: 'UMID',
+    placeholder: '1234-5678901-2',
+    pattern: /^\d{4}-\d{7}-\d{1}$|^\d{12}$/,
+    error: 'Format: 1234-5678901-2'
+  },
+  'tin_id': {
+    label: 'TIN ID',
+    placeholder: '123-456-789-000',
+    pattern: /^\d{3}-\d{3}-\d{3}-\d{3}$|^\d{9,12}$/,
+    error: 'Format: 123-456-789-000'
+  },
+  'postal_id': {
+    label: 'Postal ID',
+    placeholder: '123456789012',
+    pattern: /^\d{12}$/,
+    error: 'Format: 12 digits'
+  },
+  'prc_id': {
+    label: 'PRC ID',
+    placeholder: '1234567',
+    pattern: /^\d{7}$/,
+    error: 'Format: 7 digits'
+  },
+  'senior_citizen': {
+    label: 'Senior Citizen ID',
+    placeholder: '12345',
+    pattern: /^[A-Z0-9-]{3,20}$/i,
+    error: 'Invalid format'
+  },
+  'pwd_id': {
+    label: 'PWD ID',
+    placeholder: '12-3456-789-0123456',
+    pattern: /^[A-Z0-9-]{3,25}$/i,
+    error: 'Invalid format'
+  },
+  'barangay_id': {
+    label: 'Barangay ID',
+    placeholder: '12345678',
+    pattern: /^[A-Z0-9-]{3,20}$/i,
+    error: 'Invalid format'
+  },
+  'other': {
+    label: 'Other',
+    placeholder: 'Enter ID number',
+    pattern: /^.{3,50}$/,
+    error: 'Min 3 characters'
+  }
+};

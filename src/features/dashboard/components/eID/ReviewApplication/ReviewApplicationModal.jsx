@@ -183,18 +183,35 @@ function ApplicationStatusTabs({ value, onChange }) {
   );
 }
 
-function Checklist({ items }) {
+function Checklist({ items, checkedIndices, onChange }) {
   return (
     <div className="border border-gray-100 rounded-lg p-5">
-      <h5 className="text-sm font-bold text-gray-900 mb-4">Verification Checklist</h5>
+      <div className="flex items-center justify-between mb-4">
+        <h5 className="text-sm font-bold text-gray-900">Verification Checklist</h5>
+        <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded border border-gray-100">
+          {checkedIndices.length} of {items.length} Required
+        </span>
+      </div>
       <div className="space-y-3.5">
         {items.map((item, i) => (
           <label key={i} className="flex items-center gap-3 cursor-pointer group">
             <div className="relative flex items-center justify-center shrink-0">
-              <input type="checkbox" className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded-md checked:bg-[#8C0B1A] checked:border-[#8C0B1A] transition-all" />
+              <input
+                type="checkbox"
+                checked={checkedIndices.includes(i)}
+                onChange={(e) => {
+                  const next = e.target.checked
+                    ? [...checkedIndices, i]
+                    : checkedIndices.filter((idx) => idx !== i);
+                  onChange(next);
+                }}
+                className="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded-md checked:bg-[#8C0B1A] checked:border-[#8C0B1A] transition-all"
+              />
               <FiCheck className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
             </div>
-            <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">{item}</span>
+            <span className={`text-sm transition-colors ${checkedIndices.includes(i) ? 'text-gray-900' : 'text-gray-600 group-hover:text-gray-800'}`}>
+              {item}
+            </span>
           </label>
         ))}
       </div>
@@ -296,7 +313,24 @@ function ApplicantCard({ app, onReview }) {
 }
 
 // ─── Step content components ──────────────────────────────────────────────────
-function Step1Content({ app }) {
+const STEP1_ITEMS = [
+  'ID photo is clear and of good quality',
+  'All information on the ID is readable and legible',
+  'ID appears to be authentic and not expired',
+  "Photo on ID matches the applicant's submitted information",
+];
+const STEP2_ITEMS = [
+  'Name on government ID matches application information exactly',
+  'Photos appear authentic with no signs of tampering or manipulation',
+  'No red flags or inconsistencies found during the verification process',
+];
+const STEP3_ITEMS = [
+  'Address is confirmed to be within Barangay jurisdiction',
+  'Address on government ID matches the submitted application address',
+  'Address can be verified through barangay records or database',
+];
+
+function Step1Content({ app, checkedIndices, onCheckChange }) {
   const [zoomed, setZoomed] = useState(false);
   const resident    = app.residents || {};
   const validIdUrl  = app.valid_id_url || resident.valid_id_url || null;
@@ -336,7 +370,7 @@ function Step1Content({ app }) {
           <p className="text-[11px] text-gray-500 mt-2 text-center">{validIdType} - {app.id_number || '—'}</p>
         </div>
       </div>
-      <Checklist items={['ID photo is clear and of good quality','All information on the ID is readable and legible','ID appears to be authentic and not expired',"Photo on ID matches the applicant's submitted information"]} />
+      <Checklist items={STEP1_ITEMS} checkedIndices={checkedIndices} onChange={onCheckChange} />
       {zoomed && validIdUrl && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-10 cursor-zoom-out" onClick={() => setZoomed(false)}>
           <img src={validIdUrl} alt="Valid ID Zoomed" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
@@ -348,7 +382,7 @@ function Step1Content({ app }) {
   );
 }
 
-function Step2Content({ app }) {
+function Step2Content({ app, checkedIndices, onCheckChange }) {
   const resident = app.residents || {};
   return (
     <div className="space-y-6">
@@ -361,19 +395,21 @@ function Step2Content({ app }) {
         <div className="grid grid-cols-3 gap-y-6 gap-x-8 text-[13px]">
           <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Full Name</p><p className="font-bold text-gray-900 truncate">{fullName(app)}</p></div>
           <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Resident Number</p><p className="font-bold text-gray-900">{resident.resident_no || '—'}</p></div>
+          <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Contact Number</p><p className="font-bold text-gray-900">{app.contact_number || resident.contact_number || '—'}</p></div>
+          <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Email Address</p><p className="font-bold text-gray-900 truncate">{app.email || resident.email || '—'}</p></div>
           <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Government ID Type</p><p className="font-bold text-gray-900">{app.valid_id_type || resident.valid_id_type || '—'}</p></div>
+          <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Government ID Number</p><p className="font-bold text-gray-900">{app.id_number || '—'}</p></div>
           <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Address</p><p className="font-bold text-gray-900 truncate">{app.address_line || '—'}</p></div>
           <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Civil Status</p><p className="font-bold text-gray-900">{resident.civil_status ? resident.civil_status.charAt(0).toUpperCase() + resident.civil_status.slice(1) : 'Single'}</p></div>
-          <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Government ID Number</p><p className="font-bold text-gray-900">{app.id_number || '—'}</p></div>
           <div><p className="text-[10px] text-[#48BB78] font-bold mb-1">Date of Birth</p><p className="font-bold text-gray-900">{fmt(app.date_of_birth)}</p></div>
         </div>
       </div>
-      <Checklist items={['Name on government ID matches application information exactly','Photos appear authentic with no signs of tampering or manipulation','No red flags or inconsistencies found during the verification process']} />
+      <Checklist items={STEP2_ITEMS} checkedIndices={checkedIndices} onChange={onCheckChange} />
     </div>
   );
 }
 
-function Step3Content({ app }) {
+function Step3Content({ app, checkedIndices, onCheckChange }) {
   return (
     <div className="space-y-6">
       <div className="bg-[#EBF5FF] border border-[#BEE3F8] p-4 rounded-lg flex gap-3">
@@ -392,7 +428,7 @@ function Step3Content({ app }) {
           <p className="font-bold text-gray-700 leading-relaxed text-[13px]">{app.address_line || '—'}</p>
         </div>
       </div>
-      <Checklist items={['Address is confirmed to be within Barangay jurisdiction','Address on government ID matches the submitted application address','Address can be verified through barangay records or database']} />
+      <Checklist items={STEP3_ITEMS} checkedIndices={checkedIndices} onChange={onCheckChange} />
     </div>
   );
 }
@@ -491,6 +527,7 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
   const [currentStep,     setCurrentStep]     = useState(1);
   const [selectedApp,     setSelectedApp]     = useState(null);
   const [issuedEidNumber, setIssuedEidNumber] = useState(null);
+  const [checklistState,  setChecklistState]  = useState({}); // { step: [indices] }
   const [isIssuing,       setIsIssuing]       = useState(false);
   const [search,          setSearch]          = useState('');
   // Default to 'under_review' — that's the first actionable inbox
@@ -527,6 +564,7 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
     setCurrentStep(1);
     setSelectedApp(null);
     setIssuedEidNumber(null);
+    setChecklistState({});
     setIsIssuing(false);
   };
 
@@ -536,6 +574,7 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
     setSelectedApp(app);
     setIssuedEidNumber(null);
     setIsIssuing(false);
+    setChecklistState({}); // Reset checklist when starting a new review or resuming
     setCurrentStep(app.current_step || 1);
     setView('review');
     // Applications already start as under_review from the DB default.
@@ -548,6 +587,19 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
   // Step 5 → 'Approve & Notify' → status becomes 'approved', eID issued
   const handleNext = () => {
     if (currentStep >= 5) return;
+
+    // Checklist Validation
+    const checks = checklistState[currentStep] || [];
+    let requiredCount = 0;
+    if (currentStep === 1) requiredCount = STEP1_ITEMS.length;
+    else if (currentStep === 2) requiredCount = STEP2_ITEMS.length;
+    else if (currentStep === 3) requiredCount = STEP3_ITEMS.length;
+
+    if (checks.length < requiredCount) {
+      toast.error('Please complete the verification checklist before proceeding.');
+      return;
+    }
+
     const nextStep = currentStep + 1;
     setCurrentStep(nextStep);
 
@@ -743,9 +795,27 @@ export default function ReviewApplicationModal({ isOpen, onClose }) {
 
             {/* Step content */}
             <div className="flex-1 overflow-y-auto px-8 py-8 bg-[#F8FAF8]">
-              {currentStep === 1 && <Step1Content app={selectedApp} />}
-              {currentStep === 2 && <Step2Content app={selectedApp} />}
-              {currentStep === 3 && <Step3Content app={selectedApp} />}
+              {currentStep === 1 && (
+                <Step1Content
+                  app={selectedApp}
+                  checkedIndices={checklistState[1] || []}
+                  onCheckChange={(val) => setChecklistState((s) => ({ ...s, 1: val }))}
+                />
+              )}
+              {currentStep === 2 && (
+                <Step2Content
+                  app={selectedApp}
+                  checkedIndices={checklistState[2] || []}
+                  onCheckChange={(val) => setChecklistState((s) => ({ ...s, 2: val }))}
+                />
+              )}
+              {currentStep === 3 && (
+                <Step3Content
+                  app={selectedApp}
+                  checkedIndices={checklistState[3] || []}
+                  onCheckChange={(val) => setChecklistState((s) => ({ ...s, 3: val }))}
+                />
+              )}
               {currentStep === 4 && <Step4Content app={selectedApp} issuedEidNumber={issuedEidNumber} setIssuedEidNumber={setIssuedEidNumber} />}
               {currentStep === 5 && <Step5Content app={selectedApp} issuedEidNumber={issuedEidNumber} />}
             </div>

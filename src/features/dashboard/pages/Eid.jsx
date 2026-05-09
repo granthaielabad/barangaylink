@@ -1,15 +1,16 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import DashboardHeader from '../components/DashboardHeader';
 import DashboardSidebar from '../components/DashboardSidebar';
 import { EidOverview, EidCard, EidAddEditModal, ReviewApplicationModal } from '../components/eID';
 import { SearchBox, SortFilter, OrderFilter, Pagination, DeactiveModal, DeleteModal, ActivateModal } from '../../../shared';
-import { useEids, useEidStats, useMutateEid, useEidApplicationStats } from '../../../hooks/queries/eid/useEids';
+import { useEids, useEidStats, useMutateEid, useEidApplicationStats, eidKeys } from '../../../hooks/queries/eid/useEids';
 import { useEidFilters } from '../../../store/filterStore';
 import { useAuth } from '../../../hooks/auth/useAuth';
 import { useAuthStore } from '../../../store/authStore';
 import { signOut } from '../../../services/supabase/authService';
-import { uploadResidentPhoto } from '../../../services/supabase/residentService';
+import { uploadResidentPhoto, uploadResidentSignature, updateResident } from '../../../services/supabase/residentService';
 import { SORT_FIELDS } from '../../../core/constants';
 import toast from 'react-hot-toast';
 
@@ -24,6 +25,7 @@ export default function Eid() {
   const [reviewModalOpen,     setReviewModalOpen]     = useState(false);
 
   const navigate  = useNavigate();
+  const qc = useQueryClient();
   const { profile } = useAuth();
   const clearAuth = useAuthStore((s) => s.clearAuth);
 
@@ -199,24 +201,57 @@ export default function Eid() {
       <EidAddEditModal
         isOpen={eidFormModalOpen}
         onClose={() => { setEidFormModalOpen(false); setSelectedEid(null); }}
-        onSubmit={async ({ residentId, hasEid, eidStatus, photoUrl }) => {
-          if (hasEid && eidStatus === 'active') {
+        onSubmit={async ({ residentId, hasEid, eidStatus, photoUrl, contactNumber, email, signatureFile }) => {
+          if (eidFormMode === 'create' && hasEid && eidStatus === 'active') {
             toast.error('This resident already has an active eID.');
             return;
           }
           try {
-            await issue.mutateAsync(residentId);
-            if (photoUrl) {
+            // 1. Update basic resident info (contact/email) if changed
+            await updateResident(residentId, { 
+              contact_number: contactNumber, 
+              email: email 
+            });
+
+            // 2. Issue new eID ONLY if in create mode
+            if (eidFormMode === 'create') {
+              await issue.mutateAsync(residentId);
+            }
+
+            // 3. Update photo if provided and changed (is a data URL)
+            if (photoUrl && photoUrl.startsWith('data:')) {
               try {
                 await uploadResidentPhoto(residentId, photoUrl);
               } catch (photoErr) {
-                toast.error('eID issued but photo upload failed. You can re-upload later.');
+                toast.error('Info updated but photo upload failed.');
                 console.error('Photo upload error:', photoErr);
               }
             }
+
+            // 4. Update signature if provided
+            if (signatureFile) {
+              try {
+                await uploadResidentSignature(residentId, signatureFile);
+              } catch (sigErr) {
+                toast.error('Info updated but signature upload failed.');
+                console.error('Signature upload error:', sigErr);
+              }
+            }
+
+            qc.invalidateQueries({ queryKey: eidKeys.all });
+            
+            if (eidFormMode === 'edit') {
+              toast.success('eID information updated.');
+            } else {
+              toast.success('eID issued successfully.');
+            }
+
             setEidFormModalOpen(false);
             setSelectedEid(null);
-          } catch { /* already toasted by mutation */ }
+          } catch (err) {
+            console.error('Submit error:', err);
+            toast.error(err.message || 'Failed to save changes.');
+          }
         }}
         initialData={selectedEid}
         mode={eidFormMode}
