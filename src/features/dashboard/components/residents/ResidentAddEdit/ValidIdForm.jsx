@@ -2,24 +2,12 @@ import { useRef } from 'react';
 import { PiIdentificationCardLight } from 'react-icons/pi';
 import { HiOutlineArrowUpTray } from 'react-icons/hi2';
 import { FormSelect } from '../../../../../shared';
-import { RESIDENT_STATUS_FORM_OPTIONS } from '../../../../../core/constants';
+import { RESIDENT_STATUS_FORM_OPTIONS, VALID_ID_CONFIG } from '../../../../../core/constants';
 
-const ID_TYPE_OPTIONS = [
-  { value: 'national_id',    label: "National ID" },
-  { value: 'passport',       label: "Passport" },
-  { value: 'drivers_license',label: "Driver's License" },
-  { value: 'sss',            label: "SSS ID" },
-  { value: 'philhealth',     label: "PhilHealth ID" },
-  { value: 'umid',           label: "UMID" },
-  { value: 'voters_id',      label: "Voter's ID" },
-  { value: 'postal_id',      label: "Postal ID" },
-  { value: 'prc_id',         label: "PRC ID" },
-  { value: 'tin_id',         label: "TIN ID" },
-  { value: 'senior_citizen', label: "Senior Citizen ID" },
-  { value: 'pwd_id',         label: "PWD ID" },
-  { value: 'barangay_id',    label: "Barangay ID" },
-  { value: 'other',          label: "Other" },
-];
+const ID_TYPE_OPTIONS = Object.entries(VALID_ID_CONFIG).map(([key, cfg]) => ({
+  value: key,
+  label: cfg.label
+}));
 
 const MAX_SIZE_MB  = 2;
 const MAX_SIZE_B   = MAX_SIZE_MB * 1024 * 1024;
@@ -28,7 +16,8 @@ const ACCEPT_TYPES = 'image/jpeg,image/png,image/webp,application/pdf';
 const inputClass =
   'w-full px-4 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-base placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8C0B1A]/30 focus:border-[#8C0B1A]';
 
-export default function ValidIdForm({ value = {}, onChange, status = 'active', onStatusChange }) {
+export default function ValidIdForm({ value = {}, onChange, status = 'active', onStatusChange, error, mode = 'create' }) {
+  const isEdit = mode === 'edit';
   const fileInputRef = useRef(null);
   const signatureInputRef = useRef(null);
 
@@ -73,6 +62,7 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
           value={value.validIdType ?? ''}
           onChange={(val) => update('validIdType', val)}
           options={ID_TYPE_OPTIONS}
+          disabled={isEdit}
         />
       </div>
 
@@ -86,9 +76,11 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
             type="text"
             value={value.validIdNumber ?? ''}
             onChange={(e) => update('validIdNumber', e.target.value)}
-            placeholder="Enter ID number"
-            className={inputClass}
+            placeholder={VALID_ID_CONFIG[value.validIdType]?.placeholder || "Enter ID number"}
+            className={`${inputClass} ${error ? 'border-red-500 ring-1 ring-red-500' : ''} ${isEdit ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+            readOnly={isEdit}
           />
+          {error && <p className="text-[11px] text-red-600 mt-1 font-medium">{error}</p>}
         </div>
 
         <div>
@@ -104,34 +96,46 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
         </div>
       </div>
 
-      {/* Upload zone */}
+      {/* Upload zone / Display existing ID */}
       <div>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => fileInputRef.current?.click()}
-          onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={onDrop}
-          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#8C0B1A]/50 hover:bg-[#F1F7F2] transition-colors cursor-pointer py-7 px-4 text-center"
-        >
-          <HiOutlineArrowUpTray className="w-6 h-6 text-gray-400" />
-          {fileName ? (
-            <p className="text-sm text-[#8C0B1A] font-medium">{fileName}</p>
-          ) : (
-            <>
-              <p className="text-sm font-medium text-gray-700">
-                Upload Valid ID
-              </p>
-              <p className="text-xs text-gray-400">
-                Click to browse (Max to {MAX_SIZE_MB}MB)
-              </p>
-            </>
-          )}
-        </div>
-        <p className="mt-1.5 text-xs text-gray-400">
-          Clear photo showing ID details and address
-        </p>
+        {isEdit && value.validIdUrl ? (
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-gray-500 uppercase">Existing Valid ID Photo</label>
+            <div className="relative group rounded-lg overflow-hidden border border-gray-200 bg-gray-50 max-h-60 flex justify-center">
+              <img src={value.validIdUrl} alt="Valid ID" className="max-h-full object-contain" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+            </div>
+          </div>
+        ) : (
+          <>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={onDrop}
+              className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#8C0B1A]/50 hover:bg-[#F1F7F2] transition-colors cursor-pointer py-7 px-4 text-center"
+            >
+              <HiOutlineArrowUpTray className="w-6 h-6 text-gray-400" />
+              {fileName ? (
+                <p className="text-sm text-[#8C0B1A] font-medium">{fileName}</p>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-gray-700">
+                    Upload Valid ID
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Click to browse (Max to {MAX_SIZE_MB}MB)
+                  </p>
+                </>
+              )}
+            </div>
+            <p className="mt-1.5 text-xs text-gray-400">
+              Clear photo showing ID details and address
+            </p>
+          </>
+        )}
 
         <input
           ref={fileInputRef}
@@ -147,23 +151,33 @@ export default function ValidIdForm({ value = {}, onChange, status = 'active', o
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
           Resident's Signature
         </label>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => signatureInputRef.current?.click()}
-          onKeyDown={(e) => e.key === 'Enter' && signatureInputRef.current?.click()}
-          className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#8C0B1A]/50 hover:bg-[#F1F7F2] transition-colors cursor-pointer py-4 px-4 text-center"
-        >
-          <HiOutlineArrowUpTray className="w-5 h-5 text-gray-400" />
-          {signatureName ? (
-            <p className="text-sm text-[#8C0B1A] font-medium">{signatureName}</p>
-          ) : (
-            <p className="text-sm font-medium text-gray-700">Upload Signature Image</p>
-          )}
-        </div>
-        <p className="mt-1.5 text-xs text-gray-400 italic">
-          Clear handwritten signature on a plain white background
-        </p>
+        
+        {isEdit && value.signatureUrl ? (
+          <div className="flex justify-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <img src={value.signatureUrl} alt="Signature" className="h-20 object-contain mix-blend-multiply" />
+          </div>
+        ) : (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => signatureInputRef.current?.click()}
+            onKeyDown={(e) => e.key === 'Enter' && signatureInputRef.current?.click()}
+            className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#8C0B1A]/50 hover:bg-[#F1F7F2] transition-colors cursor-pointer py-4 px-4 text-center"
+          >
+            <HiOutlineArrowUpTray className="w-5 h-5 text-gray-400" />
+            {signatureName ? (
+              <p className="text-sm text-[#8C0B1A] font-medium">{signatureName}</p>
+            ) : (
+              <p className="text-sm font-medium text-gray-700">Upload Signature Image</p>
+            )}
+          </div>
+        )}
+        
+        {!isEdit && (
+          <p className="mt-1.5 text-xs text-gray-400 italic">
+            Clear handwritten signature on a plain white background
+          </p>
+        )}
 
         <input
           ref={signatureInputRef}

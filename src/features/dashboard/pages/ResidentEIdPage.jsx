@@ -13,6 +13,7 @@ import {
   useSubmitEidApplication,
   useSubmitEidRenewal,
 } from '../../../hooks/queries/resident/useResidentPortal';
+import { VALID_ID_CONFIG } from '../../../core/constants';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 function fmt(dateStr) {
@@ -68,6 +69,9 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const [signatureError,   setSignatureError]   = useState('');
   const [signatureDirty,   setSignatureDirty]   = useState(false);
   const [canUndoSignature, setCanUndoSignature] = useState(false);
+  const [validIdError,     setValidIdError]     = useState('');
+  const [contactNumber,    setContactNumber]    = useState('');
+  const [email,            setEmail]            = useState('');
   const photoRef   = useRef(null);
   const validIdRef = useRef(null);
   const signatureRef = useRef(null);
@@ -75,6 +79,13 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
   const isDrawingRef = useRef(false);
   const lastPointRef = useRef({ x: 0, y: 0 });
   const signatureHistoryRef = useRef([]);
+
+  useEffect(() => {
+    if (resident) {
+      setContactNumber(resident.contact_number || '');
+      setEmail(resident.email || '');
+    }
+  }, [resident]);
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -323,6 +334,15 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
       setSignatureError('Please provide your signature before submitting.');
       return;
     }
+
+    // Valid ID validation
+    const config = VALID_ID_CONFIG[validIdType];
+    if (config?.pattern && !config.pattern.test(validIdNumber)) {
+      setValidIdError(config.error);
+      return;
+    }
+    setValidIdError('');
+
     onSubmit({
       first_name:     resident?.first_name,
       middle_name:    resident?.middle_name,
@@ -331,11 +351,11 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
       date_of_birth:  resident?.date_of_birth,
       sex:            resident?.sex,
       address_line:   resident?.address_line,
-      contact_number: resident?.contact_number,
-      email:          resident?.email,
+      contact_number: contactNumber || null,
+      email:          email || null,
       id_number:      validIdNumber || null,
       photo_url:      photoPreview  || null,
-      _validIdType:   validIdType   || null,
+      _validIdType:   VALID_ID_CONFIG[validIdType]?.label || validIdType || null,
       _validIdFile:   validIdFile   || null,
       _signature:     drawnSignature || signaturePreview || null,
     });
@@ -419,8 +439,39 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                 <LockedField label="Sex:" icon={FiUser} value={sex} />
               </div>
               <LockedField label="Address:" icon={FiMapPin} value={resident?.address_line} />
-              <LockedField label="Contact Number:" icon={FiPhone} value={resident?.contact_number} />
-              <LockedField label="Email Address:" icon={FiMail} value={resident?.email} />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Contact Number:</label>
+                  <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
+                    <div className="bg-gray-50 px-4 py-2.5 border-r border-gray-300 text-[#8C0B1A]">
+                      <FiPhone className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="text"
+                      value={contactNumber}
+                      onChange={(e) => setContactNumber(e.target.value)}
+                      placeholder="Enter contact number"
+                      className="flex-1 px-4 py-2 bg-white text-gray-900 focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address:</label>
+                  <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden bg-white">
+                    <div className="bg-gray-50 px-4 py-2.5 border-r border-gray-300 text-[#8C0B1A]">
+                      <FiMail className="w-5 h-5" />
+                    </div>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter email address"
+                      className="flex-1 px-4 py-2 bg-white text-gray-900 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* ── Valid ID Identification (editable) ── */}
@@ -432,21 +483,15 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
                     Valid ID Type <span className="text-red-500">*</span>
                   </label>
-                  <select value={validIdType} onChange={(e) => setValidIdType(e.target.value)}
+                  <select value={validIdType} onChange={(e) => {
+                    setValidIdType(e.target.value);
+                    setValidIdError('');
+                  }}
                     required className={inputCls}>
                     <option value="">Select ID Type</option>
-                    <option>PhilSys (National ID)</option>
-                    <option>Voter's ID</option>
-                    <option>Driver's License</option>
-                    <option>Passport</option>
-                    <option>SSS ID</option>
-                    <option>PhilHealth ID</option>
-                    <option>Postal ID</option>
-                    <option>UMID</option>
-                    <option>Senior Citizen ID</option>
-                    <option>PWD ID</option>
-                    <option>Barangay ID</option>
-                    <option>Other</option>
+                    {Object.entries(VALID_ID_CONFIG).map(([key, cfg]) => (
+                      <option key={key} value={key}>{cfg.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -454,9 +499,13 @@ function ApplyModal({ resident, onClose, onSubmit, isPending }) {
                     ID Number <span className="text-red-500">*</span>
                   </label>
                   <input type="text" value={validIdNumber}
-                    onChange={(e) => setValidIdNumber(e.target.value)}
-                    placeholder="Enter your ID number"
-                    required className={inputCls} />
+                    onChange={(e) => {
+                      setValidIdNumber(e.target.value);
+                      setValidIdError('');
+                    }}
+                    placeholder={VALID_ID_CONFIG[validIdType]?.placeholder || "Enter your ID number"}
+                    required className={`${inputCls} ${validIdError ? 'border-red-500 ring-1 ring-red-500' : ''}`} />
+                  {validIdError && <p className="text-[11px] text-red-600 mt-1">{validIdError}</p>}
                 </div>
               </div>
 

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { IoMdAdd } from 'react-icons/io';
 import EidForms from './EidForms';
-import ValidIdForm from '../residents/ResidentAddEdit/ValidIdForm';
 
 const emptyForm = {
   residentId:    '',
@@ -19,9 +18,8 @@ const emptyForm = {
   hasEid:        false,
   eidStatus:     null,
   eidNumber:     null,
-  validIdType:   '',
-  validIdNumber: '',
-  validIdFile:   null,
+  signatureUrl:  null,
+  signatureFile: null,
 };
 
 function buildEditForm(raw) {
@@ -45,9 +43,8 @@ function buildEditForm(raw) {
     hasEid:        true,
     eidStatus:     raw.status       ?? null,
     eidNumber:     raw.eid_number   ?? null,
-    validIdType:   r.valid_id_type  ?? '',
-    validIdNumber: r.id_number      ?? '',
-    validIdFile:   null,
+    signatureUrl:  r.signature_url  ?? null,
+    signatureFile: null,
   };
 }
 
@@ -89,9 +86,9 @@ export default function EidModal({
       hasEid:        formData.hasEid,
       eidStatus:     formData.eidStatus,
       photoUrl:      formData.photoUrl      ?? null,
-      validIdType:   formData.validIdType   || null,
-      validIdNumber: formData.validIdNumber || null,
-      validIdFile:   formData.validIdFile   ?? null,
+      contactNumber: formData.contactNumber || null,
+      email:         formData.email         || null,
+      signatureFile: formData.signatureFile ?? null,
     });
     setFormData(emptyForm);
     onClose?.();
@@ -99,7 +96,11 @@ export default function EidModal({
 
   if (!isOpen) return null;
 
-  const canSubmit = !!formData.residentId && !(formData.hasEid && formData.eidStatus === 'active');
+  const isContactValid = !formData.contactNumber || formData.contactNumber.length === 11;
+  const hasPhoto = mode === 'edit' ? true : !!formData.photoUrl;
+  const hasSignature = mode === 'edit' ? true : !!formData.signatureFile;
+  const canSubmit = !!formData.residentId && isContactValid && hasPhoto && hasSignature && (mode === 'edit' || !(formData.hasEid && formData.eidStatus === 'active'));
+
 
   return (
     <div
@@ -136,10 +137,6 @@ export default function EidModal({
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 py-6 space-y-8">
             <EidForms value={formData} onChange={setFormData} mode={mode} />
-            <ValidIdForm
-              value={{ validIdType: formData.validIdType, validIdNumber: formData.validIdNumber, validIdFile: formData.validIdFile }}
-              onChange={(v) => setFormData((d) => ({ ...d, ...v }))}
-            />
           </div>
 
           <div className="flex justify-end gap-3 px-6 py-4 bg-[#F1F7F2] border-t border-gray-200">

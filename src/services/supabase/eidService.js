@@ -9,7 +9,7 @@ const DEFAULT_SELECT = `
   resident_id,
   residents (
     id, first_name, middle_name, last_name, suffix,
-    photo_url, signature_url, contact_number, date_of_birth, sex, blood_type, civil_status,
+    photo_url, signature_url, valid_id_url, contact_number, email, date_of_birth, sex, blood_type, civil_status,
     address_line,
     puroks ( id, name )
   )
