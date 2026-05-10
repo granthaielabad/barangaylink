@@ -47,7 +47,7 @@ export function useResident(id) {
 
 export function useMutateResident() {
   const qc = useQueryClient();
-  const invalidate = () => qc.invalidateQueries({ queryKey: residentKeys.lists() });
+  const invalidate = () => qc.invalidateQueries({ queryKey: residentKeys.all });
 
   const create = useMutation({
     mutationFn: createResident,

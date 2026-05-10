@@ -8,8 +8,8 @@ import { supabase } from '../../../services/supabase/client';
 async function fetchActiveResidents() {
   const { data, error } = await supabase
     .from('residents')
-    .select('id, resident_no, first_name, middle_name, last_name, suffix')
-    .eq('status', 'active')
+    .select('id, resident_no, first_name, middle_name, last_name, suffix, status')
+    .neq('status', 'archived')
     .order('last_name')
     .order('first_name');
   if (error) throw error;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { sendOtp, sendSignupOtp } from '../../../services/supabase/authService';
+import { isEmailRegistered } from '../../../services/supabase/isEmailRegistered';
 import toast from 'react-hot-toast';
 
 const inputClass =
@@ -45,16 +46,28 @@ export default function EmailCredentialsForm({
 
     setIsSendingOtp(true);
     try {
-      // Use the correct OTP function depending on the flow
       if (variant === 'signup') {
+        // Check email if already registered
+        const exists = await isEmailRegistered(email.trim());
+        if (exists) {
+          setEmailError('This email address is already registered. Please login instead.');
+          setIsSendingOtp(false);
+          return;
+        }
         await sendSignupOtp(email.trim());
       } else {
+        // For forgot password, we don't block if exists (sendOtp with shouldCreateUser: false handles it)
         await sendOtp(email.trim());
       }
       toast.success(`Verification code sent to ${email}`);
       setOtpCooldown(OTP_COOLDOWN_SECONDS);
     } catch (err) {
-      toast.error(err.message ?? 'Failed to send verification code.');
+      const msg = err.message || '';
+      if (msg.includes('rate limit')) {
+        toast.error('Too many requests. Please wait a few minutes.');
+      } else {
+        toast.error('Failed to send verification code. Please try again.');
+      }
     } finally {
       setIsSendingOtp(false);
     }

@@ -166,7 +166,7 @@ export default function Inquiries() {
                             <div className="flex items-center justify-end gap-2">
                               <button 
                                 onClick={() => handleView(inquiry)}
-                                className="p-2 text-gray-400 hover:text-[#8C0B1A] hover:bg-green-50 rounded-lg transition-all"
+                                className="p-2 text-black-400 hover:text-[#8C0B1A] hover:bg-green-50 rounded-lg transition-all"
                                 title="View Message"
                               >
                                 <FiEye className="w-5 h-5" />

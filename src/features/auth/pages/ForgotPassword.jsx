@@ -89,6 +89,7 @@ export default function ForgotPassword() {
         <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 w-full max-w-lg border border-gray-100 text-gray-900">
           {step === STEPS.EMAIL && (
             <EmailCredentialsForm
+              variant="forgot"
               onSubmit={handleEmailSubmit}
               defaultEmail={formData.email}
               isLoading={isLoading}
